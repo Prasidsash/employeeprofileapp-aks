@@ -1,24 +1,24 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Build Stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+WORKDIR /src
+
+COPY src/Employeeprofileapp/*.csproj ./Employeeprofileapp/
+RUN dotnet restore ./Employeeprofileapp/EmployeeProfileApp.csproj
+
+COPY src/Employeeprofileapp/. ./Employeeprofileapp/
+
+WORKDIR /src/Employeeprofileapp
+
+RUN dotnet publish EmployeeProfileApp.csproj -c Release -o /app/publish
+
+# Runtime Stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
 WORKDIR /app
 
-COPY pom.xml .
-COPY src ./src
-
-RUN mvn clean package -DskipTests
-
-FROM eclipse-temurin:17-jre
-
-WORKDIR /app
-
-RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
-
-COPY --from=build /app/target/*.jar app.jar
-
-RUN chown -R appuser:appgroup /app
-
-USER appuser
+COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["dotnet", "EmployeeProfileApp.dll"]

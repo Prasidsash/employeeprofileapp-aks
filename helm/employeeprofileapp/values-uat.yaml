@@ -5,9 +5,32 @@ app:
 
 image:
   repository: prasidsash/employeeprofileapp
-  tag: latest
+  tag: v1
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+
+  limits:
+    cpu: "1"
+    memory: "1Gi"
 
 ingress:
   enabled: true
   className: nginx
   host: uat.employee.local
+  path: /
+  pathType: Prefix
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 15
+  averageUtilization: 70

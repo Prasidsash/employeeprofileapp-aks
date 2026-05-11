@@ -1,13 +1,36 @@
-replicaCount: 2
+replicaCount: 1
 
 app:
   name: employeeprofileapp
 
 image:
   repository: prasidsash/employeeprofileapp
-  tag: latest
+  tag: v1
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
 
 ingress:
   enabled: true
   className: nginx
   host: qa.employee.local
+  path: /
+  pathType: Prefix
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  averageUtilization: 70
