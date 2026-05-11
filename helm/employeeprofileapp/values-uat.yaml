@@ -1,0 +1,13 @@
+replicaCount: 2
+
+app:
+  name: employeeprofileapp
+
+image:
+  repository: prasidsash/employeeprofileapp
+  tag: latest
+
+ingress:
+  enabled: true
+  className: nginx
+  host: uat.employee.local

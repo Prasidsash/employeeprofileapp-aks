@@ -1,0 +1,11 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: terraform init
+- script: terraform validate
+- script: terraform plan
+- script: terraform apply -auto-approve

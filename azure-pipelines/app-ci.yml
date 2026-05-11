@@ -1,0 +1,9 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: docker build -t prasidsash/employeeprofileapp:latest .
+- script: docker push prasidsash/employeeprofileapp:latest

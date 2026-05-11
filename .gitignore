@@ -1,0 +1,26 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# Terraform variable secrets
+*.auto.tfvars
+secret.auto.tfvars
+
+# Build artifacts
+bin/
+obj/
+publish/
+
+# VS Code
+.vscode/
+
+# OS files
+Thumbs.db
+.DS_Store
