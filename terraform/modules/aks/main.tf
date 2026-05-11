@@ -28,7 +28,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   azure_policy_enabled = true
 
-  local_account_disabled = true
+  local_account_disabled = false
 
   # =====================================
   # Default System Node Pool
