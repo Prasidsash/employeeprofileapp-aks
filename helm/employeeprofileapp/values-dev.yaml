@@ -30,7 +30,7 @@ ingress:
   pathType: Prefix
 
 hpa:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   averageUtilization: 70
