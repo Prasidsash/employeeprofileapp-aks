@@ -1,7 +1,7 @@
 replicaCount: 1
 
 app:
-  name: employeeprofileapp
+  name: employeeprofileapp-dev
 
 image:
   repository: prasidsash/employeeprofileapp-aks
