@@ -1,0 +1,36 @@
+replicaCount: 1
+
+app:
+  name: ""
+
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: ""
+    memory: ""
+
+  limits:
+    cpu: ""
+    memory: ""
+
+ingress:
+  enabled: false
+  className: ""
+  host: ""
+  path: /
+  pathType: Prefix
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  averageUtilization: 70

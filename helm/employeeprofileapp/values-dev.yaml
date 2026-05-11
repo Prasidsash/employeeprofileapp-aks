@@ -4,7 +4,7 @@ app:
   name: employeeprofileapp
 
 image:
-  repository: prasidsash/employeeprofileapp
+  repository: prasidsash/employeeprofileapp-aks
   tag: v1
   pullPolicy: Always
 
