@@ -1,8 +1,52 @@
 trigger: none
 
+parameters:
+- name: environment
+  type: string
+  default: dev
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- group: employeeprofileapp-${{ parameters.environment }}-vars
+
 stages:
+
 - stage: Deploy
+  displayName: Deploy To AKS
+
   jobs:
-  - job: HelmDeploy
-    steps:
-    - script: helm upgrade --install employeeprofileapp ./helm/employeeprofileapp
+  - deployment: HelmDeploy
+
+    environment: ${{ parameters.environment }}
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+
+          - checkout: self
+
+          - task: Kubernetes@1
+            displayName: AKS Login
+            inputs:
+              connectionType: Kubernetes Service Connection
+              kubernetesServiceEndpoint: $(kubernetesServiceConnection)
+              command: login
+
+          - task: HelmInstaller@1
+            displayName: Install Helm
+            inputs:
+              helmVersionToInstall: latest
+
+          - script: |
+
+              helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
+                --namespace $(namespace) \
+                --create-namespace \
+                --set image.repository=$(imageRepository) \
+                --set image.tag=$(Build.BuildId)
+
+            displayName: Helm Deploy

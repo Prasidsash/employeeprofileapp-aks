@@ -1,9 +1,36 @@
 trigger:
 - main
 
+parameters:
+- name: environment
+  type: string
+  default: dev
+
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: docker build -t prasidsash/employeeprofileapp:latest .
-- script: docker push prasidsash/employeeprofileapp:latest
+variables:
+- group: employeeprofileapp-${{ parameters.environment }}-vars
+
+stages:
+
+- stage: Build
+  displayName: Build And Push Docker Image
+
+  jobs:
+  - job: DockerBuildPush
+
+    steps:
+
+    - checkout: self
+
+    - task: Docker@2
+      displayName: Docker Build And Push
+      inputs:
+        containerRegistry: $(dockerRegistryServiceConnection)
+        repository: $(imageRepository)
+        command: buildAndPush
+        Dockerfile: $(dockerfilePath)
+        tags: |
+          $(Build.BuildId)
+          latest

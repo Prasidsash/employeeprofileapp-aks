@@ -1,11 +1,48 @@
 trigger:
 - main
 
+parameters:
+- name: environment
+  type: string
+  default: dev
+
 pool:
   vmImage: ubuntu-latest
 
-steps:
-- script: terraform init
-- script: terraform validate
-- script: terraform plan
-- script: terraform apply -auto-approve
+variables:
+- group: employeeprofileapp-${{ parameters.environment }}-vars
+
+stages:
+
+- stage: Terraform
+  displayName: Terraform Deployment
+
+  jobs:
+  - job: TerraformApply
+
+    steps:
+
+    - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+      inputs:
+        terraformVersion: latest
+
+    - task: AzureCLI@2
+      displayName: Terraform Apply
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          cd $(terraformWorkingDirectory)
+
+          terraform init
+
+          terraform validate
+
+          terraform plan -out=tfplan
+
+          terraform apply -auto-approve tfplan
