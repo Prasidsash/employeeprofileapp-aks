@@ -40,13 +40,21 @@ stages:
 
         inlineScript: |
 
+          echo "Checking TF_VAR_secret_data"
+
+          if [ -z "$TF_VAR_secret_data" ]; then
+            echo "TF_VAR_secret_data is EMPTY"
+          else
+            echo "TF_VAR_secret_data is PRESENT"
+          fi
+
           terraform init
 
           terraform validate
 
-          terraform plan -out=tfplan
+          terraform plan -input=false -out=tfplan
 
-          terraform apply -auto-approve tfplan
+          terraform apply -input=false -auto-approve tfplan
 
           az aks get-credentials \
             --resource-group employeeprofileapp-dev-rg \
@@ -55,3 +63,6 @@ stages:
             --overwrite-existing
 
           kubectl get nodes
+
+      env:
+        TF_VAR_secret_data: $(TF_VAR_secret_data)
