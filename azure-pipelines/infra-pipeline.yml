@@ -19,6 +19,7 @@ stages:
 
   jobs:
   - job: TerraformApply
+    displayName: Terraform Apply
 
     steps:
 
@@ -35,9 +36,9 @@ stages:
         azureSubscription: $(azureServiceConnection)
         scriptType: bash
         scriptLocation: inlineScript
-        inlineScript: |
+        workingDirectory: $(terraformWorkingDirectory)
 
-          cd $(terraformWorkingDirectory)
+        inlineScript: |
 
           terraform init
 
@@ -46,3 +47,11 @@ stages:
           terraform plan -out=tfplan
 
           terraform apply -auto-approve tfplan
+
+          az aks get-credentials \
+            --resource-group employeeprofileapp-dev-rg \
+            --name employeeprofileapp-dev-aks \
+            --admin \
+            --overwrite-existing
+
+          kubectl get nodes

@@ -46,7 +46,8 @@ stages:
               helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
                 --namespace $(namespace) \
                 --create-namespace \
+                -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
                 --set image.repository=$(imageRepository) \
                 --set image.tag=$(Build.BuildId)
 
-            displayName: Helm Deploy
+            displayName: Helm Upgrade Install
