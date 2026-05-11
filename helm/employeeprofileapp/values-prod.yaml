@@ -1,10 +1,10 @@
-replicaCount: 3
+replicaCount: 1
 
 app:
-  name: employeeprofileapp
+  name: employeeprofileapp-prod
 
 image:
-  repository: prasidsash/employeeprofileapp
+  repository: prasidsash/employeeprofileapp-aks
   tag: v1
   pullPolicy: Always
 
@@ -15,22 +15,22 @@ service:
 
 resources:
   requests:
-    cpu: "1"
-    memory: "1Gi"
+    cpu: "100m"
+    memory: "128Mi"
 
   limits:
-    cpu: "2"
-    memory: "2Gi"
+    cpu: "200m"
+    memory: "256Mi"
 
 ingress:
   enabled: true
   className: nginx
-  host: employee.company.com
+  host: prod.employee.local
   path: /
   pathType: Prefix
 
 hpa:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 20
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
   averageUtilization: 70

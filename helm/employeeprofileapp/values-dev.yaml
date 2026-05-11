@@ -1,7 +1,7 @@
 replicaCount: 1
 
 app:
-  name: employeeprofileapp
+  name: employeeprofileapp-dev
 
 image:
   repository: prasidsash/employeeprofileapp-aks
@@ -15,12 +15,12 @@ service:
 
 resources:
   requests:
-    cpu: "250m"
-    memory: "256Mi"
+    cpu: "100m"
+    memory: "128Mi"
 
   limits:
-    cpu: "500m"
-    memory: "512Mi"
+    cpu: "200m"
+    memory: "256Mi"
 
 ingress:
   enabled: true

@@ -1,10 +1,10 @@
 replicaCount: 1
 
 app:
-  name: employeeprofileapp
+  name: employeeprofileapp-qa
 
 image:
-  repository: prasidsash/employeeprofileapp
+  repository: prasidsash/employeeprofileapp-aks
   tag: v1
   pullPolicy: Always
 
@@ -15,12 +15,12 @@ service:
 
 resources:
   requests:
-    cpu: "250m"
-    memory: "256Mi"
+    cpu: "100m"
+    memory: "128Mi"
 
   limits:
-    cpu: "500m"
-    memory: "512Mi"
+    cpu: "200m"
+    memory: "256Mi"
 
 ingress:
   enabled: true
@@ -30,7 +30,7 @@ ingress:
   pathType: Prefix
 
 hpa:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 10
   averageUtilization: 70
