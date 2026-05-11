@@ -14,7 +14,7 @@ service:
   targetPort: 8080
 
 env:
-  ASPNETCORE_ENVIRONMENT: UAT environment
+  ASPNETCORE_ENVIRONMENT: UAT
 
 resources:
   requests:

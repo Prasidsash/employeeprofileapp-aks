@@ -14,7 +14,7 @@ service:
   targetPort: 8080
 
 env:
-  ASPNETCORE_ENVIRONMENT: QA environment
+  ASPNETCORE_ENVIRONMENT: QA
 
 resources:
   requests:
