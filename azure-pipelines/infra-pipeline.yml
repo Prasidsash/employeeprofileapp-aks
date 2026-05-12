@@ -1,5 +1,12 @@
 trigger:
-- main
+  branches:
+    include:
+    - main
+
+  paths:
+    include:
+    - terraform/**
+    - pipelines/infra/**
 
 parameters:
 - name: environment
