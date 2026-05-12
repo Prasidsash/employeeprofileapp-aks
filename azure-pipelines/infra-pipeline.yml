@@ -38,6 +38,7 @@ stages:
 
     - task: TerraformInstaller@1
       displayName: Install Terraform
+
       inputs:
         terraformVersion: 1.13.2
 
@@ -100,6 +101,3 @@ stages:
           echo "=================================="
 
           kubectl get nodes
-
-      env:
-        TF_VAR_secret_data: $(TF_VAR_secret_data)
