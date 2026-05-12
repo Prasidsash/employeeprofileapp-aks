@@ -61,7 +61,7 @@ stages:
           --create-namespace \
           -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
           --set image.repository=$(imageRepository) \
-          --set image.tag=$(Build.BuildId) \
+          --set image.tag=latest \
           --wait \
           --timeout 10m
 
