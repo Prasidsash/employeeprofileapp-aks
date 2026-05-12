@@ -1,4 +1,4 @@
-resource "kubernetes_service_account" "sa" {
+resource "kubernetes_service_account_v1" "sa" {
 
   metadata {
 
@@ -8,7 +8,7 @@ resource "kubernetes_service_account" "sa" {
   }
 }
 
-resource "kubernetes_role" "role" {
+resource "kubernetes_role_v1" "role" {
 
   metadata {
 
@@ -27,7 +27,7 @@ resource "kubernetes_role" "role" {
   }
 }
 
-resource "kubernetes_role_binding" "binding" {
+resource "kubernetes_role_binding_v1" "binding" {
 
   metadata {
 
@@ -42,14 +42,14 @@ resource "kubernetes_role_binding" "binding" {
 
     kind = "Role"
 
-    name = kubernetes_role.role.metadata[0].name
+    name = kubernetes_role_v1.role.metadata[0].name
   }
 
   subject {
 
     kind = "ServiceAccount"
 
-    name = kubernetes_service_account.sa.metadata[0].name
+    name = kubernetes_service_account_v1.sa.metadata[0].name
 
     namespace = var.namespace_name
   }
