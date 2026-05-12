@@ -58,6 +58,7 @@ stages:
 
         helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
           --namespace $(namespace) \
+          -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
           --set image.repository=$(imageRepository) \
           --set image.tag=latest \
           --wait \
