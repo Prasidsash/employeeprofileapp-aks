@@ -171,3 +171,16 @@ module "employee_ingress" {
 
   service_name = var.service_name
 }
+
+module "employee_secret" {
+
+  source = "../../modules/employee_secret"
+
+  count = var.enable_secret ? 1 : 0
+
+  namespace_name = var.namespace_name
+
+  secret_name = var.secret_name
+
+  secret_data = var.secret_data
+}
