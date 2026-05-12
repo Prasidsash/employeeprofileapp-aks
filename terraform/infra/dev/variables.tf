@@ -212,9 +212,9 @@ variable "service_name" {
 
 variable "secret_data" {
 
-  type      = map(string)
+  type = map(string)
 
   sensitive = true
 
-  default   = {}
+  default = {}
 }

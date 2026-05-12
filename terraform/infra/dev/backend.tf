@@ -2,12 +2,12 @@ terraform {
 
   backend "azurerm" {
 
-    resource_group_name  = "employeeprofileapp-tfstate-rg"
+    resource_group_name = "employeeprofileapp-tfstate-rg"
 
     storage_account_name = "empproftfstate2026"
 
-    container_name       = "tfstate"
+    container_name = "tfstate"
 
-    key                  = "dev.terraform.tfstate"
+    key = "dev.terraform.tfstate"
   }
 }

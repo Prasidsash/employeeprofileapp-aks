@@ -90,7 +90,7 @@ ingress_path = "/"
 
 ingress_path_type = "Prefix"
 
-service_name = "employeeprofileapp-dev"
+service_name = "employeeprofileapp-service-dev"
 
 # ---------------------
 # Helm

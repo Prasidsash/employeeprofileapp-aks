@@ -19,6 +19,7 @@ stages:
 
   jobs:
   - job: DockerBuildPush
+    displayName: Docker Build And Push
 
     steps:
 
@@ -26,11 +27,16 @@ stages:
 
     - task: Docker@2
       displayName: Docker Build And Push
+
       inputs:
+        command: buildAndPush
         containerRegistry: $(dockerRegistryServiceConnection)
         repository: $(imageRepository)
-        command: buildAndPush
-        Dockerfile: $(dockerfilePath)
+
+        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+
+        buildContext: '$(Build.SourcesDirectory)'
+
         tags: |
           $(Build.BuildId)
           latest

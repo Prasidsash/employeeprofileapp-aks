@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "main" {
 
-  name     = var.resource_group_name
+  name = var.resource_group_name
 
   location = var.location
 
@@ -8,9 +8,9 @@ resource "azurerm_resource_group" "main" {
 
     environment = var.environment
 
-    project     = "employeeprofileapp"
+    project = "employeeprofileapp"
 
-    managed_by  = "terraform"
+    managed_by = "terraform"
   }
 }
 
@@ -131,4 +131,23 @@ module "secret" {
   secret_name = var.secret_name
 
   secret_data = var.secret_data
+}
+
+module "ingress" {
+
+  source = "../../modules/employee_ingress"
+
+  count = var.enable_ingress ? 1 : 0
+
+  namespace_name = var.namespace_name
+
+  ingress_name = var.ingress_name
+
+  ingress_host = var.ingress_host
+
+  ingress_path = var.ingress_path
+
+  ingress_path_type = var.ingress_path_type
+
+  service_name = var.service_name
 }
