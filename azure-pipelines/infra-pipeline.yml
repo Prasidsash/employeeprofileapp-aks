@@ -10,7 +10,17 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
+
 - group: employeeprofileapp-${{ parameters.environment }}-vars
+
+- name: terraformWorkingDirectory
+  value: terraform/infra/${{ parameters.environment }}
+
+- name: resourceGroupName
+  value: employeeprofileapp-${{ parameters.environment }}-rg
+
+- name: aksClusterName
+  value: employeeprofileapp-${{ parameters.environment }}-aks
 
 stages:
 
@@ -18,6 +28,7 @@ stages:
   displayName: Terraform Deployment
 
   jobs:
+
   - job: TerraformApply
     displayName: Terraform Apply
 
@@ -28,39 +39,65 @@ stages:
     - task: TerraformInstaller@1
       displayName: Install Terraform
       inputs:
-        terraformVersion: latest
+        terraformVersion: 1.13.2
 
     - task: AzureCLI@2
       displayName: Terraform Apply
+
       inputs:
+
         azureSubscription: $(azureServiceConnection)
+
         scriptType: bash
+
         scriptLocation: inlineScript
+
         workingDirectory: $(terraformWorkingDirectory)
 
         inlineScript: |
 
-          echo "Checking TF_VAR_secret_data"
+          echo "=================================="
+          echo "Terraform Initialization"
+          echo "=================================="
 
-          if [ -z "$TF_VAR_secret_data" ]; then
-            echo "TF_VAR_secret_data is EMPTY"
-          else
-            echo "TF_VAR_secret_data is PRESENT"
-          fi
+          terraform init -reconfigure
 
-          terraform init
+          echo "=================================="
+          echo "Terraform Validation"
+          echo "=================================="
 
           terraform validate
 
-          terraform plan -input=false -out=tfplan
+          echo "=================================="
+          echo "Terraform Plan"
+          echo "=================================="
 
-          terraform apply -input=false -auto-approve tfplan
+          terraform plan \
+            -input=false \
+            -out=tfplan
+
+          echo "=================================="
+          echo "Terraform Apply"
+          echo "=================================="
+
+          terraform apply \
+            -input=false \
+            -auto-approve \
+            tfplan
+
+          echo "=================================="
+          echo "AKS Credentials"
+          echo "=================================="
 
           az aks get-credentials \
-            --resource-group employeeprofileapp-dev-rg \
-            --name employeeprofileapp-dev-aks \
+            --resource-group $(resourceGroupName) \
+            --name $(aksClusterName) \
             --admin \
             --overwrite-existing
+
+          echo "=================================="
+          echo "Cluster Validation"
+          echo "=================================="
 
           kubectl get nodes
 
