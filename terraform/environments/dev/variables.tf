@@ -209,3 +209,10 @@ variable "enable_monitoring" {
 variable "service_name" {
   type = string
 }
+
+variable "secret_data" {
+
+  type = map(string)
+
+  sensitive = true
+}
