@@ -60,7 +60,7 @@ stages:
           --namespace $(namespace) \
           --create-namespace \
           -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
-          --set image.repository=$(acrLoginServer)/$(imageRepository) \
+          --set image.repository=$(imageRepository) \
           --set image.tag=$(Build.BuildId) \
           --wait \
           --timeout 10m
