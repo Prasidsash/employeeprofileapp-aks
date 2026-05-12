@@ -1,5 +1,11 @@
 trigger: none
 
+resources:
+  pipelines:
+  - pipeline: ci
+    source: CI
+    trigger: true
+
 parameters:
 - name: environment
   type: string
@@ -36,8 +42,6 @@ stages:
         inlineScript: |
 
           echo "Azure Login Successful"
-
-          az account show
 
           az aks get-credentials \
             --resource-group $(aksResourceGroup) \
