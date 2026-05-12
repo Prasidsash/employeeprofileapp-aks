@@ -156,14 +156,14 @@ enable_network = true
 
 enable_aks = true
 
-enable_namespace = false
+enable_namespace = true
 
-enable_rbac = false
+enable_rbac = true
 
-enable_governance = false
+enable_governance = true
 
-enable_secret = false
+enable_secret = true
 
-enable_ingress = false
+enable_ingress = true
 
 enable_monitoring = true
