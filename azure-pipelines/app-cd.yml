@@ -18,64 +18,63 @@ stages:
 
   jobs:
 
-  - deployment: HelmDeploy
+  - job: HelmDeploy
     displayName: Helm Deployment
 
-    environment: ${{ parameters.environment }}
+    steps:
 
-    strategy:
-      runOnce:
+    - checkout: self
 
-        deploy:
+    - task: AzureCLI@2
+      displayName: AKS Login
 
-          steps:
+      inputs:
+        azureSubscription: 'AKS SCN'
+        scriptType: bash
+        scriptLocation: inlineScript
 
-          - checkout: self
+        inlineScript: |
 
-          - task: AzureCLI@2
-            displayName: AKS Login
+          echo "Azure Login Successful"
 
-            inputs:
-              azureSubscription: $(kubernetesServiceConnection)
-              scriptType: bash
-              scriptLocation: inlineScript
+          az account show
 
-              inlineScript: |
+          az aks get-credentials \
+            --resource-group $(aksResourceGroup) \
+            --name $(aksClusterName) \
+            --overwrite-existing
 
-                az aks get-credentials \
-                  --resource-group $(aksResourceGroup) \
-                  --name $(aksClusterName) \
-                  --overwrite-existing
+          kubectl get nodes
 
-          - task: HelmInstaller@1
-            displayName: Install Helm
+    - task: HelmInstaller@1
+      displayName: Install Helm
 
-            inputs:
-              helmVersionToInstall: latest
+      inputs:
+        helmVersionToInstall: latest
 
-          - script: |
+    - script: |
 
-              echo "Starting Helm deployment..."
+        echo "Starting Helm deployment..."
 
-              helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
-                --namespace $(namespace) \
-                --create-namespace \
-                -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
-                --set image.repository=$(acrLoginServer)/$(imageRepository) \
-                --set image.tag=$(Build.BuildId) \
-                --wait \
-                --timeout 10m
+        helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
+          --namespace $(namespace) \
+          --create-namespace \
+          -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
+          --set image.repository=$(acrLoginServer)/$(imageRepository) \
+          --set image.tag=$(Build.BuildId) \
+          --wait \
+          --timeout 10m
 
-            displayName: Helm Upgrade Install
+      displayName: Helm Upgrade Install
 
-          - script: |
+    - script: |
 
-              echo "Validating deployment..."
+        echo "Validating deployment..."
 
-              kubectl get pods -n $(namespace)
+        kubectl get pods -n $(namespace)
 
-              kubectl rollout status deployment/employeeprofileapp \
-                -n $(namespace) \
-                --timeout=300s
+        kubectl rollout status deployment/employeeprofileapp \
+          -n $(namespace) \
+          --timeout=300s
 
-            displayName: Verify Deployment
+      displayName: Verify Deployment
