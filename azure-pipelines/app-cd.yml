@@ -58,8 +58,6 @@ stages:
 
         helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
           --namespace $(namespace) \
-          --create-namespace \
-          -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
           --set image.repository=$(imageRepository) \
           --set image.tag=latest \
           --wait \
@@ -73,7 +71,7 @@ stages:
 
         kubectl get pods -n $(namespace)
 
-        kubectl rollout status deployment/employeeprofileapp \
+        kubectl rollout status deployment/employeeprofileapp-dev \
           -n $(namespace) \
           --timeout=300s
 
