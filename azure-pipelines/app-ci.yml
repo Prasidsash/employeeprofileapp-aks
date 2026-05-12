@@ -1,3 +1,5 @@
+name: $(Date:yyyyMMdd).$(Rev:r)
+
 trigger:
 - main
 
@@ -18,6 +20,7 @@ stages:
   displayName: Build And Push Docker Image
 
   jobs:
+
   - job: DockerBuildPush
     displayName: Docker Build And Push
 
@@ -30,7 +33,9 @@ stages:
 
       inputs:
         command: buildAndPush
+
         containerRegistry: $(dockerRegistryServiceConnection)
+
         repository: $(imageRepository)
 
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
@@ -38,5 +43,5 @@ stages:
         buildContext: '$(Build.SourcesDirectory)'
 
         tags: |
-          $(Build.BuildId)
+          $(Build.BuildNumber)
           latest
