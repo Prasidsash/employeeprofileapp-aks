@@ -17,12 +17,15 @@ stages:
   displayName: Deploy To AKS
 
   jobs:
+
   - deployment: HelmDeploy
+    displayName: Helm Deployment
 
     environment: ${{ parameters.environment }}
 
     strategy:
       runOnce:
+
         deploy:
 
           steps:
@@ -31,6 +34,7 @@ stages:
 
           - task: Kubernetes@1
             displayName: AKS Login
+
             inputs:
               connectionType: Kubernetes Service Connection
               kubernetesServiceEndpoint: $(kubernetesServiceConnection)
@@ -38,16 +42,33 @@ stages:
 
           - task: HelmInstaller@1
             displayName: Install Helm
+
             inputs:
               helmVersionToInstall: latest
 
           - script: |
 
+              echo "Starting Helm deployment..."
+
               helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
                 --namespace $(namespace) \
                 --create-namespace \
                 -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
-                --set image.repository=$(imageRepository) \
-                --set image.tag=$(Build.BuildId)
+                --set image.repository=$(acrLoginServer)/$(imageRepository) \
+                --set image.tag=$(Build.BuildId) \
+                --wait \
+                --timeout 10m
 
             displayName: Helm Upgrade Install
+
+          - script: |
+
+              echo "Validating deployment..."
+
+              kubectl get pods -n $(namespace)
+
+              kubectl rollout status deployment/employeeprofileapp \
+                -n $(namespace) \
+                --timeout=300s
+
+            displayName: Verify Deployment
