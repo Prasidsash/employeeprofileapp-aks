@@ -1,5 +1,4 @@
-resource "kubernetes_resource_quota" "quota" {
-
+resource "kubernetes_resource_quota_v1" "quota" {
   metadata {
 
     name = "resource-quota"
@@ -13,7 +12,7 @@ resource "kubernetes_resource_quota" "quota" {
   }
 }
 
-resource "kubernetes_limit_range" "limits" {
+resource "kubernetes_limit_range_v1" "limits" {
 
   metadata {
 
