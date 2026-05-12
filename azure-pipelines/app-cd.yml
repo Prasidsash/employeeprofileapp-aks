@@ -1,11 +1,5 @@
 trigger: none
 
-resources:
-  pipelines:
-  - pipeline: ci
-    source: CI
-    trigger: true
-
 parameters:
 - name: environment
   type: string
@@ -29,55 +23,59 @@ stages:
 
     steps:
 
-    - checkout: self
+    # =====================================
+    # WAIT FOR AKS READY
+    # =====================================
 
     - task: AzureCLI@2
-      displayName: AKS Login
-
+      displayName: Wait For AKS Ready
       inputs:
-        azureSubscription: 'AKS SCN'
+        azureSubscription: $(azureServiceConnection)
         scriptType: bash
         scriptLocation: inlineScript
-
         inlineScript: |
+          az aks wait \
+            --resource-group $(aksResourceGroup) \
+            --name $(aksClusterName) \
+            --created
 
-          echo "Azure Login Successful"
+    # =====================================
+    # GET AKS CREDENTIALS
+    # =====================================
 
+    - task: AzureCLI@2
+      displayName: Get AKS Credentials
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
           az aks get-credentials \
             --resource-group $(aksResourceGroup) \
             --name $(aksClusterName) \
             --overwrite-existing
 
-          kubectl get nodes
-
-    - task: HelmInstaller@1
-      displayName: Install Helm
-
-      inputs:
-        helmVersionToInstall: latest
+    # =====================================
+    # VALIDATE CLUSTER CONNECTIVITY
+    # =====================================
 
     - script: |
+        kubectl config current-context
+        kubectl get nodes
+      displayName: Validate AKS Connectivity
 
-        echo "Starting Helm deployment..."
+    # =====================================
+    # HELM DEPLOYMENT
+    # =====================================
 
-        helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
-          --namespace $(namespace) \
-          -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
-          --set image.repository=$(imageRepository) \
-          --set image.tag=latest \
-          --wait \
-          --timeout 10m
-
+    - task: HelmDeploy@0
       displayName: Helm Upgrade Install
-
-    - script: |
-
-        echo "Validating deployment..."
-
-        kubectl get pods -n $(namespace)
-
-        kubectl rollout status deployment/employeeprofileapp-dev \
-          -n $(namespace) \
-          --timeout=300s
-
-      displayName: Verify Deployment
+      inputs:
+        connectionType: None
+        command: upgrade
+        chartType: FilePath
+        chartPath: helm/employeeprofileapp
+        releaseName: employeeprofileapp-${{ parameters.environment }}
+        namespace: employeeprofileapp-${{ parameters.environment }}
+        arguments: >
+          --install
