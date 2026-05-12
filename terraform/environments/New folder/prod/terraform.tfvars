@@ -1,6 +1,6 @@
-environment = "dev"
+environment = "prod"
 
-resource_group_name = "employeeprofileapp-dev-rg"
+resource_group_name = "employeeprofileapp-prod-rg"
 
 location = "Central India"
 
@@ -8,10 +8,10 @@ location = "Central India"
 # Namespace
 # ---------------------
 
-namespace_name = "employeeprofileapp-dev"
+namespace_name = "employeeprofileapp-prod"
 
 namespace_labels = {
-  environment = "dev"
+  environment = "prod"
   app         = "employeeprofileapp"
 }
 
@@ -20,11 +20,11 @@ namespace_labels = {
 # ---------------------
 
 quota_limits = {
-  pods              = "10"
-  "requests.cpu"    = "2"
-  "requests.memory" = "2Gi"
-  "limits.cpu"      = "4"
-  "limits.memory"   = "4Gi"
+  pods              = "50"
+  "requests.cpu"    = "12"
+  "requests.memory" = "16Gi"
+  "limits.cpu"      = "24"
+  "limits.memory"   = "32Gi"
 }
 
 # ---------------------
@@ -32,13 +32,13 @@ quota_limits = {
 # ---------------------
 
 limit_max = {
-  cpu    = "1"
-  memory = "1Gi"
+  cpu    = "4"
+  memory = "8Gi"
 }
 
 limit_min = {
-  cpu    = "100m"
-  memory = "128Mi"
+  cpu    = "250m"
+  memory = "512Mi"
 }
 
 limit_default = {
@@ -79,56 +79,67 @@ allowed_verbs = [
 secret_name = "employee-db-secret"
 
 # ---------------------
+# Secret Data
+# ---------------------
+
+secret_data = {
+
+  username = "employeeadmin"
+
+  password = "StrongPassword123!"
+}
+
+# ---------------------
 # Ingress
 # ---------------------
 
 ingress_name = "employee-ingress"
 
-ingress_host = "dev.employee.local"
+ingress_host = "employee.company.com"
 
 ingress_path = "/"
 
 ingress_path_type = "Prefix"
 
-service_name = "employeeprofileapp-dev"
+service_name = "employeeprofileapp-prod"
 
 # ---------------------
 # Helm
 # ---------------------
 
-release_name = "employeeprofileapp-dev"
+release_name = "employeeprofileapp-prod"
 
 # ---------------------
 # Network
 # ---------------------
 
-vnet_name = "employeeprofileapp-dev-vnet"
+vnet_name = "employeeprofileapp-prod-vnet"
 
 vnet_address_space = [
-  "10.10.0.0/16"
+  "10.40.0.0/16"
 ]
 
 aks_subnet_name = "aks-subnet"
 
 aks_subnet_prefixes = [
-  "10.10.1.0/24"
+  "10.40.1.0/24"
 ]
 
 # ---------------------
 # Monitoring
 # ---------------------
 
-log_analytics_workspace_name = "employeeprofileapp-dev-law"
+log_analytics_workspace_name = "employeeprofileapp-prod-law"
 
 log_analytics_sku = "PerGB2018"
 
-log_retention_in_days = 30
+log_retention_in_days = 90
 
 # ---------------------
 # AKS
 # ---------------------
 
-cluster_name = "employeeprofileapp-dev-aks"
+cluster_name = "employeeprofileapp-prod-aks"
 
 kubernetes_version = "1.34.6"
 
@@ -140,13 +151,13 @@ system_node_vm_size = "Standard_D2s_v3"
 # AKS Networking
 # ---------------------
 
-service_cidr = "172.16.0.0/16"
+service_cidr = "172.40.0.0/16"
 
-dns_service_ip = "172.16.0.10"
+dns_service_ip = "172.40.0.10"
 
-# ---------------------
+# =====================================
 # Module Toggles
-# ---------------------
+# =====================================
 
 enable_network = true
 

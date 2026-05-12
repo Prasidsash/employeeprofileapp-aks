@@ -149,23 +149,6 @@ module "employee_governance" {
   limit_default_request = var.limit_default_request
 }
 
-module "employee_secret" {
-
-  depends_on = [
-    module.employee_namespace
-  ]
-
-  count = var.enable_secret ? 1 : 0
-
-  source = "../../modules/employee_secret"
-
-  namespace_name = var.namespace_name
-
-  secret_name = var.secret_name
-
-  secret_data = var.secret_data
-}
-
 module "employee_ingress" {
 
   depends_on = [

@@ -20,11 +20,11 @@ namespace_labels = {
 # ---------------------
 
 quota_limits = {
-  pods              = "50"
-  "requests.cpu"    = "12"
-  "requests.memory" = "16Gi"
-  "limits.cpu"      = "24"
-  "limits.memory"   = "32Gi"
+  pods              = "20"
+  "requests.cpu"    = "4"
+  "requests.memory" = "4Gi"
+  "limits.cpu"      = "8"
+  "limits.memory"   = "8Gi"
 }
 
 # ---------------------
@@ -32,23 +32,23 @@ quota_limits = {
 # ---------------------
 
 limit_max = {
-  cpu    = "4"
-  memory = "8Gi"
+  cpu    = "2"
+  memory = "2Gi"
 }
 
 limit_min = {
-  cpu    = "250m"
-  memory = "512Mi"
+  cpu    = "200m"
+  memory = "256Mi"
 }
 
 limit_default = {
-  cpu    = "500m"
-  memory = "512Mi"
+  cpu    = "1"
+  memory = "1Gi"
 }
 
 limit_default_request = {
-  cpu    = "250m"
-  memory = "256Mi"
+  cpu    = "500m"
+  memory = "512Mi"
 }
 
 # ---------------------
@@ -77,17 +77,6 @@ allowed_verbs = [
 # ---------------------
 
 secret_name = "employee-db-secret"
-
-# ---------------------
-# Secret Data
-# ---------------------
-
-secret_data = {
-
-  username = "employeeadmin"
-
-  password = "StrongPassword123!"
-}
 
 # ---------------------
 # Ingress
@@ -143,21 +132,21 @@ cluster_name = "employeeprofileapp-prod-aks"
 
 kubernetes_version = "1.34.6"
 
-system_node_count = 1
+system_node_count = 2
 
-system_node_vm_size = "Standard_D2s_v3"
+system_node_vm_size = "Standard_D4s_v3"
 
 # ---------------------
 # AKS Networking
 # ---------------------
 
-service_cidr = "172.40.0.0/16"
+service_cidr = "172.19.0.0/16"
 
-dns_service_ip = "172.40.0.10"
+dns_service_ip = "172.19.0.10"
 
-# =====================================
+# ---------------------
 # Module Toggles
-# =====================================
+# ---------------------
 
 enable_network = true
 

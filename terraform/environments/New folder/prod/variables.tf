@@ -206,13 +206,13 @@ variable "enable_monitoring" {
   type = bool
 }
 
-variable "service_name" {
-  type = string
-}
-
 variable "secret_data" {
 
   type = map(string)
 
   sensitive = true
+}
+
+variable "service_name" {
+  type = string
 }

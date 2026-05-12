@@ -20,11 +20,11 @@ namespace_labels = {
 # ---------------------
 
 quota_limits = {
-  pods              = "30"
-  "requests.cpu"    = "6"
-  "requests.memory" = "6Gi"
-  "limits.cpu"      = "12"
-  "limits.memory"   = "12Gi"
+  pods              = "10"
+  "requests.cpu"    = "2"
+  "requests.memory" = "2Gi"
+  "limits.cpu"      = "4"
+  "limits.memory"   = "4Gi"
 }
 
 # ---------------------
@@ -32,13 +32,13 @@ quota_limits = {
 # ---------------------
 
 limit_max = {
-  cpu    = "3"
-  memory = "4Gi"
+  cpu    = "1"
+  memory = "1Gi"
 }
 
 limit_min = {
   cpu    = "100m"
-  memory = "256Mi"
+  memory = "128Mi"
 }
 
 limit_default = {
@@ -140,13 +140,13 @@ system_node_vm_size = "Standard_D2s_v3"
 # AKS Networking
 # ---------------------
 
-service_cidr = "172.30.0.0/16"
+service_cidr = "172.18.0.0/16"
 
-dns_service_ip = "172.30.0.10"
+dns_service_ip = "172.18.0.10"
 
-# =====================================
+# ---------------------
 # Module Toggles
-# =====================================
+# ---------------------
 
 enable_network = true
 
