@@ -152,18 +152,18 @@ dns_service_ip = "172.16.0.10"
 # Module Toggles
 # =====================================
 
-enable_network = true
-
 enable_aks = true
 
-enable_namespace = true
-
-enable_rbac = true
-
-enable_governance = true
-
-enable_secret = true
-
-enable_ingress = true
+enable_network = true
 
 enable_monitoring = true
+
+enable_namespace = false
+
+enable_rbac = false
+
+enable_governance = false
+
+enable_secret = false
+
+enable_ingress = false
