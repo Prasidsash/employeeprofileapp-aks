@@ -125,8 +125,9 @@ stages:
           --wait
           --timeout 10m
           --debug
+          -f helm/employeeprofileapp/values-${{ parameters.environment }}.yaml
           --set image.repository=$(imageRepository)
-          --set image.tag=latest
+          --set image.tag=$(resources.pipeline.appci.runName)
 
     # =====================================
     # DEPLOYMENT VALIDATION
