@@ -122,6 +122,8 @@ stages:
 
         arguments: >
           --install
+          --set image.repository=$(imageRepository)
+          --set image.tag=latest
 
     # =====================================
     # DEPLOYMENT VALIDATION
