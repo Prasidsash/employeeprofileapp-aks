@@ -34,3 +34,6 @@ hpa:
   minReplicas: 1
   maxReplicas: 1
   averageUtilization: 70
+
+env:
+  ASPNETCORE_ENVIRONMENT: Development
