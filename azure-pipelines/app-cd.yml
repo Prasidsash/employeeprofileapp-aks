@@ -3,7 +3,7 @@ trigger: none
 resources:
   pipelines:
   - pipeline: appci
-    source: app-ci
+    source: CI
     trigger:
       branches:
         include:
