@@ -8,6 +8,13 @@ trigger:
     - terraform/**
     - pipelines/infra/**
 
+    exclude:
+    - app/**
+    - helm/**
+    - Dockerfile
+    - pipelines/app/**
+    - README.md
+
 parameters:
 - name: environment
   type: string

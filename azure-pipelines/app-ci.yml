@@ -1,7 +1,21 @@
 name: $(Date:yyyyMMdd).$(Rev:r)
 
 trigger:
-- main
+  branches:
+    include:
+    - main
+
+  paths:
+    include:
+    - app/**
+    - helm/**
+    - Dockerfile
+    - pipelines/app/app-ci.yml
+
+    exclude:
+    - terraform/**
+    - pipelines/infra/**
+    - README.md
 
 parameters:
 - name: environment
