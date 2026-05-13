@@ -64,6 +64,12 @@ module "aks" {
   system_node_count   = var.system_node_count
   system_node_vm_size = var.system_node_vm_size
 
+  enable_node_autoscaling = var.enable_node_autoscaling
+
+  system_node_min_count = var.system_node_min_count
+
+  system_node_max_count = var.system_node_max_count
+
   subnet_id = module.network.subnet_id
 
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id

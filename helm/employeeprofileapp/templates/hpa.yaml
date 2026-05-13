@@ -1,10 +1,10 @@
-{{- if .Values.hpa.enabled }}
+{{- if and .Values.hpa .Values.hpa.enabled }}
 
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 
 metadata:
-  name: {{ .Values.app.name }}-hpa
+  name: {{ default "employeeprofileapp" .Values.app.name }}-hpa
 
 spec:
   minReplicas: {{ .Values.hpa.minReplicas }}
@@ -13,7 +13,7 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Values.app.name }}
+    name: {{ default "employeeprofileapp" .Values.app.name }}
 
   metrics:
   - type: Resource

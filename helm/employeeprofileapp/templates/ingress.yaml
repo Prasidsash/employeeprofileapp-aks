@@ -1,10 +1,10 @@
-{{- if .Values.ingress.enabled }}
+{{- if and .Values.ingress .Values.ingress.enabled }}
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
-  name: {{ .Values.app.name }}-ingress
+  name: {{ default "employeeprofileapp" .Values.app.name }}-ingress
 
 spec:
   ingressClassName: {{ .Values.ingress.className }}
@@ -20,7 +20,7 @@ spec:
 
         backend:
           service:
-            name: {{ .Values.app.name }}
+            name: {{ default "employeeprofileapp" .Values.app.name }}
 
             port:
               number: {{ .Values.service.port }}

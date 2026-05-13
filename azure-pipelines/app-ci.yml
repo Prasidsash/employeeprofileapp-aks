@@ -32,6 +32,10 @@ stages:
 
     - checkout: self
 
+    # =====================================
+    # Docker Build And Push
+    # =====================================
+
     - task: Docker@2
       displayName: Docker Build And Push
 
@@ -50,73 +54,16 @@ stages:
           $(Build.BuildNumber)
           latest
 
-# =========================
-# DEPLOY STAGE
-# =========================
-
-- stage: Deploy
-  displayName: Deploy To AKS
-
-  dependsOn: Build
-
-  jobs:
-
-  - job: HelmDeploy
-    displayName: Helm Deployment
-
-    steps:
-
-    - checkout: self
-
-    - task: AzureCLI@2
-      displayName: AKS Login
-
-      inputs:
-        azureSubscription: 'AKS SCN'
-
-        scriptType: bash
-
-        scriptLocation: inlineScript
-
-        inlineScript: |
-
-          echo "Azure Login Successful"
-
-          az aks get-credentials \
-            --resource-group $(aksResourceGroup) \
-            --name $(aksClusterName) \
-            --overwrite-existing
-
-          kubectl get nodes
-
-    - task: HelmInstaller@1
-      displayName: Install Helm
-
-      inputs:
-        helmVersionToInstall: latest
+    # =====================================
+    # Optional Future Image Scan Placeholder
+    # =====================================
 
     - script: |
 
-        echo "Starting Helm deployment..."
+        echo "=================================="
+        echo "Optional Future Image Scan"
+        echo "=================================="
 
-        helm upgrade --install $(helmReleaseName) ./helm/employeeprofileapp \
-          --namespace $(namespace) \
-          -f ./helm/employeeprofileapp/values-${{ parameters.environment }}.yaml \
-          --set image.repository=$(imageRepository) \
-          --set image.tag=$(Build.BuildNumber) \
-          --wait \
-          --timeout 10m
+        # trivy image $(imageRepository):$(Build.BuildNumber)
 
-      displayName: Helm Upgrade Install
-
-    - script: |
-
-        echo "Validating deployment..."
-
-        kubectl get pods -n $(namespace)
-
-        kubectl rollout status deployment/employeeprofileapp-dev \
-          -n $(namespace) \
-          --timeout=300s
-
-      displayName: Verify Deployment
+      displayName: Future Image Scan Placeholder

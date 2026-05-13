@@ -37,3 +37,25 @@ hpa:
   minReplicas: 2
   maxReplicas: 10
   averageUtilization: 70
+
+# =====================================
+# Optional Future Deployment Features
+# =====================================
+# Existing working deployment behavior remains unchanged.
+
+namespace: employeeprofileapp-dev
+
+imagePullSecrets: []
+
+readinessProbe:
+  enabled: false
+  path: /
+  port: 8080
+
+livenessProbe:
+  enabled: false
+  path: /
+  port: 8080
+
+serviceSettings:
+  enableLoadBalancer: true

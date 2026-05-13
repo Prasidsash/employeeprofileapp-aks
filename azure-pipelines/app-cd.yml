@@ -29,11 +29,16 @@ stages:
 
     - task: AzureCLI@2
       displayName: Wait For AKS Ready
+
       inputs:
         azureSubscription: $(azureServiceConnection)
+
         scriptType: bash
+
         scriptLocation: inlineScript
+
         inlineScript: |
+
           az aks wait \
             --resource-group $(aksResourceGroup) \
             --name $(aksClusterName) \
@@ -45,11 +50,16 @@ stages:
 
     - task: AzureCLI@2
       displayName: Get AKS Credentials
+
       inputs:
         azureSubscription: $(azureServiceConnection)
+
         scriptType: bash
+
         scriptLocation: inlineScript
+
         inlineScript: |
+
           az aks get-credentials \
             --resource-group $(aksResourceGroup) \
             --name $(aksClusterName) \
@@ -60,9 +70,24 @@ stages:
     # =====================================
 
     - script: |
+
         kubectl config current-context
+
         kubectl get nodes
+
+        kubectl get ns
+
       displayName: Validate AKS Connectivity
+
+    # =====================================
+    # HELM LINT VALIDATION
+    # =====================================
+
+    - script: |
+
+        helm lint helm/employeeprofileapp
+
+      displayName: Helm Lint Validation
 
     # =====================================
     # HELM DEPLOYMENT
@@ -70,12 +95,43 @@ stages:
 
     - task: HelmDeploy@0
       displayName: Helm Upgrade Install
+
       inputs:
         connectionType: None
+
         command: upgrade
+
         chartType: FilePath
+
         chartPath: helm/employeeprofileapp
+
         releaseName: employeeprofileapp-${{ parameters.environment }}
+
         namespace: employeeprofileapp-${{ parameters.environment }}
+
         arguments: >
           --install
+
+    # =====================================
+    # DEPLOYMENT VALIDATION
+    # =====================================
+
+    - script: |
+
+        kubectl get pods -n employeeprofileapp-${{ parameters.environment }}
+
+        kubectl get svc -n employeeprofileapp-${{ parameters.environment }}
+
+      displayName: Validate Deployment
+
+    # =====================================
+    # OPTIONAL FUTURE ROLLBACK
+    # =====================================
+
+    - script: |
+
+        echo "Future rollback placeholder"
+
+        # helm rollback employeeprofileapp-${{ parameters.environment }} 1
+
+      displayName: Future Rollback Placeholder

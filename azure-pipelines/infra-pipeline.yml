@@ -29,6 +29,13 @@ variables:
 - name: aksClusterName
   value: employeeprofileapp-${{ parameters.environment }}-aks
 
+# =====================================
+# Optional Future Terraform Versioning
+# =====================================
+
+- name: terraformVersion
+  value: 1.13.2
+
 stages:
 
 - stage: Terraform
@@ -47,7 +54,7 @@ stages:
       displayName: Install Terraform
 
       inputs:
-        terraformVersion: 1.13.2
+        terraformVersion: $(terraformVersion)
 
     - task: AzureCLI@2
       displayName: Terraform Apply
@@ -69,6 +76,12 @@ stages:
           echo "=================================="
 
           terraform init -reconfigure
+
+          echo "=================================="
+          echo "Terraform Formatting Validation"
+          echo "=================================="
+
+          terraform fmt -check
 
           echo "=================================="
           echo "Terraform Validation"
@@ -108,3 +121,8 @@ stages:
           echo "=================================="
 
           kubectl get nodes
+
+          # ==================================
+          # Optional Future Destroy
+          # ==================================
+          # terraform destroy -auto-approve

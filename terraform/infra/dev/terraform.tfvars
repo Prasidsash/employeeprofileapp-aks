@@ -167,3 +167,19 @@ enable_governance = true
 enable_secret = true
 
 enable_ingress = true
+
+# =====================================
+# Optional Future Toggles
+# =====================================
+# These are future-ready optional settings.
+# Existing working behavior remains unchanged.
+
+enable_hpa = false
+
+enable_loadbalancer = false
+
+enable_node_autoscaling = false
+
+system_node_min_count = 1
+
+system_node_max_count = 2

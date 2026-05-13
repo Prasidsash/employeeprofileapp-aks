@@ -41,3 +41,15 @@ variable "dns_service_ip" {
 variable "log_analytics_workspace_id" {
   type = string
 }
+
+variable "enable_node_autoscaling" {
+  type = bool
+}
+
+variable "system_node_min_count" {
+  type = number
+}
+
+variable "system_node_max_count" {
+  type = number
+}

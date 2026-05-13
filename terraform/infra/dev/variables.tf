@@ -218,3 +218,27 @@ variable "secret_data" {
 
   default = {}
 }
+
+variable "enable_node_autoscaling" {
+  type = bool
+}
+
+variable "system_node_min_count" {
+  type = number
+}
+
+variable "system_node_max_count" {
+  type = number
+}
+
+variable "enable_hpa" {
+  description = "Enable Horizontal Pod Autoscaler"
+  type        = bool
+  default     = false
+}
+
+variable "enable_loadbalancer" {
+  description = "Enable LoadBalancer service"
+  type        = bool
+  default     = true
+}

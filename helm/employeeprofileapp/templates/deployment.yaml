@@ -2,10 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: {{ .Values.app.name }}
+  name: {{ default "employeeprofileapp" .Values.app.name }}
+
+  annotations:
+    checksum/config: {{ .Values.app.name | sha256sum }}
 
 spec:
   replicas: {{ .Values.replicaCount }}
+
+  strategy:
+    type: RollingUpdate
 
   selector:
     matchLabels:
@@ -17,6 +23,12 @@ spec:
         app: {{ .Values.app.name }}
 
     spec:
+
+      {{- if .Values.imagePullSecrets }}
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
+      {{- end }}
+
       containers:
       - name: {{ .Values.app.name }}
 
@@ -27,9 +39,25 @@ spec:
         ports:
         - containerPort: {{ .Values.service.targetPort }}
 
+        {{- if .Values.env }}
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
+        {{- end }}
+
+        {{- if and .Values.readinessProbe .Values.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.readinessProbe.path }}
+            port: {{ .Values.readinessProbe.port }}
+        {{- end }}
+
+        {{- if and .Values.livenessProbe .Values.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.livenessProbe.path }}
+            port: {{ .Values.livenessProbe.port }}
+        {{- end }}
 
         resources:
           requests:
