@@ -122,6 +122,9 @@ stages:
 
         arguments: >
           --install
+          --wait
+          --timeout 10m
+          --debug
           --set image.repository=$(imageRepository)
           --set image.tag=latest
 
