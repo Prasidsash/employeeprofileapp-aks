@@ -17,7 +17,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # =====================================
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 
   # =====================================
