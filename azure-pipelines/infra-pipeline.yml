@@ -6,13 +6,14 @@ trigger:
   paths:
     include:
     - terraform/**
-    - pipelines/infra/**
+    - azure-pipelines/infra-pipeline.yml
 
     exclude:
-    - app/**
+    - src/**
     - helm/**
     - Dockerfile
-    - pipelines/app/**
+    - azure-pipelines/app-ci.yml
+    - azure-pipelines/app-cd.yml
     - README.md
 
 parameters:
