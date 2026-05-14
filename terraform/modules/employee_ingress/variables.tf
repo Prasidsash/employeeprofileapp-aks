@@ -21,3 +21,21 @@ variable "ingress_path_type" {
 variable "service_name" {
   type = string
 }
+
+# =====================================
+# TLS
+# =====================================
+
+variable "enable_tls" {
+
+  type = bool
+
+  default = false
+}
+
+variable "tls_secret_name" {
+
+  type = string
+
+  default = null
+}

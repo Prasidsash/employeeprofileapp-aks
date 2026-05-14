@@ -242,3 +242,51 @@ variable "enable_loadbalancer" {
   type        = bool
   default     = true
 }
+
+# =====================================
+# TLS / HTTPS Ingress
+# =====================================
+
+variable "enable_tls" {
+
+  description = "Enable HTTPS ingress"
+
+  type = bool
+
+  default = false
+}
+
+variable "tls_secret_name" {
+
+  description = "TLS secret for ingress"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# AZURE MONITOR ALERTS
+# =====================================
+
+variable "enable_alerts" {
+
+  description = "Enable Azure Monitor alerts"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# MANAGED PROMETHEUS / GRAFANA
+# =====================================
+
+variable "enable_managed_prometheus" {
+
+  description = "Enable Azure Managed Prometheus and Grafana"
+
+  type = bool
+
+  default = false
+}
