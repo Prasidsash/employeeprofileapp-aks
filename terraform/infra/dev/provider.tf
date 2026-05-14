@@ -31,7 +31,18 @@ terraform {
 # =====================================
 
 provider "azurerm" {
-  features {}
+
+  features {
+
+    key_vault {
+
+      # Lab-friendly behavior:
+      # Removes retained deleted vault artifacts
+      # so future destroy/recreate cycles stay clean
+
+      purge_soft_delete_on_destroy = true
+    }
+  }
 }
 
 # =====================================

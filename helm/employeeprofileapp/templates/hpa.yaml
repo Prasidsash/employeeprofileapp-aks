@@ -7,6 +7,7 @@ metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}-hpa
 
 spec:
+
   minReplicas: {{ .Values.hpa.minReplicas }}
   maxReplicas: {{ .Values.hpa.maxReplicas }}
 
@@ -16,13 +17,36 @@ spec:
     name: {{ default "employeeprofileapp" .Values.app.name }}
 
   metrics:
-  - type: Resource
 
-    resource:
-      name: cpu
+    # =====================================
+    # CPU METRIC
+    # =====================================
 
-      target:
-        type: Utilization
-        averageUtilization: {{ .Values.hpa.averageUtilization }}
+    - type: Resource
+
+      resource:
+        name: cpu
+
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.averageUtilization }}
+
+    # =====================================
+    # OPTIONAL MEMORY METRIC
+    # Only used if configured
+    # =====================================
+
+    {{- if .Values.hpa.memoryAverageUtilization }}
+
+    - type: Resource
+
+      resource:
+        name: memory
+
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
+
+    {{- end }}
 
 {{- end }}

@@ -1,22 +1,51 @@
+# =====================================
+# REPLICAS
+# =====================================
+
 replicaCount: 1
+
+# =====================================
+# APPLICATION
+# =====================================
 
 app:
   name: employeeprofileapp-dev
+
+# =====================================
+# IMAGE
+# =====================================
 
 image:
   repository: prasidsash/employeeprofileapp-aks
   tag: latest
   pullPolicy: Always
 
+# =====================================
+# SERVICE
+# =====================================
+
 service:
   type: LoadBalancer
   port: 80
   targetPort: 8080
 
+# Optional feature toggle
+serviceSettings:
+  enableLoadBalancer: true
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
+
 env:
   ASPNETCORE_ENVIRONMENT: Development
 
+# =====================================
+# RESOURCE SETTINGS
+# =====================================
+
 resources:
+
   requests:
     cpu: "100m"
     memory: "128Mi"
@@ -25,6 +54,10 @@ resources:
     cpu: "200m"
     memory: "256Mi"
 
+# =====================================
+# INGRESS
+# =====================================
+
 ingress:
   enabled: false
   className: ""
@@ -32,20 +65,34 @@ ingress:
   path: /
   pathType: Prefix
 
+# =====================================
+# HPA
+# =====================================
+
 hpa:
   enabled: false
   minReplicas: 2
   maxReplicas: 10
   averageUtilization: 70
 
+  # Optional future setting
+  memoryAverageUtilization: null
+
 # =====================================
-# Optional Future Deployment Features
+# NAMESPACE
 # =====================================
-# Existing working deployment behavior remains unchanged.
 
 namespace: employeeprofileapp-dev
 
+# =====================================
+# IMAGE PULL SECRETS
+# =====================================
+
 imagePullSecrets: []
+
+# =====================================
+# PROBES
+# =====================================
 
 readinessProbe:
   enabled: false
@@ -56,6 +103,3 @@ livenessProbe:
   enabled: false
   path: /
   port: 8080
-
-serviceSettings:
-  enableLoadBalancer: true

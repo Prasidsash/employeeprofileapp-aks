@@ -98,9 +98,13 @@ module "aks" {
 
   # =====================================
   # Managed Prometheus Integration
+  # Preserve current monitoring behavior
   # =====================================
 
-  azure_monitor_workspace_id = module.monitoring.azure_monitor_workspace_id
+  azure_monitor_workspace_id = try(
+    module.monitoring.monitor_workspace_id,
+    null
+  )
 
   environment = var.environment
 

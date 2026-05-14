@@ -1,19 +1,44 @@
 replicaCount: 1
 
+# =====================================
+# APPLICATION
+# =====================================
+
 app:
   name: ""
+
+# =====================================
+# IMAGE
+# =====================================
 
 image:
   repository: ""
   tag: ""
   pullPolicy: IfNotPresent
 
+# =====================================
+# SERVICE
+# =====================================
+
 service:
   type: LoadBalancer
   port: 80
   targetPort: 8080
 
+# =====================================
+# OPTIONAL SERVICE SETTINGS
+# (Preserves existing behavior)
+# =====================================
+
+serviceSettings:
+  enableLoadBalancer: false
+
+# =====================================
+# RESOURCE SETTINGS
+# =====================================
+
 resources:
+
   requests:
     cpu: ""
     memory: ""
@@ -22,6 +47,10 @@ resources:
     cpu: ""
     memory: ""
 
+# =====================================
+# INGRESS
+# =====================================
+
 ingress:
   enabled: false
   className: ""
@@ -29,11 +58,19 @@ ingress:
   path: /
   pathType: Prefix
 
+# =====================================
+# HPA
+# =====================================
+
 hpa:
   enabled: false
   minReplicas: 1
   maxReplicas: 1
   averageUtilization: 70
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
 
 env:
   ASPNETCORE_ENVIRONMENT: Development

@@ -2,17 +2,31 @@ resource "kubernetes_ingress_v1" "ingress" {
 
   metadata {
 
-    name = var.ingress_name
-
+    name      = var.ingress_name
     namespace = var.namespace_name
 
-    annotations = {
+    annotations = merge(
 
-      "nginx.ingress.kubernetes.io/ssl-redirect" = tostring(var.enable_tls)
-    }
+      {
+        "nginx.ingress.kubernetes.io/ssl-redirect" = tostring(var.enable_tls)
+      },
+
+      # =====================================
+      # OPTIONAL CERT-MANAGER SUPPORT
+      # Existing deployments unaffected
+      # =====================================
+
+      var.enable_tls && var.cluster_issuer != null ? {
+        "cert-manager.io/cluster-issuer" = var.cluster_issuer
+      } : {}
+    )
   }
 
   spec {
+
+    # =====================================
+    # TLS
+    # =====================================
 
     dynamic "tls" {
 
@@ -28,6 +42,10 @@ resource "kubernetes_ingress_v1" "ingress" {
       }
     }
 
+    # =====================================
+    # ROUTING RULES
+    # =====================================
+
     rule {
 
       host = var.ingress_host
@@ -36,8 +54,7 @@ resource "kubernetes_ingress_v1" "ingress" {
 
         path {
 
-          path = var.ingress_path
-
+          path      = var.ingress_path
           path_type = var.ingress_path_type
 
           backend {
@@ -47,7 +64,6 @@ resource "kubernetes_ingress_v1" "ingress" {
               name = var.service_name
 
               port {
-
                 number = 80
               }
             }

@@ -5,7 +5,16 @@ metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
 spec:
-  type: {{ .Values.service.type }}
+
+  {{- /*
+      Existing behavior preserved:
+      - If serviceSettings.enableLoadBalancer exists:
+          true  -> LoadBalancer
+          false -> ClusterIP
+      - Otherwise fall back to current service.type
+  */}}
+
+  type: {{ if hasKey .Values "serviceSettings" }}{{ if .Values.serviceSettings.enableLoadBalancer }}LoadBalancer{{ else }}ClusterIP{{ end }}{{ else }}{{ .Values.service.type }}{{ end }}
 
   selector:
     app: {{ default "employeeprofileapp" .Values.app.name }}

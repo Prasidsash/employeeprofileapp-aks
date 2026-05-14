@@ -21,10 +21,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # =====================================
 
   role_based_access_control_enabled = true
-
-  azure_policy_enabled = true
-
-  local_account_disabled = false
+  azure_policy_enabled              = true
+  local_account_disabled            = false
 
   # =====================================
   # Default System Node Pool
@@ -80,7 +78,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # Monitoring Integration
+  # OMS / Log Analytics
   # =====================================
 
   dynamic "oms_agent" {

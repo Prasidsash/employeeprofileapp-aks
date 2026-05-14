@@ -27,10 +27,8 @@ locals {
 
 resource "azurerm_key_vault" "kv" {
 
-  name = local.key_vault_name
-
-  location = var.location
-
+  name                = local.key_vault_name
+  location            = var.location
   resource_group_name = var.resource_group_name
 
   tenant_id = data.azurerm_client_config.current.tenant_id
@@ -38,52 +36,46 @@ resource "azurerm_key_vault" "kv" {
   sku_name = "standard"
 
   soft_delete_retention_days = 7
+  purge_protection_enabled   = false
 
-  purge_protection_enabled = false
+  rbac_authorization_enabled = true
 
   tags = {
 
     environment = var.environment
-
-    project = "employeeprofileapp"
-
-    managed_by = "terraform"
+    project     = "employeeprofileapp"
+    managed_by  = "terraform"
   }
 }
 
 # =====================================
-# Access Policy
+# RBAC FOR KEY VAULT
 # =====================================
 
-resource "azurerm_key_vault_access_policy" "current_user" {
+resource "azurerm_role_assignment" "kv_admin" {
 
-  key_vault_id = azurerm_key_vault.kv.id
+  scope = azurerm_key_vault.kv.id
 
-  tenant_id = data.azurerm_client_config.current.tenant_id
+  role_definition_name = "Key Vault Administrator"
 
-  object_id = data.azurerm_client_config.current.object_id
-
-  secret_permissions = [
-    "Get",
-    "List",
-    "Set",
-    "Delete"
-  ]
+  principal_id = data.azurerm_client_config.current.object_id
 }
 
 # =====================================
-# Sample Secret
+# Optional Sample Secret
+# Lab-safe behavior
 # =====================================
 
 resource "azurerm_key_vault_secret" "app_secret" {
 
-  name = "employee-db-connection"
+  count = 0
 
+  name  = "employee-db-connection"
   value = "sample-secret-value"
 
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
-    azurerm_key_vault_access_policy.current_user
+    azurerm_role_assignment.kv_admin
   ]
 }

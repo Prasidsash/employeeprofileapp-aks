@@ -1,6 +1,14 @@
+# =====================================
+# NAMESPACE
+# =====================================
+
 variable "namespace_name" {
   type = string
 }
+
+# =====================================
+# INGRESS
+# =====================================
 
 variable "ingress_name" {
   type = string
@@ -28,12 +36,24 @@ variable "service_name" {
 
 variable "enable_tls" {
 
-  type = bool
-
+  type    = bool
   default = false
 }
 
 variable "tls_secret_name" {
+
+  type    = string
+  default = null
+}
+
+# =====================================
+# OPTIONAL CERT-MANAGER SUPPORT
+# Existing deployments unaffected
+# =====================================
+
+variable "cluster_issuer" {
+
+  description = "Optional cert-manager ClusterIssuer"
 
   type = string
 

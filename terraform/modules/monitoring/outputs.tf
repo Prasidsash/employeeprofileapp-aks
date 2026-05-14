@@ -1,3 +1,7 @@
+# =====================================
+# LOG ANALYTICS
+# =====================================
+
 output "log_analytics_workspace_id" {
 
   description = "Log Analytics Workspace ID"
@@ -16,7 +20,7 @@ output "log_analytics_workspace_name" {
 # MANAGED PROMETHEUS
 # =====================================
 
-output "azure_monitor_workspace_id" {
+output "monitor_workspace_id" {
 
   description = "Azure Monitor Workspace ID"
 
