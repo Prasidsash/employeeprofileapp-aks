@@ -3,13 +3,9 @@ data "azurerm_client_config" "current" {}
 resource "azurerm_kubernetes_cluster" "aks" {
 
   name                = var.cluster_name
-
   location            = var.location
-
   resource_group_name = var.resource_group_name
-
   dns_prefix          = "${var.environment}-aks"
-
   kubernetes_version  = var.kubernetes_version
 
   # =====================================
@@ -94,6 +90,22 @@ resource "azurerm_kubernetes_cluster" "aks" {
     content {
 
       log_analytics_workspace_id = var.log_analytics_workspace_id
+    }
+  }
+
+  # =====================================
+  # Managed Prometheus
+  # =====================================
+
+  dynamic "monitor_metrics" {
+
+    for_each = var.azure_monitor_workspace_id != null ? [1] : []
+
+    content {
+
+      annotations_allowed = null
+
+      labels_allowed = null
     }
   }
 

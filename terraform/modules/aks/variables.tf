@@ -42,6 +42,23 @@ variable "log_analytics_workspace_id" {
   type = string
 }
 
+# =====================================
+# Managed Prometheus
+# =====================================
+
+variable "azure_monitor_workspace_id" {
+
+  description = "Azure Monitor Workspace ID"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# Node Autoscaling
+# =====================================
+
 variable "enable_node_autoscaling" {
   type = bool
 }

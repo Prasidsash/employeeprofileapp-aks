@@ -7,7 +7,7 @@ resource_group_name = "employeeprofileapp-dev-rg"
 location            = "Central India"
 
 # =====================================
-# NETWORK INFRASTRUCTURE
+# NETWORK
 # =====================================
 
 vnet_name = "employeeprofileapp-dev-vnet"
@@ -26,14 +26,22 @@ aks_subnet_prefixes = [
 # AKS CLUSTER
 # =====================================
 
-cluster_name        = "employeeprofileapp-dev-aks"
-kubernetes_version  = "1.34.6"
+cluster_name       = "employeeprofileapp-dev-aks"
+kubernetes_version = "1.34.6"
 
 system_node_count   = 1
 system_node_vm_size = "Standard_D2s_v3"
 
-service_cidr        = "172.16.0.0/16"
-dns_service_ip      = "172.16.0.10"
+# =====================================
+# AKS NETWORKING
+# =====================================
+
+service_cidr   = "172.16.0.0/16"
+dns_service_ip = "172.16.0.10"
+
+# =====================================
+# AKS NODE AUTOSCALING
+# =====================================
 
 enable_node_autoscaling = false
 
@@ -47,6 +55,9 @@ system_node_max_count = 2
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
 log_analytics_sku            = "PerGB2018"
 log_retention_in_days        = 30
+
+enable_alerts             = false
+enable_managed_prometheus = true
 
 # =====================================
 # KUBERNETES NAMESPACE
@@ -151,24 +162,22 @@ tls_secret_name = null
 release_name = "employeeprofileapp-dev"
 
 # =====================================
-# PLATFORM FEATURE TOGGLES
+# PLATFORM FEATURES
 # =====================================
 
-enable_alerts               = false
-enable_managed_prometheus   = false
-enable_hpa                  = false
-enable_loadbalancer         = false
+enable_hpa          = false
+enable_loadbalancer = false
 
 # =====================================
 # MODULE TOGGLES
-# Core infrastructure (normally leave enabled)
+# Keep enabled for core platform
 # =====================================
 
-enable_aks         = true
-enable_network     = true
-enable_monitoring  = true
-enable_namespace   = true
-enable_rbac        = true
-enable_governance  = true
-enable_secret      = true
-enable_ingress     = true
+enable_aks        = true
+enable_network    = true
+enable_monitoring = true
+enable_namespace  = true
+enable_rbac       = true
+enable_governance = true
+enable_secret     = true
+enable_ingress    = true

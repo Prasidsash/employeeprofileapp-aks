@@ -80,19 +80,27 @@ module "aks" {
 
   source = "../../modules/aks"
 
-  resource_group_name        = azurerm_resource_group.main.name
-  location                   = azurerm_resource_group.main.location
-  cluster_name               = var.cluster_name
-  kubernetes_version         = var.kubernetes_version
-  system_node_count          = var.system_node_count
-  system_node_vm_size        = var.system_node_vm_size
-  system_node_min_count      = var.system_node_min_count
-  system_node_max_count      = var.system_node_max_count
-  enable_node_autoscaling    = var.enable_node_autoscaling
-  subnet_id                  = module.network.subnet_id
-  service_cidr               = var.service_cidr
-  dns_service_ip             = var.dns_service_ip
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = azurerm_resource_group.main.location
+  cluster_name            = var.cluster_name
+  kubernetes_version      = var.kubernetes_version
+  system_node_count       = var.system_node_count
+  system_node_vm_size     = var.system_node_vm_size
+  system_node_min_count   = var.system_node_min_count
+  system_node_max_count   = var.system_node_max_count
+  enable_node_autoscaling = var.enable_node_autoscaling
+
+  subnet_id      = module.network.subnet_id
+  service_cidr   = var.service_cidr
+  dns_service_ip = var.dns_service_ip
+
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+
+  # =====================================
+  # Managed Prometheus Integration
+  # =====================================
+
+  azure_monitor_workspace_id = module.monitoring.azure_monitor_workspace_id
 
   environment = var.environment
 

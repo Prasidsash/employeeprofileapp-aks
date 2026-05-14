@@ -1,5 +1,5 @@
 # =====================================
-# Common
+# COMMON
 # =====================================
 
 variable "environment" {
@@ -15,7 +15,7 @@ variable "location" {
 }
 
 # =====================================
-# Network
+# NETWORK
 # =====================================
 
 variable "vnet_name" {
@@ -35,7 +35,51 @@ variable "aks_subnet_prefixes" {
 }
 
 # =====================================
-# Namespace
+# AKS
+# =====================================
+
+variable "cluster_name" {
+  type = string
+}
+
+variable "kubernetes_version" {
+  type = string
+}
+
+variable "system_node_count" {
+  type = number
+}
+
+variable "system_node_vm_size" {
+  type = string
+}
+
+variable "service_cidr" {
+  type = string
+}
+
+variable "dns_service_ip" {
+  type = string
+}
+
+# =====================================
+# AKS AUTOSCALING
+# =====================================
+
+variable "enable_node_autoscaling" {
+  type = bool
+}
+
+variable "system_node_min_count" {
+  type = number
+}
+
+variable "system_node_max_count" {
+  type = number
+}
+
+# =====================================
+# NAMESPACE
 # =====================================
 
 variable "namespace_name" {
@@ -47,7 +91,7 @@ variable "namespace_labels" {
 }
 
 # =====================================
-# Governance
+# GOVERNANCE
 # =====================================
 
 variable "quota_limits" {
@@ -91,15 +135,22 @@ variable "allowed_verbs" {
 }
 
 # =====================================
-# Secret
+# SECRET
 # =====================================
 
 variable "secret_name" {
   type = string
 }
 
+variable "secret_data" {
+
+  type      = map(string)
+  sensitive = true
+  default   = {}
+}
+
 # =====================================
-# Ingress
+# INGRESS
 # =====================================
 
 variable "ingress_name" {
@@ -118,8 +169,34 @@ variable "ingress_path_type" {
   type = string
 }
 
+variable "service_name" {
+  type = string
+}
+
 # =====================================
-# Helm
+# TLS / HTTPS
+# =====================================
+
+variable "enable_tls" {
+
+  description = "Enable HTTPS ingress"
+
+  type = bool
+
+  default = false
+}
+
+variable "tls_secret_name" {
+
+  description = "TLS Secret"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# HELM
 # =====================================
 
 variable "release_name" {
@@ -127,7 +204,7 @@ variable "release_name" {
 }
 
 # =====================================
-# Monitoring
+# MONITORING
 # =====================================
 
 variable "log_analytics_workspace_name" {
@@ -142,36 +219,26 @@ variable "log_retention_in_days" {
   type = number
 }
 
-# =====================================
-# AKS
-# =====================================
+variable "enable_alerts" {
 
-variable "cluster_name" {
-  type = string
+  description = "Enable Azure Monitor Alerts"
+
+  type = bool
+
+  default = false
 }
 
-variable "kubernetes_version" {
-  type = string
-}
+variable "enable_managed_prometheus" {
 
-variable "system_node_count" {
-  type = number
-}
+  description = "Enable Azure Managed Prometheus and Grafana"
 
-variable "system_node_vm_size" {
-  type = string
-}
+  type = bool
 
-variable "service_cidr" {
-  type = string
-}
-
-variable "dns_service_ip" {
-  type = string
+  default = false
 }
 
 # =====================================
-# Module Toggles
+# FEATURE TOGGLES
 # =====================================
 
 variable "enable_network" {
@@ -206,87 +273,20 @@ variable "enable_monitoring" {
   type = bool
 }
 
-variable "service_name" {
-  type = string
-}
-
-variable "secret_data" {
-
-  type = map(string)
-
-  sensitive = true
-
-  default = {}
-}
-
-variable "enable_node_autoscaling" {
-  type = bool
-}
-
-variable "system_node_min_count" {
-  type = number
-}
-
-variable "system_node_max_count" {
-  type = number
-}
-
 variable "enable_hpa" {
+
   description = "Enable Horizontal Pod Autoscaler"
-  type        = bool
-  default     = false
+
+  type = bool
+
+  default = false
 }
 
 variable "enable_loadbalancer" {
-  description = "Enable LoadBalancer service"
-  type        = bool
-  default     = true
-}
 
-# =====================================
-# TLS / HTTPS Ingress
-# =====================================
-
-variable "enable_tls" {
-
-  description = "Enable HTTPS ingress"
+  description = "Enable LoadBalancer"
 
   type = bool
 
-  default = false
-}
-
-variable "tls_secret_name" {
-
-  description = "TLS secret for ingress"
-
-  type = string
-
-  default = null
-}
-
-# =====================================
-# AZURE MONITOR ALERTS
-# =====================================
-
-variable "enable_alerts" {
-
-  description = "Enable Azure Monitor alerts"
-
-  type = bool
-
-  default = false
-}
-
-# =====================================
-# MANAGED PROMETHEUS / GRAFANA
-# =====================================
-
-variable "enable_managed_prometheus" {
-
-  description = "Enable Azure Managed Prometheus and Grafana"
-
-  type = bool
-
-  default = false
+  default = true
 }

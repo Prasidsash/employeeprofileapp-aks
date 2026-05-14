@@ -10,6 +10,10 @@ variable "resource_group_name" {
   type = string
 }
 
+# =====================================
+# LOG ANALYTICS
+# =====================================
+
 variable "log_analytics_workspace_name" {
   type = string
 }
