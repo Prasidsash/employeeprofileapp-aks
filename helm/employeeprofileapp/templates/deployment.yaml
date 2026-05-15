@@ -1,13 +1,18 @@
 apiVersion: apps/v1
+
 kind: Deployment
 
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
+  labels:
+    app: {{ default .Chart.Name .Values.app.name }}
+
   annotations:
     checksum/config: {{ .Values.app.name | sha256sum }}
 
 spec:
+
   replicas: {{ .Values.replicaCount }}
 
   strategy:
@@ -57,54 +62,61 @@ spec:
 
       containers:
 
-      - name: {{ default .Chart.Name .Values.app.name }}
+        - name: {{ default .Chart.Name .Values.app.name }}
 
-        image: "{{ required "image.repository is required" .Values.image.repository }}:{{ default "latest" .Values.image.tag }}"
+          image: "{{ required "image.repository is required" .Values.image.repository }}:{{ default "latest" .Values.image.tag }}"
 
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
 
-        {{- if .Values.securityContext }}
-        securityContext:
-{{ toYaml .Values.securityContext | indent 10 }}
-        {{- end }}
+          {{- if .Values.securityContext }}
+          securityContext:
+{{ toYaml .Values.securityContext | indent 12 }}
+          {{- end }}
 
-        ports:
-        - containerPort: {{ .Values.service.targetPort }}
+          ports:
 
-        {{- if .Values.env }}
-        env:
-        - name: ASPNETCORE_ENVIRONMENT
-          value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
-        {{- end }}
+            - containerPort: {{ .Values.service.targetPort }}
 
-        {{- if and .Values.readinessProbe .Values.readinessProbe.enabled }}
-        readinessProbe:
+          {{- if .Values.env }}
+          env:
 
-          httpGet:
-            path: {{ .Values.readinessProbe.path }}
-            port: {{ .Values.readinessProbe.port }}
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
 
-          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-        {{- end }}
+          {{- end }}
 
-        {{- if and .Values.livenessProbe .Values.livenessProbe.enabled }}
-        livenessProbe:
+          {{- if and .Values.readinessProbe .Values.readinessProbe.enabled }}
+          readinessProbe:
 
-          httpGet:
-            path: {{ .Values.livenessProbe.path }}
-            port: {{ .Values.livenessProbe.port }}
+            httpGet:
+              path: {{ .Values.readinessProbe.path }}
+              port: {{ .Values.readinessProbe.port }}
 
-          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-        {{- end }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
 
-        resources:
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
 
-          requests:
-            cpu: {{ .Values.resources.requests.cpu }}
-            memory: {{ .Values.resources.requests.memory }}
+          {{- end }}
 
-          limits:
-            cpu: {{ .Values.resources.limits.cpu }}
-            memory: {{ .Values.resources.limits.memory }}
+          {{- if and .Values.livenessProbe .Values.livenessProbe.enabled }}
+          livenessProbe:
+
+            httpGet:
+              path: {{ .Values.livenessProbe.path }}
+              port: {{ .Values.livenessProbe.port }}
+
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+
+          {{- end }}
+
+          resources:
+
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}

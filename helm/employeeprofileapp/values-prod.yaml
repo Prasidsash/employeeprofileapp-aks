@@ -1,22 +1,67 @@
+# =====================================
+# REPLICAS
+# =====================================
+
 replicaCount: 1
+
+# =====================================
+# APPLICATION
+# =====================================
 
 app:
   name: employeeprofileapp-prod
+
+# =====================================
+# IMAGE
+# =====================================
 
 image:
   repository: prasidsash/employeeprofileapp-aks
   tag: v1
   pullPolicy: Always
 
+# =====================================
+# SERVICE
+# =====================================
+
 service:
+
+  enabled: true
+
   type: LoadBalancer
+
   port: 80
+
   targetPort: 8080
+
+  annotations: {}
+
+  externalTrafficPolicy: ""
+
+  sessionAffinity: ""
+
+  loadBalancerIP: ""
+
+# =====================================
+# OPTIONAL SERVICE SETTINGS
+# =====================================
+
+serviceSettings:
+  enableLoadBalancer: true
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
 
 env:
   ASPNETCORE_ENVIRONMENT: Production
 
+# =====================================
+# RESOURCE SETTINGS
+# =====================================
+
 resources:
+
   requests:
     cpu: "100m"
     memory: "128Mi"
@@ -25,15 +70,120 @@ resources:
     cpu: "200m"
     memory: "256Mi"
 
+# =====================================
+# INGRESS
+# =====================================
+
 ingress:
   enabled: false
+
   className: ""
+
   host: ""
+
   path: /
+
   pathType: Prefix
+
+  annotations: {}
+
+  tls:
+    enabled: false
+    secretName: ""
+
+# =====================================
+# HPA
+# =====================================
 
 hpa:
   enabled: false
+
   minReplicas: 2
+
   maxReplicas: 10
+
   averageUtilization: 70
+
+  memoryAverageUtilization: null
+
+  stabilizationWindowSeconds: 300
+
+# =====================================
+# NAMESPACE
+# =====================================
+
+namespace: employeeprofileapp-prod
+
+# =====================================
+# IMAGE PULL SECRETS
+# =====================================
+
+imagePullSecrets: []
+
+# =====================================
+# POD ANNOTATIONS
+# =====================================
+
+podAnnotations: {}
+
+# =====================================
+# CONFIGMAP ANNOTATIONS
+# =====================================
+
+configMapAnnotations: {}
+
+# =====================================
+# OPTIONAL EXTRA CONFIGURATION
+# =====================================
+
+extraConfig: {}
+
+# =====================================
+# NODE SELECTOR
+# =====================================
+
+nodeSelector: {}
+
+# =====================================
+# TOLERATIONS
+# =====================================
+
+tolerations: []
+
+# =====================================
+# AFFINITY
+# =====================================
+
+affinity: {}
+
+# =====================================
+# SECURITY CONTEXT
+# =====================================
+
+securityContext: {}
+
+# =====================================
+# PROBES
+# =====================================
+
+readinessProbe:
+  enabled: false
+
+  path: /
+
+  port: 8080
+
+  initialDelaySeconds: 10
+
+  periodSeconds: 10
+
+livenessProbe:
+  enabled: false
+
+  path: /
+
+  port: 8080
+
+  initialDelaySeconds: 15
+
+  periodSeconds: 20

@@ -1,10 +1,14 @@
 {{- if and .Values.ingress .Values.ingress.enabled }}
 
 apiVersion: networking.k8s.io/v1
+
 kind: Ingress
 
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}-ingress
+
+  labels:
+    app: {{ default "employeeprofileapp" .Values.app.name }}
 
   {{- if .Values.ingress.annotations }}
   annotations:
@@ -17,30 +21,32 @@ spec:
 
   {{- if and .Values.ingress.tls .Values.ingress.tls.enabled }}
   tls:
-  - hosts:
-    - {{ .Values.ingress.host }}
 
-    secretName: {{ .Values.ingress.tls.secretName }}
+    - hosts:
+        - {{ .Values.ingress.host }}
+
+      secretName: {{ .Values.ingress.tls.secretName }}
+
   {{- end }}
 
   rules:
 
-  - host: {{ .Values.ingress.host }}
+    - host: {{ .Values.ingress.host }}
 
-    http:
+      http:
 
-      paths:
+        paths:
 
-      - path: {{ .Values.ingress.path }}
+          - path: {{ .Values.ingress.path }}
 
-        pathType: {{ .Values.ingress.pathType }}
+            pathType: {{ .Values.ingress.pathType }}
 
-        backend:
+            backend:
 
-          service:
-            name: {{ default "employeeprofileapp" .Values.app.name }}
+              service:
+                name: {{ default "employeeprofileapp" .Values.app.name }}
 
-            port:
-              number: {{ .Values.service.port }}
+                port:
+                  number: {{ .Values.service.port }}
 
 {{- end }}

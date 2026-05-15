@@ -1,19 +1,26 @@
 {{- if and .Values.hpa .Values.hpa.enabled }}
 
 apiVersion: autoscaling/v2
+
 kind: HorizontalPodAutoscaler
 
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}-hpa
 
+  labels:
+    app: {{ default "employeeprofileapp" .Values.app.name }}
+
 spec:
 
   minReplicas: {{ .Values.hpa.minReplicas }}
+
   maxReplicas: {{ .Values.hpa.maxReplicas }}
 
   scaleTargetRef:
     apiVersion: apps/v1
+
     kind: Deployment
+
     name: {{ default "employeeprofileapp" .Values.app.name }}
 
   metrics:
@@ -29,6 +36,7 @@ spec:
 
         target:
           type: Utilization
+
           averageUtilization: {{ .Values.hpa.averageUtilization }}
 
     # =====================================
@@ -44,6 +52,7 @@ spec:
 
         target:
           type: Utilization
+
           averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
 
     {{- end }}
@@ -60,9 +69,11 @@ spec:
 
       policies:
 
-      - type: Percent
-        value: 100
-        periodSeconds: 60
+        - type: Percent
+
+          value: 100
+
+          periodSeconds: 60
 
     scaleDown:
 
@@ -70,8 +81,10 @@ spec:
 
       policies:
 
-      - type: Percent
-        value: 50
-        periodSeconds: 60
+        - type: Percent
+
+          value: 50
+
+          periodSeconds: 60
 
 {{- end }}

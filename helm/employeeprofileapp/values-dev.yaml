@@ -91,6 +91,7 @@ ingress:
   host: ""
 
   path: /
+
   pathType: Prefix
 
   annotations: {}
@@ -101,6 +102,7 @@ ingress:
 
   tls:
     enabled: false
+
     secretName: ""
 
 # =====================================
@@ -111,6 +113,7 @@ hpa:
   enabled: false
 
   minReplicas: 2
+
   maxReplicas: 10
 
   averageUtilization: 70
@@ -189,16 +192,20 @@ readinessProbe:
   enabled: false
 
   path: /
+
   port: 8080
 
   initialDelaySeconds: 10
+
   periodSeconds: 10
 
 livenessProbe:
   enabled: false
 
   path: /
+
   port: 8080
 
   initialDelaySeconds: 15
+
   periodSeconds: 20

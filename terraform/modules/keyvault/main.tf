@@ -10,6 +10,10 @@ data "azurerm_client_config" "current" {}
 
 locals {
 
+  # =====================================
+  # CLEAN RESOURCE GROUP NAME
+  # =====================================
+
   key_vault_base_name = lower(
     replace(
       replace(var.resource_group_name, "-rg", ""),
@@ -19,10 +23,21 @@ locals {
   )
 
   # =====================================
+  # ENVIRONMENT-SAFE KEY VAULT NAME
+  # PRESERVES EXISTING OVERRIDE LOGIC
+  # =====================================
+
+  generated_key_vault_name = substr(
+    "${local.key_vault_base_name}-kv",
+    0,
+    24
+  )
+
+  # =====================================
   # OPTIONAL CUSTOM NAME OVERRIDE
   # =====================================
 
-  key_vault_name = var.key_vault_name != null ? var.key_vault_name : "${substr(local.key_vault_base_name,0,18)}-kv"
+  key_vault_name = var.key_vault_name != null ? var.key_vault_name : local.generated_key_vault_name
 }
 
 # =====================================
