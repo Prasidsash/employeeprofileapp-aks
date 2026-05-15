@@ -59,7 +59,7 @@ system_node_max_count = 2
 # Preserve Existing Runtime Behavior
 # =====================================
 
-enable_workload_identity = true
+enable_workload_identity = false
 
 enable_oidc_issuer = true
 
@@ -79,6 +79,7 @@ aks_additional_tags = {}
 
 # =====================================
 # MONITORING
+# LOW-COST SINGLE NODE OPTIMIZATION
 # =====================================
 
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
@@ -89,7 +90,7 @@ log_retention_in_days = 30
 
 enable_alerts = false
 
-enable_managed_prometheus = true
+enable_managed_prometheus = false
 
 # =====================================
 # OPTIONAL MONITORING SETTINGS
@@ -122,6 +123,7 @@ namespace_annotations = {}
 
 # =====================================
 # GOVERNANCE
+# LOW-COST DEV SAFE LIMITS
 # =====================================
 
 quota_limits = {
@@ -146,23 +148,23 @@ limit_max = {
 
 limit_min = {
 
-  cpu = "100m"
+  cpu = "50m"
 
-  memory = "128Mi"
+  memory = "64Mi"
 }
 
 limit_default = {
 
-  cpu = "500m"
+  cpu = "150m"
 
-  memory = "512Mi"
+  memory = "256Mi"
 }
 
 limit_default_request = {
 
-  cpu = "250m"
+  cpu = "50m"
 
-  memory = "256Mi"
+  memory = "64Mi"
 }
 
 # =====================================
@@ -236,11 +238,6 @@ secret_additional_annotations = {}
 # KEY VAULT RBAC STABILIZATION
 # =====================================
 
-# IMPORTANT:
-# Use a stable Object ID.
-# Recommended:
-# Azure DevOps Service Principal Object ID
-
 keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 
 # =====================================
@@ -303,7 +300,6 @@ enable_loadbalancer = false
 
 # =====================================
 # MODULE TOGGLES
-# Keep enabled for core platform
 # =====================================
 
 enable_aks = true

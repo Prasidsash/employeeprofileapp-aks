@@ -25,9 +25,21 @@ image:
 # =====================================
 
 service:
+
+  # =====================================
+  # REQUIRED FOR SERVICE TEMPLATE RENDERING
+  # =====================================
+
+  enabled: true
+
+  # =====================================
+  # PUBLIC AKS LOAD BALANCER
+  # =====================================
+
   type: LoadBalancer
 
   port: 80
+
   targetPort: 8080
 
   annotations: {}
@@ -54,17 +66,18 @@ env:
 
 # =====================================
 # RESOURCE SETTINGS
+# LOW-COST SINGLE NODE OPTIMIZATION
 # =====================================
 
 resources:
 
   requests:
-    cpu: "100m"
-    memory: "128Mi"
+    cpu: "50m"
+    memory: "64Mi"
 
   limits:
-    cpu: "200m"
-    memory: "256Mi"
+    cpu: "100m"
+    memory: "128Mi"
 
 # =====================================
 # INGRESS

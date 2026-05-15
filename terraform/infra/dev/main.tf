@@ -135,23 +135,30 @@ module "aks" {
 
   enable_node_autoscaling = var.enable_node_autoscaling
 
+  # =====================================
+  # AKS NETWORKING
+  # =====================================
+
   subnet_id = module.network.subnet_id
 
   service_cidr = var.service_cidr
 
   dns_service_ip = var.dns_service_ip
 
-  log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+  # =====================================
+  # MONITORING
+  # =====================================
 
-  # =====================================
-  # Managed Prometheus Integration
-  # Preserve Existing Monitoring Behavior
-  # =====================================
+  log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
 
   azure_monitor_workspace_id = try(
     module.monitoring.monitor_workspace_id,
     null
   )
+
+  # =====================================
+  # ENVIRONMENT
+  # =====================================
 
   environment = var.environment
 
