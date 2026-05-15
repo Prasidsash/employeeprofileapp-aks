@@ -18,32 +18,87 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.13"
     }
+
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.11"
+    }
   }
 }
 
+# =====================================
+# AZURE PROVIDER
+# =====================================
+
 provider "azurerm" {
-  features {}
+
+  features {
+
+    key_vault {
+
+      purge_soft_delete_on_destroy = true
+    }
+  }
 }
 
 # =====================================
-# Kubernetes Provider
-# Uses local kubeconfig + kubelogin
+# KUBERNETES PROVIDER
+# Stable AKS Provider Authentication
 # =====================================
 
 provider "kubernetes" {
 
-  config_path = "~/.kube/config"
+  host = module.aks.host
+
+  client_certificate = base64decode(
+    module.aks.client_certificate
+  )
+
+  client_key = base64decode(
+    module.aks.client_key
+  )
+
+  cluster_ca_certificate = base64decode(
+    module.aks.cluster_ca_certificate
+  )
 }
 
 # =====================================
-# Helm Provider
-# Uses local kubeconfig + kubelogin
+# HELM PROVIDER
+# Stable AKS Provider Authentication
 # =====================================
 
 provider "helm" {
 
   kubernetes {
 
-    config_path = "~/.kube/config"
+    host = module.aks.host
+
+    client_certificate = base64decode(
+      module.aks.client_certificate
+    )
+
+    client_key = base64decode(
+      module.aks.client_key
+    )
+
+    cluster_ca_certificate = base64decode(
+      module.aks.cluster_ca_certificate
+    )
   }
 }
+
+# =====================================
+# OPTIONAL FUTURE PROVIDER NOTES
+# =====================================
+
+# Future enterprise enhancements may include:
+#
+# - Workload Identity authentication
+# - OIDC federation
+# - Terraform Cloud integration
+# - Remote execution runners
+# - Multi-environment provider aliasing
+#
+# Current provider model intentionally
+# preserves stable AKS + Helm behavior.

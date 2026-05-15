@@ -10,198 +10,304 @@ resources:
         include:
         - main
 
-parameters:
-- name: environment
-  type: string
-  default: dev
-
 pool:
   vmImage: ubuntu-latest
 
-variables:
-- group: employeeprofileapp-${{ parameters.environment }}-vars
+# =====================================
+# STAGES
+# =====================================
 
 stages:
 
-- stage: Deploy
-  displayName: Deploy To AKS
+# =====================================
+# DEV DEPLOYMENT
+# =====================================
+
+- stage: DEV
+  displayName: Deploy DEV
+
+  variables:
+  - group: employeeprofileapp-dev-vars
 
   jobs:
 
-  - job: HelmDeploy
-    displayName: Helm Deployment
+  - deployment: DeployDEV
+    displayName: Deploy To DEV AKS
 
-    steps:
+    environment: DEV
 
-    - checkout: self
+    strategy:
+      runOnce:
 
-    # =====================================
-    # TOOLING VALIDATION
-    # =====================================
+        deploy:
 
-    - script: |
+          steps:
 
-        echo "=================================="
-        echo "Kubectl Version"
-        echo "=================================="
+          - checkout: self
 
-        kubectl version --client
+          # =====================================
+          # TOOLING VALIDATION
+          # =====================================
 
-        echo "=================================="
-        echo "Helm Version"
-        echo "=================================="
+          - script: |
 
-        helm version
+              echo "=================================="
+              echo "Kubectl Version"
+              echo "=================================="
 
-      displayName: Validate Tooling
+              kubectl version --client
 
-    # =====================================
-    # WAIT FOR AKS READY
-    # =====================================
+              echo "=================================="
+              echo "Helm Version"
+              echo "=================================="
 
-    - task: AzureCLI@2
-      displayName: Wait For AKS Ready
+              helm version
 
-      inputs:
-        azureSubscription: $(azureServiceConnection)
+            displayName: Validate Tooling
 
-        scriptType: bash
+          # =====================================
+          # WAIT FOR AKS READY
+          # =====================================
 
-        scriptLocation: inlineScript
+          - task: AzureCLI@2
+            displayName: Wait For AKS Ready
 
-        inlineScript: |
+            inputs:
+              azureSubscription: $(azureServiceConnection)
 
-          az aks wait \
-            --resource-group $(aksResourceGroup) \
-            --name $(aksClusterName) \
-            --created
+              scriptType: bash
 
-    # =====================================
-    # GET AKS CREDENTIALS
-    # =====================================
+              scriptLocation: inlineScript
 
-    - task: AzureCLI@2
-      displayName: Get AKS Credentials
+              inlineScript: |
 
-      inputs:
-        azureSubscription: $(azureServiceConnection)
+                az aks wait \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --created
 
-        scriptType: bash
+          # =====================================
+          # GET AKS CREDENTIALS
+          # =====================================
 
-        scriptLocation: inlineScript
+          - task: AzureCLI@2
+            displayName: Get AKS Credentials
 
-        inlineScript: |
+            inputs:
+              azureSubscription: $(azureServiceConnection)
 
-          az aks get-credentials \
-            --resource-group $(aksResourceGroup) \
-            --name $(aksClusterName) \
-            --overwrite-existing
+              scriptType: bash
 
-    # =====================================
-    # VALIDATE CLUSTER CONNECTIVITY
-    # =====================================
+              scriptLocation: inlineScript
 
-    - script: |
+              inlineScript: |
 
-        kubectl config current-context
+                az aks get-credentials \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --overwrite-existing
 
-        kubectl get nodes
+          # =====================================
+          # VALIDATE CLUSTER CONNECTIVITY
+          # =====================================
 
-        kubectl get ns
+          - script: |
 
-      displayName: Validate AKS Connectivity
+              kubectl config current-context
 
-    # =====================================
-    # VALIDATE NAMESPACE
-    # =====================================
+              kubectl get nodes
 
-    - script: |
+              kubectl get ns
 
-        kubectl get namespace employeeprofileapp-${{ parameters.environment }}
+            displayName: Validate AKS Connectivity
 
-      displayName: Validate Namespace
+          # =====================================
+          # VALIDATE NAMESPACE
+          # =====================================
 
-    # =====================================
-    # HELM LINT VALIDATION
-    # =====================================
+          - script: |
 
-    - script: |
+              kubectl get namespace employeeprofileapp-dev
 
-        helm lint helm/employeeprofileapp
+            displayName: Validate Namespace
 
-      displayName: Helm Lint Validation
+          # =====================================
+          # HELM LINT VALIDATION
+          # =====================================
 
-    # =====================================
-    # HELM DEPLOYMENT
-    # =====================================
+          - script: |
 
-    - task: HelmDeploy@0
-      displayName: Helm Upgrade Install
+              helm lint helm/employeeprofileapp
 
-      inputs:
-        connectionType: None
+            displayName: Helm Lint Validation
 
-        command: upgrade
+          # =====================================
+          # HELM DEPLOYMENT
+          # =====================================
 
-        chartType: FilePath
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade Install
 
-        chartPath: helm/employeeprofileapp
+            inputs:
+              connectionType: None
 
-        releaseName: employeeprofileapp-${{ parameters.environment }}
+              command: upgrade
 
-        namespace: employeeprofileapp-${{ parameters.environment }}
+              chartType: FilePath
 
-        arguments: >
-          --install
-          --wait
-          --timeout 10m
-          --atomic
-          --debug
-          -f helm/employeeprofileapp/values-${{ parameters.environment }}.yaml
-          --set image.repository=$(imageRepository)
-          --set image.tag=$(resources.pipeline.appci.runName)
+              chartPath: helm/employeeprofileapp
 
-    # =====================================
-    # DEPLOYMENT VALIDATION
-    # =====================================
+              releaseName: employeeprofileapp-dev
 
-    - script: |
+              namespace: employeeprofileapp-dev
 
-        kubectl get pods -n employeeprofileapp-${{ parameters.environment }}
+              arguments: >
+                --install
+                --wait
+                --timeout 10m
+                --atomic
+                --debug
+                -f helm/employeeprofileapp/values-dev.yaml
+                --set image.repository=$(imageRepository)
+                --set image.tag=$(resources.pipeline.appci.runName)
 
-        kubectl get svc -n employeeprofileapp-${{ parameters.environment }}
+          # =====================================
+          # DEPLOYMENT VALIDATION
+          # =====================================
 
-        kubectl rollout status deployment/employeeprofileapp-${{ parameters.environment }} \
-          -n employeeprofileapp-${{ parameters.environment }} \
-          --timeout=300s
+          - script: |
 
-      displayName: Validate Deployment
+              kubectl get pods -n employeeprofileapp-dev
 
-    # =====================================
-    # OPTIONAL TROUBLESHOOTING
-    # =====================================
+              kubectl get svc -n employeeprofileapp-dev
 
-    - script: |
+              kubectl rollout status deployment/employeeprofileapp-dev \
+                -n employeeprofileapp-dev \
+                --timeout=300s
 
-        echo "=================================="
-        echo "Deployment Diagnostics"
-        echo "=================================="
+            displayName: Validate Deployment
 
-        kubectl describe deployment employeeprofileapp-${{ parameters.environment }} \
-          -n employeeprofileapp-${{ parameters.environment }} || true
+          # =====================================
+          # OPTIONAL TROUBLESHOOTING
+          # =====================================
 
-      condition: failed()
+          - script: |
 
-      displayName: Optional Deployment Diagnostics
+              echo "=================================="
+              echo "Deployment Diagnostics"
+              echo "=================================="
 
-    # =====================================
-    # OPTIONAL FUTURE ROLLBACK
-    # =====================================
+              kubectl describe deployment employeeprofileapp-dev \
+                -n employeeprofileapp-dev || true
 
-    - script: |
+            condition: failed()
 
-        echo "Future rollback placeholder"
+            displayName: Optional Deployment Diagnostics
 
-        # helm rollback employeeprofileapp-${{ parameters.environment }} 1
+          # =====================================
+          # OPTIONAL FUTURE ROLLBACK
+          # =====================================
 
-      displayName: Future Rollback Placeholder
+          - script: |
+
+              echo "Future rollback placeholder"
+
+              # helm rollback employeeprofileapp-dev 1
+
+            displayName: Future Rollback Placeholder
+
+# =====================================
+# QA DEPLOYMENT
+# =====================================
+
+- stage: QA
+  displayName: Deploy QA
+
+  dependsOn: DEV
+
+  variables:
+  - group: employeeprofileapp-qa-vars
+
+  jobs:
+
+  - deployment: DeployQA
+    displayName: Deploy To QA AKS
+
+    environment: QA
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - checkout: self
+
+          - template: templates/helm-deploy-template.yml
+            parameters:
+              environment: qa
+
+# =====================================
+# UAT DEPLOYMENT
+# =====================================
+
+- stage: UAT
+  displayName: Deploy UAT
+
+  dependsOn: QA
+
+  variables:
+  - group: employeeprofileapp-uat-vars
+
+  jobs:
+
+  - deployment: DeployUAT
+    displayName: Deploy To UAT AKS
+
+    environment: UAT
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - checkout: self
+
+          - template: templates/helm-deploy-template.yml
+            parameters:
+              environment: uat
+
+# =====================================
+# PROD DEPLOYMENT
+# =====================================
+
+- stage: PROD
+  displayName: Deploy PROD
+
+  dependsOn: UAT
+
+  variables:
+  - group: employeeprofileapp-prod-vars
+
+  jobs:
+
+  - deployment: DeployPROD
+    displayName: Deploy To PROD AKS
+
+    environment: PROD
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          - checkout: self
+
+          - template: templates/helm-deploy-template.yml
+            parameters:
+              environment: prod
