@@ -14,14 +14,10 @@ pool:
   vmImage: ubuntu-latest
 
 # =====================================
-# STAGES
+# DEV STAGE
 # =====================================
 
 stages:
-
-# =====================================
-# DEV DEPLOYMENT
-# =====================================
 
 - stage: DEV
   displayName: Deploy DEV
@@ -45,10 +41,6 @@ stages:
 
           - checkout: self
 
-          # =====================================
-          # TOOLING VALIDATION
-          # =====================================
-
           - script: |
 
               echo "=================================="
@@ -64,10 +56,6 @@ stages:
               helm version
 
             displayName: Validate Tooling
-
-          # =====================================
-          # WAIT FOR AKS READY
-          # =====================================
 
           - task: AzureCLI@2
             displayName: Wait For AKS Ready
@@ -86,10 +74,6 @@ stages:
                   --name $(aksClusterName) \
                   --created
 
-          # =====================================
-          # GET AKS CREDENTIALS
-          # =====================================
-
           - task: AzureCLI@2
             displayName: Get AKS Credentials
 
@@ -107,10 +91,6 @@ stages:
                   --name $(aksClusterName) \
                   --overwrite-existing
 
-          # =====================================
-          # VALIDATE CLUSTER CONNECTIVITY
-          # =====================================
-
           - script: |
 
               kubectl config current-context
@@ -121,29 +101,17 @@ stages:
 
             displayName: Validate AKS Connectivity
 
-          # =====================================
-          # VALIDATE NAMESPACE
-          # =====================================
-
           - script: |
 
               kubectl get namespace employeeprofileapp-dev
 
             displayName: Validate Namespace
 
-          # =====================================
-          # HELM LINT VALIDATION
-          # =====================================
-
           - script: |
 
               helm lint helm/employeeprofileapp
 
             displayName: Helm Lint Validation
-
-          # =====================================
-          # HELM DEPLOYMENT
-          # =====================================
 
           - task: HelmDeploy@0
             displayName: Helm Upgrade Install
@@ -171,10 +139,6 @@ stages:
                 --set image.repository=$(imageRepository)
                 --set image.tag=$(resources.pipeline.appci.runName)
 
-          # =====================================
-          # DEPLOYMENT VALIDATION
-          # =====================================
-
           - script: |
 
               kubectl get pods -n employeeprofileapp-dev
@@ -186,10 +150,6 @@ stages:
                 --timeout=300s
 
             displayName: Validate Deployment
-
-          # =====================================
-          # OPTIONAL TROUBLESHOOTING
-          # =====================================
 
           - script: |
 
@@ -204,20 +164,8 @@ stages:
 
             displayName: Optional Deployment Diagnostics
 
-          # =====================================
-          # OPTIONAL FUTURE ROLLBACK
-          # =====================================
-
-          - script: |
-
-              echo "Future rollback placeholder"
-
-              # helm rollback employeeprofileapp-dev 1
-
-            displayName: Future Rollback Placeholder
-
 # =====================================
-# QA DEPLOYMENT
+# QA STAGE
 # =====================================
 
 - stage: QA
@@ -244,12 +192,82 @@ stages:
 
           - checkout: self
 
-          - template: templates/helm-deploy-template.yml
-            parameters:
-              environment: qa
+          - script: |
+
+              kubectl version --client
+
+              helm version
+
+            displayName: Validate Tooling
+
+          - task: AzureCLI@2
+            displayName: Wait For AKS Ready
+
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              inlineScript: |
+
+                az aks wait \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --created
+
+          - task: AzureCLI@2
+            displayName: Get AKS Credentials
+
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              inlineScript: |
+
+                az aks get-credentials \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --overwrite-existing
+
+          - script: |
+
+              kubectl get namespace employeeprofileapp-qa
+
+            displayName: Validate Namespace
+
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade Install
+
+            inputs:
+              connectionType: None
+
+              command: upgrade
+
+              chartType: FilePath
+
+              chartPath: helm/employeeprofileapp
+
+              releaseName: employeeprofileapp-qa
+
+              namespace: employeeprofileapp-qa
+
+              arguments: >
+                --install
+                --wait
+                --timeout 10m
+                --atomic
+                --debug
+                -f helm/employeeprofileapp/values-qa.yaml
+                --set image.repository=$(imageRepository)
+                --set image.tag=$(resources.pipeline.appci.runName)
 
 # =====================================
-# UAT DEPLOYMENT
+# UAT STAGE
 # =====================================
 
 - stage: UAT
@@ -276,12 +294,51 @@ stages:
 
           - checkout: self
 
-          - template: templates/helm-deploy-template.yml
-            parameters:
-              environment: uat
+          - task: AzureCLI@2
+            displayName: Get AKS Credentials
+
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              inlineScript: |
+
+                az aks get-credentials \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --overwrite-existing
+
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade Install
+
+            inputs:
+              connectionType: None
+
+              command: upgrade
+
+              chartType: FilePath
+
+              chartPath: helm/employeeprofileapp
+
+              releaseName: employeeprofileapp-uat
+
+              namespace: employeeprofileapp-uat
+
+              arguments: >
+                --install
+                --wait
+                --timeout 10m
+                --atomic
+                --debug
+                -f helm/employeeprofileapp/values-uat.yaml
+                --set image.repository=$(imageRepository)
+                --set image.tag=$(resources.pipeline.appci.runName)
 
 # =====================================
-# PROD DEPLOYMENT
+# PROD STAGE
 # =====================================
 
 - stage: PROD
@@ -308,6 +365,45 @@ stages:
 
           - checkout: self
 
-          - template: templates/helm-deploy-template.yml
-            parameters:
-              environment: prod
+          - task: AzureCLI@2
+            displayName: Get AKS Credentials
+
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              inlineScript: |
+
+                az aks get-credentials \
+                  --resource-group $(aksResourceGroup) \
+                  --name $(aksClusterName) \
+                  --overwrite-existing
+
+          - task: HelmDeploy@0
+            displayName: Helm Upgrade Install
+
+            inputs:
+              connectionType: None
+
+              command: upgrade
+
+              chartType: FilePath
+
+              chartPath: helm/employeeprofileapp
+
+              releaseName: employeeprofileapp-prod
+
+              namespace: employeeprofileapp-prod
+
+              arguments: >
+                --install
+                --wait
+                --timeout 10m
+                --atomic
+                --debug
+                -f helm/employeeprofileapp/values-prod.yaml
+                --set image.repository=$(imageRepository)
+                --set image.tag=$(resources.pipeline.appci.runName)
