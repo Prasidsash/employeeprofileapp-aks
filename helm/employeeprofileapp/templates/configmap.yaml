@@ -4,5 +4,26 @@ kind: ConfigMap
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}-config
 
+  labels:
+    app: {{ default .Chart.Name .Values.app.name }}
+
+  {{- if .Values.configMapAnnotations }}
+  annotations:
+{{ toYaml .Values.configMapAnnotations | indent 4 }}
+  {{- end }}
+
 data:
+
+  # =====================================
+  # APPLICATION NAME
+  # =====================================
+
   APP_NAME: "{{ default "employeeprofileapp" .Values.app.name }}"
+
+  # =====================================
+  # OPTIONAL EXTRA CONFIGURATION
+  # =====================================
+
+  {{- if .Values.extraConfig }}
+{{ toYaml .Values.extraConfig | indent 2 }}
+  {{- end }}

@@ -4,6 +4,7 @@ resources:
   pipelines:
   - pipeline: appci
     source: CI
+
     trigger:
       branches:
         include:
@@ -33,6 +34,26 @@ stages:
     steps:
 
     - checkout: self
+
+    # =====================================
+    # TOOLING VALIDATION
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Kubectl Version"
+        echo "=================================="
+
+        kubectl version --client
+
+        echo "=================================="
+        echo "Helm Version"
+        echo "=================================="
+
+        helm version
+
+      displayName: Validate Tooling
 
     # =====================================
     # WAIT FOR AKS READY
@@ -91,6 +112,16 @@ stages:
       displayName: Validate AKS Connectivity
 
     # =====================================
+    # VALIDATE NAMESPACE
+    # =====================================
+
+    - script: |
+
+        kubectl get namespace employeeprofileapp-${{ parameters.environment }}
+
+      displayName: Validate Namespace
+
+    # =====================================
     # HELM LINT VALIDATION
     # =====================================
 
@@ -124,6 +155,7 @@ stages:
           --install
           --wait
           --timeout 10m
+          --atomic
           --debug
           -f helm/employeeprofileapp/values-${{ parameters.environment }}.yaml
           --set image.repository=$(imageRepository)
@@ -139,7 +171,28 @@ stages:
 
         kubectl get svc -n employeeprofileapp-${{ parameters.environment }}
 
+        kubectl rollout status deployment/employeeprofileapp-${{ parameters.environment }} \
+          -n employeeprofileapp-${{ parameters.environment }} \
+          --timeout=300s
+
       displayName: Validate Deployment
+
+    # =====================================
+    # OPTIONAL TROUBLESHOOTING
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Deployment Diagnostics"
+        echo "=================================="
+
+        kubectl describe deployment employeeprofileapp-${{ parameters.environment }} \
+          -n employeeprofileapp-${{ parameters.environment }} || true
+
+      condition: failed()
+
+      displayName: Optional Deployment Diagnostics
 
     # =====================================
     # OPTIONAL FUTURE ROLLBACK

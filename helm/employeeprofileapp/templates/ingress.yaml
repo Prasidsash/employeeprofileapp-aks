@@ -6,19 +6,37 @@ kind: Ingress
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}-ingress
 
+  {{- if .Values.ingress.annotations }}
+  annotations:
+{{ toYaml .Values.ingress.annotations | indent 4 }}
+  {{- end }}
+
 spec:
+
   ingressClassName: {{ .Values.ingress.className }}
 
+  {{- if and .Values.ingress.tls .Values.ingress.tls.enabled }}
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+
+    secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+
   rules:
+
   - host: {{ .Values.ingress.host }}
 
     http:
+
       paths:
+
       - path: {{ .Values.ingress.path }}
 
         pathType: {{ .Values.ingress.pathType }}
 
         backend:
+
           service:
             name: {{ default "employeeprofileapp" .Values.app.name }}
 

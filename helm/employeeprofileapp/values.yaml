@@ -22,8 +22,17 @@ image:
 
 service:
   type: LoadBalancer
+
   port: 80
   targetPort: 8080
+
+  annotations: {}
+
+  externalTrafficPolicy: ""
+
+  sessionAffinity: ""
+
+  loadBalancerIP: ""
 
 # =====================================
 # OPTIONAL SERVICE SETTINGS
@@ -53,10 +62,19 @@ resources:
 
 ingress:
   enabled: false
+
   className: ""
+
   host: ""
+
   path: /
   pathType: Prefix
+
+  annotations: {}
+
+  tls:
+    enabled: false
+    secretName: ""
 
 # =====================================
 # HPA
@@ -64,9 +82,15 @@ ingress:
 
 hpa:
   enabled: false
+
   minReplicas: 1
   maxReplicas: 1
+
   averageUtilization: 70
+
+  memoryAverageUtilization: null
+
+  stabilizationWindowSeconds: 300
 
 # =====================================
 # ENVIRONMENT VARIABLES
@@ -74,3 +98,61 @@ hpa:
 
 env:
   ASPNETCORE_ENVIRONMENT: Development
+
+# =====================================
+# IMAGE PULL SECRETS
+# =====================================
+
+imagePullSecrets: []
+
+# =====================================
+# POD ANNOTATIONS
+# =====================================
+
+podAnnotations: {}
+
+# =====================================
+# NODE SELECTOR
+# =====================================
+
+nodeSelector: {}
+
+# =====================================
+# TOLERATIONS
+# =====================================
+
+tolerations: []
+
+# =====================================
+# AFFINITY
+# =====================================
+
+affinity: {}
+
+# =====================================
+# SECURITY CONTEXT
+# =====================================
+
+securityContext: {}
+
+# =====================================
+# PROBES
+# =====================================
+
+readinessProbe:
+  enabled: false
+
+  path: /
+  port: 8080
+
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+livenessProbe:
+  enabled: false
+
+  path: /
+  port: 8080
+
+  initialDelaySeconds: 15
+  periodSeconds: 20

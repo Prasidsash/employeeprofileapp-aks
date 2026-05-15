@@ -33,7 +33,6 @@ spec:
 
     # =====================================
     # OPTIONAL MEMORY METRIC
-    # Only used if configured
     # =====================================
 
     {{- if .Values.hpa.memoryAverageUtilization }}
@@ -48,5 +47,31 @@ spec:
           averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
 
     {{- end }}
+
+  # =====================================
+  # OPTIONAL SCALING BEHAVIOR
+  # =====================================
+
+  behavior:
+
+    scaleUp:
+
+      stabilizationWindowSeconds: {{ .Values.hpa.stabilizationWindowSeconds | default 300 }}
+
+      policies:
+
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+
+    scaleDown:
+
+      stabilizationWindowSeconds: {{ .Values.hpa.stabilizationWindowSeconds | default 300 }}
+
+      policies:
+
+      - type: Percent
+        value: 50
+        periodSeconds: 60
 
 {{- end }}

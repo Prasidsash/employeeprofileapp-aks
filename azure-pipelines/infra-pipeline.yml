@@ -38,7 +38,7 @@ variables:
   value: employeeprofileapp-${{ parameters.environment }}-aks
 
 # =====================================
-# Optional Future Terraform Versioning
+# TERRAFORM VERSION
 # =====================================
 
 - name: terraformVersion
@@ -58,11 +58,39 @@ stages:
 
     - checkout: self
 
+    # =====================================
+    # INSTALL TERRAFORM
+    # =====================================
+
     - task: TerraformInstaller@1
       displayName: Install Terraform
 
       inputs:
         terraformVersion: $(terraformVersion)
+
+    # =====================================
+    # TOOLING VALIDATION
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Terraform Version"
+        echo "=================================="
+
+        terraform version
+
+        echo "=================================="
+        echo "Kubectl Version"
+        echo "=================================="
+
+        kubectl version --client || true
+
+      displayName: Validate Tooling
+
+    # =====================================
+    # TERRAFORM DEPLOYMENT
+    # =====================================
 
     - task: AzureCLI@2
       displayName: Terraform Apply
@@ -79,11 +107,25 @@ stages:
 
         inlineScript: |
 
+          set -e
+
+          echo "=================================="
+          echo "Azure Subscription Context"
+          echo "=================================="
+
+          az account show
+
           echo "=================================="
           echo "Terraform Initialization"
           echo "=================================="
 
           terraform init -reconfigure
+
+          echo "=================================="
+          echo "Terraform Providers"
+          echo "=================================="
+
+          terraform providers
 
           echo "=================================="
           echo "Terraform Formatting Validation"
@@ -130,7 +172,31 @@ stages:
 
           kubectl get nodes
 
+          kubectl get namespaces
+
+          echo "=================================="
+          echo "Cluster Info"
+          echo "=================================="
+
+          kubectl cluster-info
+
           # ==================================
           # Optional Future Destroy
           # ==================================
           # terraform destroy -auto-approve
+
+    # =====================================
+    # OPTIONAL FAILURE DIAGNOSTICS
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Terraform Failure Diagnostics"
+        echo "=================================="
+
+        terraform version || true
+
+      condition: failed()
+
+      displayName: Optional Failure Diagnostics

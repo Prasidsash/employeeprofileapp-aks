@@ -4,6 +4,11 @@ kind: Service
 metadata:
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
+  {{- if .Values.service.annotations }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4 }}
+  {{- end }}
+
 spec:
 
   {{- /*
@@ -16,9 +21,27 @@ spec:
 
   type: {{ if hasKey .Values "serviceSettings" }}{{ if .Values.serviceSettings.enableLoadBalancer }}LoadBalancer{{ else }}ClusterIP{{ end }}{{ else }}{{ .Values.service.type }}{{ end }}
 
+  {{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+
+  {{- if .Values.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.service.sessionAffinity }}
+  {{- end }}
+
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+
   selector:
     app: {{ default "employeeprofileapp" .Values.app.name }}
 
   ports:
-    - port: {{ .Values.service.port }}
+
+    - name: http
+
+      protocol: TCP
+
+      port: {{ .Values.service.port }}
+
       targetPort: {{ .Values.service.targetPort }}

@@ -47,7 +47,39 @@ stages:
     - checkout: self
 
     # =====================================
-    # Docker Build And Push
+    # TOOLING VALIDATION
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Docker Version"
+        echo "=================================="
+
+        docker --version
+
+      displayName: Validate Docker Tooling
+
+    # =====================================
+    # BUILD INFORMATION
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Build Information"
+        echo "=================================="
+
+        echo "Repository: $(imageRepository)"
+
+        echo "Build Number: $(Build.BuildNumber)"
+
+        echo "Source Branch: $(Build.SourceBranchName)"
+
+      displayName: Build Metadata
+
+    # =====================================
+    # DOCKER BUILD AND PUSH
     # =====================================
 
     - task: Docker@2
@@ -69,7 +101,22 @@ stages:
           latest
 
     # =====================================
-    # Optional Future Image Scan Placeholder
+    # OPTIONAL IMAGE VALIDATION
+    # =====================================
+
+    - script: |
+
+        echo "=================================="
+        echo "Docker Image Validation"
+        echo "=================================="
+
+        echo "Image successfully pushed:"
+        echo "$(imageRepository):$(Build.BuildNumber)"
+
+      displayName: Validate Docker Image
+
+    # =====================================
+    # OPTIONAL FUTURE IMAGE SCAN
     # =====================================
 
     - script: |

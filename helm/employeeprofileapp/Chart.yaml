@@ -1,6 +1,42 @@
 apiVersion: v2
+
 name: employeeprofileapp
+
 description: Employee Profile Application Helm Chart
+
 type: application
+
+# =====================================
+# CHART VERSION
+# =====================================
+
 version: 0.1.0
+
+# =====================================
+# APPLICATION VERSION
+# =====================================
+
 appVersion: "1.0"
+
+# =====================================
+# KUBERNETES COMPATIBILITY
+# =====================================
+
+kubeVersion: ">=1.28.0"
+
+# =====================================
+# OPTIONAL METADATA
+# =====================================
+
+keywords:
+  - aks
+  - kubernetes
+  - helm
+  - azure-devops
+  - employeeprofileapp
+
+maintainers:
+  - name: employeeprofileapp-team
+
+annotations:
+  category: application
