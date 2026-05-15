@@ -58,7 +58,11 @@ resource "azurerm_role_assignment" "kv_admin" {
 
   role_definition_name = "Key Vault Administrator"
 
-  principal_id = data.azurerm_client_config.current.object_id
+  # =====================================
+  # STABLE PRINCIPAL ASSIGNMENT
+  # =====================================
+
+  principal_id = var.keyvault_admin_object_id
 }
 
 # =====================================

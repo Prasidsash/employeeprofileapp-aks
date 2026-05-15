@@ -36,70 +36,69 @@ provider "azurerm" {
 
     key_vault {
 
-      # Lab-friendly behavior:
-      # Removes retained deleted vault artifacts
-      # so future destroy/recreate cycles stay clean
-
       purge_soft_delete_on_destroy = true
     }
   }
 }
 
 # =====================================
-# AKS DATA SOURCE
-# =====================================
-
-data "azurerm_kubernetes_cluster" "aks" {
-
-  name                = var.cluster_name
-  resource_group_name = var.resource_group_name
-
-  depends_on = [
-    module.aks
-  ]
-}
-
-# =====================================
 # KUBERNETES PROVIDER
+# Stable AKS Provider Authentication
 # =====================================
 
 provider "kubernetes" {
 
-  host = data.azurerm_kubernetes_cluster.aks.kube_config[0].host
+  host = module.aks.host
 
   client_certificate = base64decode(
-    data.azurerm_kubernetes_cluster.aks.kube_config[0].client_certificate
+    module.aks.client_certificate
   )
 
   client_key = base64decode(
-    data.azurerm_kubernetes_cluster.aks.kube_config[0].client_key
+    module.aks.client_key
   )
 
   cluster_ca_certificate = base64decode(
-    data.azurerm_kubernetes_cluster.aks.kube_config[0].cluster_ca_certificate
+    module.aks.cluster_ca_certificate
   )
 }
 
 # =====================================
 # HELM PROVIDER
+# Stable AKS Provider Authentication
 # =====================================
 
 provider "helm" {
 
   kubernetes {
 
-    host = data.azurerm_kubernetes_cluster.aks.kube_config[0].host
+    host = module.aks.host
 
     client_certificate = base64decode(
-      data.azurerm_kubernetes_cluster.aks.kube_config[0].client_certificate
+      module.aks.client_certificate
     )
 
     client_key = base64decode(
-      data.azurerm_kubernetes_cluster.aks.kube_config[0].client_key
+      module.aks.client_key
     )
 
     cluster_ca_certificate = base64decode(
-      data.azurerm_kubernetes_cluster.aks.kube_config[0].cluster_ca_certificate
+      module.aks.cluster_ca_certificate
     )
   }
 }
+
+# =====================================
+# OPTIONAL FUTURE PROVIDER NOTES
+# =====================================
+
+# Future enterprise enhancements may include:
+#
+# - Workload Identity authentication
+# - OIDC federation
+# - Terraform Cloud integration
+# - Remote execution runners
+# - Multi-environment provider aliasing
+#
+# Current provider model intentionally
+# preserves stable AKS + Helm behavior.

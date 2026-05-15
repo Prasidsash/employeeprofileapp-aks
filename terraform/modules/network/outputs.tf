@@ -18,3 +18,17 @@ output "subnet_id" {
 
   value = azurerm_subnet.aks_subnet.id
 }
+
+output "subnet_name" {
+
+  description = "AKS Subnet Name"
+
+  value = azurerm_subnet.aks_subnet.name
+}
+
+output "subnet_address_prefixes" {
+
+  description = "AKS Subnet Address Prefixes"
+
+  value = azurerm_subnet.aks_subnet.address_prefixes
+}

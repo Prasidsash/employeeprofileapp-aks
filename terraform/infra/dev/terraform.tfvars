@@ -4,7 +4,8 @@
 
 environment         = "dev"
 resource_group_name = "employeeprofileapp-dev-rg"
-location            = "Central India"
+
+location = "Central India"
 
 # =====================================
 # NETWORK
@@ -26,7 +27,8 @@ aks_subnet_prefixes = [
 # AKS CLUSTER
 # =====================================
 
-cluster_name       = "employeeprofileapp-dev-aks"
+cluster_name = "employeeprofileapp-dev-aks"
+
 kubernetes_version = "1.34.6"
 
 system_node_count   = 1
@@ -53,8 +55,9 @@ system_node_max_count = 2
 # =====================================
 
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
-log_analytics_sku            = "PerGB2018"
-log_retention_in_days        = 30
+
+log_analytics_sku     = "PerGB2018"
+log_retention_in_days = 30
 
 enable_alerts             = false
 enable_managed_prometheus = true
@@ -138,11 +141,24 @@ allowed_verbs = [
 secret_name = "employee-db-secret"
 
 # =====================================
+# KEY VAULT RBAC STABILIZATION
+# =====================================
+
+# IMPORTANT:
+# Use a stable Object ID.
+# Recommended:
+# Azure DevOps Service Principal Object ID
+
+keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
+
+# =====================================
 # INGRESS
 # =====================================
 
-ingress_name      = "employee-ingress"
-ingress_host      = "dev.employee.local"
+ingress_name = "employee-ingress"
+
+ingress_host = "dev.employee.local"
+
 ingress_path      = "/"
 ingress_path_type = "Prefix"
 
@@ -152,7 +168,8 @@ service_name = "employeeprofileapp-service-dev"
 # TLS / HTTPS
 # =====================================
 
-enable_tls      = false
+enable_tls = false
+
 tls_secret_name = null
 
 # =====================================

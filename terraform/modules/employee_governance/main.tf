@@ -1,9 +1,21 @@
+# =====================================
+# RESOURCE QUOTA
+# =====================================
+
 resource "kubernetes_resource_quota_v1" "quota" {
+
   metadata {
 
     name = "resource-quota"
 
     namespace = var.namespace_name
+
+    labels = {
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    }
   }
 
   spec {
@@ -12,6 +24,10 @@ resource "kubernetes_resource_quota_v1" "quota" {
   }
 }
 
+# =====================================
+# LIMIT RANGE
+# =====================================
+
 resource "kubernetes_limit_range_v1" "limits" {
 
   metadata {
@@ -19,6 +35,13 @@ resource "kubernetes_limit_range_v1" "limits" {
     name = "limit-range"
 
     namespace = var.namespace_name
+
+    labels = {
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    }
   }
 
   spec {

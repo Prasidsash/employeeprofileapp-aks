@@ -65,7 +65,15 @@ module "keyvault" {
 
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  environment         = var.environment
+
+  environment = var.environment
+
+  # =====================================
+  # STABLE KEY VAULT RBAC PRINCIPAL
+  # Prevents RBAC replacement drift
+  # =====================================
+
+  keyvault_admin_object_id = var.keyvault_admin_object_id
 
   depends_on = [
     azurerm_resource_group.main

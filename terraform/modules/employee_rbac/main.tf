@@ -1,3 +1,7 @@
+# =====================================
+# SERVICE ACCOUNT
+# =====================================
+
 resource "kubernetes_service_account_v1" "sa" {
 
   metadata {
@@ -5,8 +9,28 @@ resource "kubernetes_service_account_v1" "sa" {
     name = var.service_account_name
 
     namespace = var.namespace_name
+
+    labels = {
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    }
+
+    annotations = var.service_account_annotations
   }
+
+  # =====================================
+  # Optional Future Security Hardening
+  # Preserve Existing Behavior
+  # =====================================
+
+  automount_service_account_token = true
 }
+
+# =====================================
+# ROLE
+# =====================================
 
 resource "kubernetes_role_v1" "role" {
 
@@ -15,6 +39,13 @@ resource "kubernetes_role_v1" "role" {
     name = var.role_name
 
     namespace = var.namespace_name
+
+    labels = {
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    }
   }
 
   rule {
@@ -27,6 +58,10 @@ resource "kubernetes_role_v1" "role" {
   }
 }
 
+# =====================================
+# ROLE BINDING
+# =====================================
+
 resource "kubernetes_role_binding_v1" "binding" {
 
   metadata {
@@ -34,6 +69,13 @@ resource "kubernetes_role_binding_v1" "binding" {
     name = "${var.role_name}-binding"
 
     namespace = var.namespace_name
+
+    labels = {
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    }
   }
 
   role_ref {

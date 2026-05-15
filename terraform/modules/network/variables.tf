@@ -25,3 +25,16 @@ variable "aks_subnet_name" {
 variable "aks_subnet_prefixes" {
   type = list(string)
 }
+
+# =====================================
+# Optional Future Networking Features
+# =====================================
+
+variable "service_endpoints" {
+
+  description = "Optional subnet service endpoints"
+
+  type = list(string)
+
+  default = []
+}

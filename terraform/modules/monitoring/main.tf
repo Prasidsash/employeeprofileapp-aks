@@ -8,8 +8,18 @@ resource "azurerm_log_analytics_workspace" "law" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  sku               = var.log_analytics_sku
+  sku = var.log_analytics_sku
+
   retention_in_days = var.log_retention_in_days
+
+  tags = {
+
+    environment = var.environment
+
+    managed_by = "terraform"
+
+    project = "employeeprofileapp"
+  }
 }
 
 # =====================================
@@ -20,9 +30,20 @@ resource "azurerm_monitor_action_group" "alerts" {
 
   count = var.enable_alerts ? 1 : 0
 
-  name                = "${var.environment}-alerts"
+  name = "${var.environment}-alerts"
+
   resource_group_name = var.resource_group_name
-  short_name          = "alerts"
+
+  short_name = "alerts"
+
+  tags = {
+
+    environment = var.environment
+
+    managed_by = "terraform"
+
+    project = "employeeprofileapp"
+  }
 }
 
 # =====================================
@@ -34,9 +55,20 @@ resource "azurerm_monitor_workspace" "prometheus" {
 
   count = var.enable_managed_prometheus ? 1 : 0
 
-  name                = "${var.environment}-amw"
-  location            = var.location
+  name = "${var.environment}-amw"
+
+  location = var.location
+
   resource_group_name = var.resource_group_name
+
+  tags = {
+
+    environment = var.environment
+
+    managed_by = "terraform"
+
+    project = "employeeprofileapp"
+  }
 }
 
 # =====================================
@@ -47,12 +79,22 @@ resource "azurerm_dashboard_grafana" "grafana" {
 
   count = var.enable_managed_prometheus ? 1 : 0
 
-  name                = "${var.environment}-grafana"
-  location            = var.location
+  name = "${var.environment}-grafana"
+
+  location = var.location
+
   resource_group_name = var.resource_group_name
 
   grafana_major_version = 11
-  api_key_enabled       = true
+
+  api_key_enabled = true
+
+  # =====================================
+  # Optional Future Network Hardening
+  # Preserve Existing Behavior
+  # =====================================
+
+  public_network_access_enabled = true
 
   identity {
 
@@ -66,6 +108,15 @@ resource "azurerm_dashboard_grafana" "grafana" {
   azure_monitor_workspace_integrations {
 
     resource_id = azurerm_monitor_workspace.prometheus[0].id
+  }
+
+  tags = {
+
+    environment = var.environment
+
+    managed_by = "terraform"
+
+    project = "employeeprofileapp"
   }
 }
 

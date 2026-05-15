@@ -150,6 +150,17 @@ variable "secret_data" {
 }
 
 # =====================================
+# KEY VAULT RBAC
+# =====================================
+
+variable "keyvault_admin_object_id" {
+
+  description = "Stable Object ID for Key Vault Administrator RBAC assignment"
+
+  type = string
+}
+
+# =====================================
 # INGRESS
 # =====================================
 

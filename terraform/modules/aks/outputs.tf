@@ -26,6 +26,66 @@ output "kubernetes_version" {
   value = azurerm_kubernetes_cluster.aks.kubernetes_version
 }
 
+# =====================================
+# AKS MANAGED IDENTITY
+# =====================================
+
+output "aks_principal_id" {
+
+  description = "AKS Managed Identity Principal ID"
+
+  value = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+}
+
+output "aks_tenant_id" {
+
+  description = "AKS Managed Identity Tenant ID"
+
+  value = azurerm_kubernetes_cluster.aks.identity[0].tenant_id
+}
+
+# =====================================
+# KUBELET IDENTITY
+# =====================================
+
+output "kubelet_identity_object_id" {
+
+  description = "AKS Kubelet Identity Object ID"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id,
+    null
+  )
+}
+
+output "kubelet_identity_client_id" {
+
+  description = "AKS Kubelet Identity Client ID"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.kubelet_identity[0].client_id,
+    null
+  )
+}
+
+# =====================================
+# OPTIONAL FUTURE OIDC SUPPORT
+# =====================================
+
+output "oidc_issuer_url" {
+
+  description = "AKS OIDC Issuer URL"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.oidc_issuer_url,
+    null
+  )
+}
+
+# =====================================
+# KUBECONFIG DETAILS
+# =====================================
+
 output "host" {
 
   value = azurerm_kubernetes_cluster.aks.kube_config[0].host

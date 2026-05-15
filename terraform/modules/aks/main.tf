@@ -5,8 +5,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.cluster_name
   location            = var.location
   resource_group_name = var.resource_group_name
-  dns_prefix          = "${var.environment}-aks"
-  kubernetes_version  = var.kubernetes_version
+
+  dns_prefix = "${var.environment}-aks"
+
+  kubernetes_version = var.kubernetes_version
 
   # =====================================
   # Prevent Accidental Destroy
@@ -21,8 +23,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # =====================================
 
   role_based_access_control_enabled = true
-  azure_policy_enabled              = true
-  local_account_disabled            = false
+
+  azure_policy_enabled = true
+
+  local_account_disabled = false
+
+  # =====================================
+  # Optional Future Features
+  # Preserve Existing Cluster Behavior
+  # =====================================
+
+  sku_tier = "Free"
 
   # =====================================
   # Default System Node Pool
@@ -93,6 +104,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   # =====================================
   # Managed Prometheus
+  # Preserve Existing Monitoring Behavior
   # =====================================
 
   dynamic "monitor_metrics" {

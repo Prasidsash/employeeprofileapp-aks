@@ -12,3 +12,16 @@ variable "secret_data" {
 
   sensitive = true
 }
+
+# =====================================
+# OPTIONAL SECRET ANNOTATIONS
+# =====================================
+
+variable "secret_annotations" {
+
+  description = "Optional Kubernetes Secret annotations"
+
+  type = map(string)
+
+  default = {}
+}

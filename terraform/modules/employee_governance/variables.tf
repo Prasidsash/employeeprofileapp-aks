@@ -21,3 +21,25 @@ variable "limit_default" {
 variable "limit_default_request" {
   type = map(string)
 }
+
+# =====================================
+# OPTIONAL FUTURE METADATA SUPPORT
+# =====================================
+
+variable "labels" {
+
+  description = "Optional governance labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "annotations" {
+
+  description = "Optional governance annotations"
+
+  type = map(string)
+
+  default = {}
+}

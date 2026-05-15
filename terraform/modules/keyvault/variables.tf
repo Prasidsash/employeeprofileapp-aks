@@ -37,3 +37,14 @@ variable "key_vault_name" {
 
   default = null
 }
+
+# =====================================
+# KEY VAULT RBAC
+# =====================================
+
+variable "keyvault_admin_object_id" {
+
+  description = "Stable Object ID for Key Vault Administrator role assignment"
+
+  type = string
+}

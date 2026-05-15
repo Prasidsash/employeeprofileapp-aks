@@ -70,3 +70,52 @@ variable "system_node_min_count" {
 variable "system_node_max_count" {
   type = number
 }
+
+# =====================================
+# Optional Future AKS Features
+# =====================================
+
+variable "workload_identity_enabled" {
+
+  description = "Enable AKS Workload Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "oidc_issuer_enabled" {
+
+  description = "Enable AKS OIDC Issuer"
+
+  type = bool
+
+  default = false
+}
+
+variable "image_cleaner_enabled" {
+
+  description = "Enable AKS Image Cleaner"
+
+  type = bool
+
+  default = false
+}
+
+variable "image_cleaner_interval_hours" {
+
+  description = "AKS Image Cleaner Interval"
+
+  type = number
+
+  default = 48
+}
+
+variable "sku_tier" {
+
+  description = "AKS SKU Tier"
+
+  type = string
+
+  default = "Free"
+}
