@@ -1,3 +1,7 @@
+# =====================================
+# AKS CLUSTER
+# =====================================
+
 output "cluster_name" {
 
   description = "AKS Cluster Name"
@@ -24,6 +28,20 @@ output "kubernetes_version" {
   description = "AKS Kubernetes Version"
 
   value = azurerm_kubernetes_cluster.aks.kubernetes_version
+}
+
+# =====================================
+# OPTIONAL AKS FQDN
+# =====================================
+
+output "aks_fqdn" {
+
+  description = "AKS API Server FQDN"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.fqdn,
+    null
+  )
 }
 
 # =====================================
@@ -83,10 +101,26 @@ output "oidc_issuer_url" {
 }
 
 # =====================================
+# OPTIONAL FUTURE WORKLOAD IDENTITY
+# =====================================
+
+output "workload_identity_enabled" {
+
+  description = "AKS Workload Identity Enabled"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.workload_identity_enabled,
+    null
+  )
+}
+
+# =====================================
 # KUBECONFIG DETAILS
 # =====================================
 
 output "host" {
+
+  description = "AKS API Server Host"
 
   value = azurerm_kubernetes_cluster.aks.kube_config[0].host
 
@@ -95,6 +129,8 @@ output "host" {
 
 output "client_certificate" {
 
+  description = "AKS Client Certificate"
+
   value = azurerm_kubernetes_cluster.aks.kube_config[0].client_certificate
 
   sensitive = true
@@ -102,12 +138,16 @@ output "client_certificate" {
 
 output "client_key" {
 
+  description = "AKS Client Key"
+
   value = azurerm_kubernetes_cluster.aks.kube_config[0].client_key
 
   sensitive = true
 }
 
 output "cluster_ca_certificate" {
+
+  description = "AKS Cluster CA Certificate"
 
   value = azurerm_kubernetes_cluster.aks.kube_config[0].cluster_ca_certificate
 

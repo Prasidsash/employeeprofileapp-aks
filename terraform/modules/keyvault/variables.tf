@@ -48,3 +48,42 @@ variable "keyvault_admin_object_id" {
 
   type = string
 }
+
+# =====================================
+# OPTIONAL ROLE OVERRIDE
+# =====================================
+
+variable "keyvault_role_definition_name" {
+
+  description = "Optional Key Vault RBAC role definition"
+
+  type = string
+
+  default = "Key Vault Administrator"
+}
+
+# =====================================
+# OPTIONAL NETWORK ACL SUPPORT
+# =====================================
+
+variable "enable_network_acls" {
+
+  description = "Enable Key Vault network ACL block"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# OPTIONAL ADDITIONAL TAGS
+# =====================================
+
+variable "additional_tags" {
+
+  description = "Additional Key Vault tags"
+
+  type = map(string)
+
+  default = {}
+}

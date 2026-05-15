@@ -2,8 +2,10 @@ data "azurerm_client_config" "current" {}
 
 resource "azurerm_kubernetes_cluster" "aks" {
 
-  name                = var.cluster_name
-  location            = var.location
+  name = var.cluster_name
+
+  location = var.location
+
   resource_group_name = var.resource_group_name
 
   dns_prefix = "${var.environment}-aks"
@@ -15,6 +17,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # =====================================
 
   lifecycle {
+
     prevent_destroy = false
   }
 
@@ -36,7 +39,23 @@ resource "azurerm_kubernetes_cluster" "aks" {
   sku_tier = "Free"
 
   # =====================================
-  # Default System Node Pool
+  # OPTIONAL WORKLOAD IDENTITY
+  # =====================================
+
+  workload_identity_enabled = var.enable_workload_identity
+
+  oidc_issuer_enabled = var.enable_oidc_issuer
+
+  # =====================================
+  # OPTIONAL IMAGE CLEANER
+  # =====================================
+
+  image_cleaner_enabled = var.enable_image_cleaner
+
+  image_cleaner_interval_hours = var.image_cleaner_interval_hours
+
+  # =====================================
+  # DEFAULT SYSTEM NODE POOL
   # =====================================
 
   default_node_pool {
@@ -57,13 +76,31 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     orchestrator_version = var.kubernetes_version
 
+    # =====================================
+    # OPTIONAL NODE LABELS
+    # =====================================
+
+    node_labels = var.node_labels
+
+    # =====================================
+    # OPTIONAL NODE TAINTS
+    # =====================================
+    # Temporarily excluded because
+    # current AzureRM provider schema
+    # does not support node_taints
+    # safely in default_node_pool.
+    #
+    # Preserving runtime stability.
+    # =====================================
+
     upgrade_settings {
+
       max_surge = "10%"
     }
   }
 
   # =====================================
-  # Managed Identity
+  # MANAGED IDENTITY
   # =====================================
 
   identity {
@@ -72,7 +109,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # Network Profile
+  # NETWORK PROFILE
   # =====================================
 
   network_profile {
@@ -89,7 +126,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # OMS / Log Analytics
+  # OMS / LOG ANALYTICS
   # =====================================
 
   dynamic "oms_agent" {
@@ -103,7 +140,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # Managed Prometheus
+  # MANAGED PROMETHEUS
   # Preserve Existing Monitoring Behavior
   # =====================================
 
@@ -120,15 +157,33 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # Tags
+  # OPTIONAL API SERVER ACCESS PROFILE
   # =====================================
 
-  tags = {
+  dynamic "api_server_access_profile" {
 
-    environment = var.environment
+    for_each = var.enable_api_server_access_profile ? [1] : []
 
-    managed_by = "terraform"
+    content {
 
-    project = "employeeprofileapp"
+      authorized_ip_ranges = var.authorized_ip_ranges
+    }
   }
+
+  # =====================================
+  # TAGS
+  # =====================================
+
+  tags = merge(
+
+    {
+      environment = var.environment
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
 }

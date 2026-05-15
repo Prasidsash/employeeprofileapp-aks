@@ -2,7 +2,8 @@
 # ENVIRONMENT
 # =====================================
 
-environment         = "dev"
+environment = "dev"
+
 resource_group_name = "employeeprofileapp-dev-rg"
 
 location = "Central India"
@@ -31,14 +32,16 @@ cluster_name = "employeeprofileapp-dev-aks"
 
 kubernetes_version = "1.34.6"
 
-system_node_count   = 1
+system_node_count = 1
+
 system_node_vm_size = "Standard_D2s_v3"
 
 # =====================================
 # AKS NETWORKING
 # =====================================
 
-service_cidr   = "172.16.0.0/16"
+service_cidr = "172.16.0.0/16"
+
 dns_service_ip = "172.16.0.10"
 
 # =====================================
@@ -48,7 +51,31 @@ dns_service_ip = "172.16.0.10"
 enable_node_autoscaling = false
 
 system_node_min_count = 1
+
 system_node_max_count = 2
+
+# =====================================
+# OPTIONAL FUTURE AKS FEATURES
+# Preserve Existing Runtime Behavior
+# =====================================
+
+enable_workload_identity = true
+
+enable_oidc_issuer = true
+
+enable_image_cleaner = false
+
+image_cleaner_interval_hours = 48
+
+node_labels = {}
+
+node_taints = []
+
+enable_api_server_access_profile = false
+
+authorized_ip_ranges = []
+
+aks_additional_tags = {}
 
 # =====================================
 # MONITORING
@@ -56,11 +83,23 @@ system_node_max_count = 2
 
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
 
-log_analytics_sku     = "PerGB2018"
+log_analytics_sku = "PerGB2018"
+
 log_retention_in_days = 30
 
-enable_alerts             = false
+enable_alerts = false
+
 enable_managed_prometheus = true
+
+# =====================================
+# OPTIONAL MONITORING SETTINGS
+# =====================================
+
+grafana_major_version = 11
+
+grafana_api_key_enabled = true
+
+monitoring_additional_tags = {}
 
 # =====================================
 # KUBERNETES NAMESPACE
@@ -71,8 +110,15 @@ namespace_name = "employeeprofileapp-dev"
 namespace_labels = {
 
   environment = "dev"
-  app         = "employeeprofileapp"
+
+  app = "employeeprofileapp"
 }
+
+# =====================================
+# OPTIONAL NAMESPACE ANNOTATIONS
+# =====================================
+
+namespace_annotations = {}
 
 # =====================================
 # GOVERNANCE
@@ -80,36 +126,52 @@ namespace_labels = {
 
 quota_limits = {
 
-  pods              = "10"
-  "requests.cpu"    = "2"
+  pods = "10"
+
+  "requests.cpu" = "2"
+
   "requests.memory" = "2Gi"
-  "limits.cpu"      = "4"
-  "limits.memory"   = "4Gi"
+
+  "limits.cpu" = "4"
+
+  "limits.memory" = "4Gi"
 }
 
 limit_max = {
 
-  cpu    = "1"
+  cpu = "1"
+
   memory = "1Gi"
 }
 
 limit_min = {
 
-  cpu    = "100m"
+  cpu = "100m"
+
   memory = "128Mi"
 }
 
 limit_default = {
 
-  cpu    = "500m"
+  cpu = "500m"
+
   memory = "512Mi"
 }
 
 limit_default_request = {
 
-  cpu    = "250m"
+  cpu = "250m"
+
   memory = "256Mi"
 }
+
+# =====================================
+# OPTIONAL GOVERNANCE METADATA
+# =====================================
+
+governance_labels = {}
+
+governance_annotations = {}
 
 # =====================================
 # RBAC
@@ -135,10 +197,40 @@ allowed_verbs = [
 ]
 
 # =====================================
+# OPTIONAL RBAC METADATA
+# =====================================
+
+service_account_annotations = {}
+
+role_annotations = {}
+
+role_binding_annotations = {}
+
+rbac_additional_labels = {}
+
+rbac_additional_annotations = {}
+
+# =====================================
 # SECRETS
 # =====================================
 
 secret_name = "employee-db-secret"
+
+secret_data = {}
+
+# =====================================
+# OPTIONAL SECRET SETTINGS
+# =====================================
+
+secret_annotations = {}
+
+secret_type = "Opaque"
+
+secret_immutable = false
+
+secret_additional_labels = {}
+
+secret_additional_annotations = {}
 
 # =====================================
 # KEY VAULT RBAC STABILIZATION
@@ -152,6 +244,14 @@ secret_name = "employee-db-secret"
 keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 
 # =====================================
+# OPTIONAL KEY VAULT FEATURES
+# =====================================
+
+enable_network_acls = false
+
+keyvault_additional_tags = {}
+
+# =====================================
 # INGRESS
 # =====================================
 
@@ -159,10 +259,25 @@ ingress_name = "employee-ingress"
 
 ingress_host = "dev.employee.local"
 
-ingress_path      = "/"
+ingress_path = "/"
+
 ingress_path_type = "Prefix"
 
 service_name = "employeeprofileapp-service-dev"
+
+# =====================================
+# OPTIONAL INGRESS FEATURES
+# =====================================
+
+ingress_class_name = "nginx"
+
+enable_rewrite_target = false
+
+enable_proxy_body_size = false
+
+proxy_body_size = "10m"
+
+cluster_issuer = null
 
 # =====================================
 # TLS / HTTPS
@@ -182,7 +297,8 @@ release_name = "employeeprofileapp-dev"
 # PLATFORM FEATURES
 # =====================================
 
-enable_hpa          = false
+enable_hpa = false
+
 enable_loadbalancer = false
 
 # =====================================
@@ -190,11 +306,18 @@ enable_loadbalancer = false
 # Keep enabled for core platform
 # =====================================
 
-enable_aks        = true
-enable_network    = true
+enable_aks = true
+
+enable_network = true
+
 enable_monitoring = true
-enable_namespace  = true
-enable_rbac       = true
+
+enable_namespace = true
+
+enable_rbac = true
+
 enable_governance = true
-enable_secret     = true
-enable_ingress    = true
+
+enable_secret = true
+
+enable_ingress = true

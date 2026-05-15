@@ -10,14 +10,35 @@ resource "kubernetes_service_account_v1" "sa" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
 
-    annotations = var.service_account_annotations
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL SERVICE ACCOUNT ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.service_account_annotations
+    )
   }
 
   # =====================================
@@ -40,12 +61,35 @@ resource "kubernetes_role_v1" "role" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL ROLE ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.role_annotations
+    )
   }
 
   rule {
@@ -70,12 +114,35 @@ resource "kubernetes_role_binding_v1" "binding" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL ROLE BINDING ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.role_binding_annotations
+    )
   }
 
   role_ref {

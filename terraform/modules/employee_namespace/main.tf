@@ -8,6 +8,10 @@ resource "kubernetes_namespace_v1" "namespace" {
 
     name = var.namespace_name
 
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
+
     labels = merge(
 
       {
@@ -16,9 +20,36 @@ resource "kubernetes_namespace_v1" "namespace" {
         project = "employeeprofileapp"
       },
 
+      # =====================================
+      # OPTIONAL FUTURE PLATFORM LABELS
+      # =====================================
+
+      var.additional_labels,
+
+      # =====================================
+      # ENVIRONMENT-SPECIFIC LABELS
+      # =====================================
+
       var.namespace_labels
     )
 
-    annotations = var.namespace_annotations
+    # =====================================
+    # OPTIONAL ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      # =====================================
+      # OPTIONAL FUTURE ANNOTATIONS
+      # =====================================
+
+      var.additional_annotations,
+
+      # =====================================
+      # ENVIRONMENT ANNOTATIONS
+      # =====================================
+
+      var.namespace_annotations
+    )
   }
 }

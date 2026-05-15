@@ -49,12 +49,16 @@ variable "ingress_class_name" {
 
 variable "enable_tls" {
 
+  description = "Enable TLS for ingress"
+
   type = bool
 
   default = false
 }
 
 variable "tls_secret_name" {
+
+  description = "TLS Secret Name"
 
   type = string
 
@@ -76,7 +80,7 @@ variable "cluster_issuer" {
 }
 
 # =====================================
-# OPTIONAL FUTURE INGRESS FEATURES
+# OPTIONAL REWRITE TARGET
 # =====================================
 
 variable "enable_rewrite_target" {
@@ -87,6 +91,10 @@ variable "enable_rewrite_target" {
 
   default = false
 }
+
+# =====================================
+# OPTIONAL PROXY BODY SIZE
+# =====================================
 
 variable "enable_proxy_body_size" {
 
@@ -104,4 +112,96 @@ variable "proxy_body_size" {
   type = string
 
   default = "10m"
+}
+
+# =====================================
+# OPTIONAL SSL PASSTHROUGH
+# =====================================
+
+variable "enable_ssl_passthrough" {
+
+  description = "Enable SSL passthrough"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# OPTIONAL BACKEND PROTOCOL
+# =====================================
+
+variable "backend_protocol" {
+
+  description = "Ingress backend protocol"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# OPTIONAL PROXY TIMEOUTS
+# =====================================
+
+variable "enable_proxy_timeouts" {
+
+  description = "Enable ingress proxy timeout annotations"
+
+  type = bool
+
+  default = false
+}
+
+variable "proxy_connect_timeout" {
+
+  description = "Ingress proxy connect timeout"
+
+  type = string
+
+  default = "60"
+}
+
+variable "proxy_read_timeout" {
+
+  description = "Ingress proxy read timeout"
+
+  type = string
+
+  default = "60"
+}
+
+variable "proxy_send_timeout" {
+
+  description = "Ingress proxy send timeout"
+
+  type = string
+
+  default = "60"
+}
+
+# =====================================
+# OPTIONAL SOURCE WHITELIST
+# =====================================
+
+variable "whitelist_source_ranges" {
+
+  description = "Optional ingress source whitelist"
+
+  type = list(string)
+
+  default = []
+}
+
+# =====================================
+# OPTIONAL CUSTOM ANNOTATIONS
+# =====================================
+
+variable "additional_annotations" {
+
+  description = "Additional ingress annotations"
+
+  type = map(string)
+
+  default = {}
 }

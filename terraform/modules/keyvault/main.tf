@@ -18,34 +18,76 @@ locals {
     )
   )
 
-  key_vault_name = "${substr(local.key_vault_base_name,0,18)}-kv"
+  # =====================================
+  # OPTIONAL CUSTOM NAME OVERRIDE
+  # =====================================
+
+  key_vault_name = var.key_vault_name != null ? var.key_vault_name : "${substr(local.key_vault_base_name,0,18)}-kv"
 }
 
 # =====================================
-# Key Vault
+# KEY VAULT
 # =====================================
 
 resource "azurerm_key_vault" "kv" {
 
-  name                = local.key_vault_name
-  location            = var.location
+  name = local.key_vault_name
+
+  location = var.location
+
   resource_group_name = var.resource_group_name
 
   tenant_id = data.azurerm_client_config.current.tenant_id
 
   sku_name = "standard"
 
+  # =====================================
+  # LAB-SAFE SETTINGS
+  # =====================================
+
   soft_delete_retention_days = 7
-  purge_protection_enabled   = false
+
+  purge_protection_enabled = false
+
+  # =====================================
+  # RBAC AUTHORIZATION
+  # =====================================
 
   rbac_authorization_enabled = true
 
-  tags = {
+  # =====================================
+  # OPTIONAL NETWORK ACL PLACEHOLDER
+  # Preserve Existing Behavior
+  # =====================================
 
-    environment = var.environment
-    project     = "employeeprofileapp"
-    managed_by  = "terraform"
+  dynamic "network_acls" {
+
+    for_each = var.enable_network_acls ? [1] : []
+
+    content {
+
+      bypass = "AzureServices"
+
+      default_action = "Allow"
+    }
   }
+
+  # =====================================
+  # TAGS
+  # =====================================
+
+  tags = merge(
+
+    {
+      environment = var.environment
+
+      project = "employeeprofileapp"
+
+      managed_by = "terraform"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================
@@ -56,7 +98,7 @@ resource "azurerm_role_assignment" "kv_admin" {
 
   scope = azurerm_key_vault.kv.id
 
-  role_definition_name = "Key Vault Administrator"
+  role_definition_name = var.keyvault_role_definition_name
 
   # =====================================
   # STABLE PRINCIPAL ASSIGNMENT
@@ -74,7 +116,8 @@ resource "azurerm_key_vault_secret" "app_secret" {
 
   count = 0
 
-  name  = "employee-db-connection"
+  name = "employee-db-connection"
+
   value = "sample-secret-value"
 
   key_vault_id = azurerm_key_vault.kv.id

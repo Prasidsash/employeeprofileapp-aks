@@ -4,22 +4,28 @@
 
 resource "azurerm_log_analytics_workspace" "law" {
 
-  name                = var.log_analytics_workspace_name
-  location            = var.location
+  name = var.log_analytics_workspace_name
+
+  location = var.location
+
   resource_group_name = var.resource_group_name
 
   sku = var.log_analytics_sku
 
   retention_in_days = var.log_retention_in_days
 
-  tags = {
+  tags = merge(
 
-    environment = var.environment
+    {
+      environment = var.environment
 
-    managed_by = "terraform"
+      managed_by = "terraform"
 
-    project = "employeeprofileapp"
-  }
+      project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================
@@ -36,14 +42,18 @@ resource "azurerm_monitor_action_group" "alerts" {
 
   short_name = "alerts"
 
-  tags = {
+  tags = merge(
 
-    environment = var.environment
+    {
+      environment = var.environment
 
-    managed_by = "terraform"
+      managed_by = "terraform"
 
-    project = "employeeprofileapp"
-  }
+      project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================
@@ -61,14 +71,18 @@ resource "azurerm_monitor_workspace" "prometheus" {
 
   resource_group_name = var.resource_group_name
 
-  tags = {
+  tags = merge(
 
-    environment = var.environment
+    {
+      environment = var.environment
 
-    managed_by = "terraform"
+      managed_by = "terraform"
 
-    project = "employeeprofileapp"
-  }
+      project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================
@@ -85,9 +99,9 @@ resource "azurerm_dashboard_grafana" "grafana" {
 
   resource_group_name = var.resource_group_name
 
-  grafana_major_version = 11
+  grafana_major_version = var.grafana_major_version
 
-  api_key_enabled = true
+  api_key_enabled = var.grafana_api_key_enabled
 
   # =====================================
   # Optional Future Network Hardening
@@ -110,14 +124,18 @@ resource "azurerm_dashboard_grafana" "grafana" {
     resource_id = azurerm_monitor_workspace.prometheus[0].id
   }
 
-  tags = {
+  tags = merge(
 
-    environment = var.environment
+    {
+      environment = var.environment
 
-    managed_by = "terraform"
+      managed_by = "terraform"
 
-    project = "employeeprofileapp"
-  }
+      project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================

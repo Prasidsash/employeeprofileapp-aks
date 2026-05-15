@@ -79,6 +79,91 @@ variable "system_node_max_count" {
 }
 
 # =====================================
+# OPTIONAL FUTURE AKS FEATURES
+# =====================================
+
+variable "enable_workload_identity" {
+
+  description = "Enable AKS Workload Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "enable_oidc_issuer" {
+
+  description = "Enable AKS OIDC Issuer"
+
+  type = bool
+
+  default = false
+}
+
+variable "enable_image_cleaner" {
+
+  description = "Enable AKS Image Cleaner"
+
+  type = bool
+
+  default = false
+}
+
+variable "image_cleaner_interval_hours" {
+
+  description = "AKS Image Cleaner Interval"
+
+  type = number
+
+  default = 48
+}
+
+variable "node_labels" {
+
+  description = "Optional AKS node labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "node_taints" {
+
+  description = "Optional AKS node taints"
+
+  type = list(string)
+
+  default = []
+}
+
+variable "enable_api_server_access_profile" {
+
+  description = "Enable AKS API server access profile"
+
+  type = bool
+
+  default = false
+}
+
+variable "authorized_ip_ranges" {
+
+  description = "Authorized IP ranges for AKS API server"
+
+  type = list(string)
+
+  default = []
+}
+
+variable "aks_additional_tags" {
+
+  description = "Additional AKS tags"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # NAMESPACE
 # =====================================
 
@@ -88,6 +173,19 @@ variable "namespace_name" {
 
 variable "namespace_labels" {
   type = map(string)
+}
+
+# =====================================
+# OPTIONAL NAMESPACE ANNOTATIONS
+# =====================================
+
+variable "namespace_annotations" {
+
+  description = "Optional namespace annotations"
+
+  type = map(string)
+
+  default = {}
 }
 
 # =====================================
@@ -115,6 +213,28 @@ variable "limit_default_request" {
 }
 
 # =====================================
+# OPTIONAL GOVERNANCE METADATA
+# =====================================
+
+variable "governance_labels" {
+
+  description = "Optional governance labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "governance_annotations" {
+
+  description = "Optional governance annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # RBAC
 # =====================================
 
@@ -135,6 +255,55 @@ variable "allowed_verbs" {
 }
 
 # =====================================
+# OPTIONAL RBAC ANNOTATIONS
+# =====================================
+
+variable "service_account_annotations" {
+
+  description = "Optional ServiceAccount annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "role_annotations" {
+
+  description = "Optional Role annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "role_binding_annotations" {
+
+  description = "Optional RoleBinding annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "rbac_additional_labels" {
+
+  description = "Additional RBAC labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "rbac_additional_annotations" {
+
+  description = "Additional RBAC annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # SECRET
 # =====================================
 
@@ -144,9 +313,60 @@ variable "secret_name" {
 
 variable "secret_data" {
 
-  type      = map(string)
+  type = map(string)
+
   sensitive = true
-  default   = {}
+
+  default = {}
+}
+
+# =====================================
+# OPTIONAL SECRET SETTINGS
+# =====================================
+
+variable "secret_annotations" {
+
+  description = "Optional Kubernetes Secret annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "secret_type" {
+
+  description = "Kubernetes Secret type"
+
+  type = string
+
+  default = "Opaque"
+}
+
+variable "secret_immutable" {
+
+  description = "Immutable Kubernetes Secret"
+
+  type = bool
+
+  default = false
+}
+
+variable "secret_additional_labels" {
+
+  description = "Additional Secret labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "secret_additional_annotations" {
+
+  description = "Additional Secret annotations"
+
+  type = map(string)
+
+  default = {}
 }
 
 # =====================================
@@ -158,6 +378,28 @@ variable "keyvault_admin_object_id" {
   description = "Stable Object ID for Key Vault Administrator RBAC assignment"
 
   type = string
+}
+
+# =====================================
+# OPTIONAL KEY VAULT FEATURES
+# =====================================
+
+variable "enable_network_acls" {
+
+  description = "Enable Key Vault network ACLs"
+
+  type = bool
+
+  default = false
+}
+
+variable "keyvault_additional_tags" {
+
+  description = "Additional Key Vault tags"
+
+  type = map(string)
+
+  default = {}
 }
 
 # =====================================
@@ -182,6 +424,55 @@ variable "ingress_path_type" {
 
 variable "service_name" {
   type = string
+}
+
+# =====================================
+# OPTIONAL INGRESS FEATURES
+# =====================================
+
+variable "ingress_class_name" {
+
+  description = "Ingress Controller Class Name"
+
+  type = string
+
+  default = "nginx"
+}
+
+variable "enable_rewrite_target" {
+
+  description = "Enable ingress rewrite-target annotation"
+
+  type = bool
+
+  default = false
+}
+
+variable "enable_proxy_body_size" {
+
+  description = "Enable ingress proxy-body-size annotation"
+
+  type = bool
+
+  default = false
+}
+
+variable "proxy_body_size" {
+
+  description = "Ingress proxy body size"
+
+  type = string
+
+  default = "10m"
+}
+
+variable "cluster_issuer" {
+
+  description = "Optional cert-manager ClusterIssuer"
+
+  type = string
+
+  default = null
 }
 
 # =====================================
@@ -246,6 +537,33 @@ variable "enable_managed_prometheus" {
   type = bool
 
   default = false
+}
+
+variable "grafana_major_version" {
+
+  description = "Azure Managed Grafana version"
+
+  type = number
+
+  default = 11
+}
+
+variable "grafana_api_key_enabled" {
+
+  description = "Enable Grafana API keys"
+
+  type = bool
+
+  default = true
+}
+
+variable "monitoring_additional_tags" {
+
+  description = "Additional monitoring tags"
+
+  type = map(string)
+
+  default = {}
 }
 
 # =====================================

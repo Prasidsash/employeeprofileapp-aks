@@ -10,12 +10,35 @@ resource "kubernetes_resource_quota_v1" "quota" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL RESOURCE QUOTA ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.resource_quota_annotations
+    )
   }
 
   spec {
@@ -36,12 +59,35 @@ resource "kubernetes_limit_range_v1" "limits" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL LIMIT RANGE ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.limit_range_annotations
+    )
   }
 
   spec {

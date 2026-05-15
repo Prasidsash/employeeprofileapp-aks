@@ -1,3 +1,7 @@
+# =====================================
+# COMMON
+# =====================================
+
 variable "environment" {
   type = string
 }
@@ -10,6 +14,10 @@ variable "resource_group_name" {
   type = string
 }
 
+# =====================================
+# AKS CLUSTER
+# =====================================
+
 variable "cluster_name" {
   type = string
 }
@@ -17,6 +25,10 @@ variable "cluster_name" {
 variable "kubernetes_version" {
   type = string
 }
+
+# =====================================
+# SYSTEM NODE POOL
+# =====================================
 
 variable "system_node_count" {
   type = number
@@ -30,6 +42,10 @@ variable "subnet_id" {
   type = string
 }
 
+# =====================================
+# NETWORKING
+# =====================================
+
 variable "service_cidr" {
   type = string
 }
@@ -38,12 +54,19 @@ variable "dns_service_ip" {
   type = string
 }
 
+# =====================================
+# LOG ANALYTICS
+# =====================================
+
 variable "log_analytics_workspace_id" {
+
+  description = "Log Analytics Workspace ID"
+
   type = string
 }
 
 # =====================================
-# Managed Prometheus
+# MANAGED PROMETHEUS
 # =====================================
 
 variable "azure_monitor_workspace_id" {
@@ -56,7 +79,7 @@ variable "azure_monitor_workspace_id" {
 }
 
 # =====================================
-# Node Autoscaling
+# NODE AUTOSCALING
 # =====================================
 
 variable "enable_node_autoscaling" {
@@ -72,10 +95,10 @@ variable "system_node_max_count" {
 }
 
 # =====================================
-# Optional Future AKS Features
+# OPTIONAL WORKLOAD IDENTITY
 # =====================================
 
-variable "workload_identity_enabled" {
+variable "enable_workload_identity" {
 
   description = "Enable AKS Workload Identity"
 
@@ -84,7 +107,11 @@ variable "workload_identity_enabled" {
   default = false
 }
 
-variable "oidc_issuer_enabled" {
+# =====================================
+# OPTIONAL OIDC ISSUER
+# =====================================
+
+variable "enable_oidc_issuer" {
 
   description = "Enable AKS OIDC Issuer"
 
@@ -93,7 +120,11 @@ variable "oidc_issuer_enabled" {
   default = false
 }
 
-variable "image_cleaner_enabled" {
+# =====================================
+# OPTIONAL IMAGE CLEANER
+# =====================================
+
+variable "enable_image_cleaner" {
 
   description = "Enable AKS Image Cleaner"
 
@@ -111,6 +142,10 @@ variable "image_cleaner_interval_hours" {
   default = 48
 }
 
+# =====================================
+# OPTIONAL SKU TIER
+# =====================================
+
 variable "sku_tier" {
 
   description = "AKS SKU Tier"
@@ -118,4 +153,65 @@ variable "sku_tier" {
   type = string
 
   default = "Free"
+}
+
+# =====================================
+# OPTIONAL NODE LABELS
+# =====================================
+
+variable "node_labels" {
+
+  description = "Optional AKS node labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
+# OPTIONAL NODE TAINTS
+# =====================================
+
+variable "node_taints" {
+
+  description = "Optional AKS node taints"
+
+  type = list(string)
+
+  default = []
+}
+
+# =====================================
+# OPTIONAL API SERVER ACCESS PROFILE
+# =====================================
+
+variable "enable_api_server_access_profile" {
+
+  description = "Enable AKS API server access profile"
+
+  type = bool
+
+  default = false
+}
+
+variable "authorized_ip_ranges" {
+
+  description = "Authorized IP ranges for AKS API server"
+
+  type = list(string)
+
+  default = []
+}
+
+# =====================================
+# OPTIONAL ADDITIONAL TAGS
+# =====================================
+
+variable "additional_tags" {
+
+  description = "Additional AKS tags"
+
+  type = map(string)
+
+  default = {}
 }

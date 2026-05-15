@@ -1,3 +1,7 @@
+# =====================================
+# COMMON
+# =====================================
+
 variable "environment" {
   type = string
 }
@@ -15,14 +19,23 @@ variable "resource_group_name" {
 # =====================================
 
 variable "log_analytics_workspace_name" {
+
+  description = "Log Analytics Workspace Name"
+
   type = string
 }
 
 variable "log_analytics_sku" {
+
+  description = "Log Analytics SKU"
+
   type = string
 }
 
 variable "log_retention_in_days" {
+
+  description = "Log retention in days"
+
   type = number
 }
 
@@ -59,4 +72,39 @@ variable "enable_managed_prometheus" {
   type = bool
 
   default = false
+}
+
+# =====================================
+# OPTIONAL GRAFANA SETTINGS
+# =====================================
+
+variable "grafana_major_version" {
+
+  description = "Azure Managed Grafana major version"
+
+  type = number
+
+  default = 11
+}
+
+variable "grafana_api_key_enabled" {
+
+  description = "Enable Grafana API keys"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# OPTIONAL ADDITIONAL TAGS
+# =====================================
+
+variable "additional_tags" {
+
+  description = "Additional monitoring tags"
+
+  type = map(string)
+
+  default = {}
 }

@@ -10,14 +10,35 @@ resource "kubernetes_secret" "secret" {
 
     namespace = var.namespace_name
 
-    labels = {
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
 
-      managed_by = "terraform"
+    labels = merge(
 
-      project = "employeeprofileapp"
-    }
+      {
+        managed_by = "terraform"
 
-    annotations = var.secret_annotations
+        project = "employeeprofileapp"
+      },
+
+      # =====================================
+      # OPTIONAL ADDITIONAL LABELS
+      # =====================================
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL SECRET ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.secret_annotations
+    )
   }
 
   # =====================================
@@ -26,12 +47,16 @@ resource "kubernetes_secret" "secret" {
 
   data = var.secret_data
 
-  type = "Opaque"
+  # =====================================
+  # SECRET TYPE
+  # =====================================
+
+  type = var.secret_type
 
   # =====================================
   # Optional Future Secret Hardening
   # Preserve Existing Behavior
   # =====================================
 
-  immutable = false
+  immutable = var.secret_immutable
 }
