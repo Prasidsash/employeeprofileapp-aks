@@ -127,7 +127,7 @@ stages:
 
           inputs:
 
-            azureSubscription: $(azureServiceConnection)
+            azureSubscription: $(azureInfraServiceConnection)
 
             scriptType: bash
 

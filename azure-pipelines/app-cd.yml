@@ -71,7 +71,7 @@ stages:
                 displayName: Wait For AKS Ready
 
                 inputs:
-                  azureSubscription: $(azureServiceConnection)
+                  azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
 
