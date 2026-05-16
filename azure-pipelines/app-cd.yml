@@ -72,7 +72,7 @@ stages:
 
                 inputs:
 
-                  azureSubscription: $(azureDeployServiceConnection)
+                  azureSubscription: 'AKS SCN'
 
                   scriptType: bash
 
@@ -94,7 +94,7 @@ stages:
 
                 inputs:
 
-                  azureSubscription: $(azureDeployServiceConnection)
+                  azureSubscription: 'AKS SCN'
 
                   scriptType: bash
 
@@ -234,7 +234,7 @@ stages:
 
                 inputs:
 
-                  azureSubscription: $(azureDeployServiceConnection)
+                  azureSubscription: 'AKS SCN'
 
                   scriptType: bash
 
@@ -286,7 +286,7 @@ stages:
 
                 inputs:
 
-                  azureSubscription: $(azureDeployServiceConnection)
+                  azureSubscription: 'AKS SCN'
 
                   scriptType: bash
 
@@ -338,7 +338,7 @@ stages:
 
                 inputs:
 
-                  azureSubscription: $(azureDeployServiceConnection)
+                  azureSubscription: 'AKS SCN'
 
                   scriptType: bash
 
