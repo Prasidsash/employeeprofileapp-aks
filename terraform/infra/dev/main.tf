@@ -313,7 +313,7 @@ module "ingress" {
   # Optional Future Ingress Features
   # =====================================
 
-  ingress_class_name = "nginx"
+  ingress_class_name = var.ingress_class_name
 
   enable_rewrite_target = false
 

@@ -22,6 +22,10 @@ pool:
 
 variables:
 
+  # =====================================
+  # VARIABLE GROUP
+  # =====================================
+
   - group: employeeprofileapp-dev-vars
 
 stages:
@@ -72,6 +76,10 @@ stages:
 
             echo "Source Branch: $(Build.SourceBranchName)"
 
+            echo "Build ID: $(Build.BuildId)"
+
+            echo "Commit ID: $(Build.SourceVersion)"
+
           displayName: Build Metadata
 
         # =====================================
@@ -110,6 +118,20 @@ stages:
             echo "$(imageRepository):$(Build.BuildNumber)"
 
           displayName: Validate Docker Image
+
+        # =====================================
+        # OPTIONAL IMAGE PULL VALIDATION
+        # =====================================
+
+        - script: |
+
+            echo "=================================="
+            echo "Optional Docker Pull Validation"
+            echo "=================================="
+
+            docker pull $(imageRepository):$(Build.BuildNumber) || true
+
+          displayName: Optional Image Pull Validation
 
         # =====================================
         # OPTIONAL FUTURE IMAGE SCAN
