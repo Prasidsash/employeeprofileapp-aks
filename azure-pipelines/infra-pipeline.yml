@@ -16,49 +16,23 @@ trigger:
       - azure-pipelines/app-cd.yml
       - README.md
 
-# =====================================
-# ENVIRONMENT PARAMETER
-# =====================================
-
 parameters:
   - name: environment
     type: string
     default: dev
-
-    values:
-      - dev
-      - qa
-      - uat
-      - prod
 
 pool:
   vmImage: ubuntu-latest
 
 variables:
 
-  # =====================================
-  # VARIABLE GROUP
-  # =====================================
-
   - group: employeeprofileapp-${{ parameters.environment }}-vars
-
-  # =====================================
-  # TERRAFORM WORKING DIRECTORY
-  # =====================================
 
   - name: terraformWorkingDirectory
     value: terraform/infra/${{ parameters.environment }}
 
-  # =====================================
-  # RESOURCE GROUP
-  # =====================================
-
   - name: resourceGroupName
     value: employeeprofileapp-${{ parameters.environment }}-rg
-
-  # =====================================
-  # AKS CLUSTER
-  # =====================================
 
   - name: aksClusterName
     value: employeeprofileapp-${{ parameters.environment }}-aks
@@ -72,167 +46,157 @@ variables:
 
 stages:
 
-# =====================================
-# TERRAFORM STAGE
-# =====================================
+  - stage: Terraform
+    displayName: Terraform Deployment
 
-- stage: Terraform
-  displayName: Terraform Deployment
+    jobs:
 
-  jobs:
+      - job: TerraformApply
+        displayName: Terraform Apply
 
-    - job: TerraformApply
-      displayName: Terraform Apply
+        steps:
 
-      steps:
+          - checkout: self
 
-        - checkout: self
+          # =====================================
+          # INSTALL TERRAFORM
+          # =====================================
 
-        # =====================================
-        # INSTALL TERRAFORM
-        # =====================================
+          - task: TerraformInstaller@1
+            displayName: Install Terraform
 
-        - task: TerraformInstaller@1
-          displayName: Install Terraform
+            inputs:
+              terraformVersion: $(terraformVersion)
 
-          inputs:
-            terraformVersion: $(terraformVersion)
+          # =====================================
+          # TOOLING VALIDATION
+          # =====================================
 
-        # =====================================
-        # TOOLING VALIDATION
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Terraform Version"
-            echo "=================================="
-
-            terraform version
-
-            echo "=================================="
-            echo "Kubectl Version"
-            echo "=================================="
-
-            kubectl version --client || true
-
-          displayName: Validate Tooling
-
-        # =====================================
-        # TERRAFORM DEPLOYMENT
-        # =====================================
-
-        - task: AzureCLI@2
-          displayName: Terraform Apply
-
-          inputs:
-
-            azureSubscription: $(azureInfraServiceConnection)
-
-            scriptType: bash
-
-            scriptLocation: inlineScript
-
-            workingDirectory: $(terraformWorkingDirectory)
-
-            inlineScript: |
-
-              set -e
+          - script: |
 
               echo "=================================="
-              echo "Environment"
+              echo "Terraform Version"
               echo "=================================="
 
-              echo "${{ parameters.environment }}"
+              terraform version
 
               echo "=================================="
-              echo "Azure Subscription Context"
+              echo "Kubectl Version"
               echo "=================================="
 
-              az account show
+              kubectl version --client || true
+
+            displayName: Validate Tooling
+
+          # =====================================
+          # TERRAFORM DEPLOYMENT
+          # =====================================
+
+          - task: AzureCLI@2
+            displayName: Terraform Apply
+
+            inputs:
+
+              azureSubscription: $(azureInfraServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              workingDirectory: $(terraformWorkingDirectory)
+
+              inlineScript: |
+
+                set -e
+
+                echo "=================================="
+                echo "Azure Subscription Context"
+                echo "=================================="
+
+                az account show
+
+                echo "=================================="
+                echo "Terraform Initialization"
+                echo "=================================="
+
+                terraform init -reconfigure
+
+                echo "=================================="
+                echo "Terraform Providers"
+                echo "=================================="
+
+                terraform providers
+
+                echo "=================================="
+                echo "Terraform Formatting Validation"
+                echo "=================================="
+
+                terraform fmt -check
+
+                echo "=================================="
+                echo "Terraform Validation"
+                echo "=================================="
+
+                terraform validate
+
+                echo "=================================="
+                echo "Terraform Plan"
+                echo "=================================="
+
+                terraform plan \
+                  -input=false \
+                  -out=tfplan
+
+                echo "=================================="
+                echo "Terraform Apply"
+                echo "=================================="
+
+                terraform apply \
+                  -input=false \
+                  -auto-approve \
+                  tfplan
+
+                echo "=================================="
+                echo "AKS Credentials"
+                echo "=================================="
+
+                az aks get-credentials \
+                  --resource-group $(resourceGroupName) \
+                  --name $(aksClusterName) \
+                  --admin \
+                  --overwrite-existing
+
+                echo "=================================="
+                echo "Cluster Validation"
+                echo "=================================="
+
+                kubectl get nodes
+
+                kubectl get namespaces
+
+                echo "=================================="
+                echo "Cluster Info"
+                echo "=================================="
+
+                kubectl cluster-info
+
+                # ==================================
+                # Optional Future Destroy
+                # ==================================
+                # terraform destroy -auto-approve
+
+          # =====================================
+          # OPTIONAL FAILURE DIAGNOSTICS
+          # =====================================
+
+          - script: |
 
               echo "=================================="
-              echo "Terraform Initialization"
+              echo "Terraform Failure Diagnostics"
               echo "=================================="
 
-              terraform init -reconfigure
+              terraform version || true
 
-              echo "=================================="
-              echo "Terraform Providers"
-              echo "=================================="
+            condition: failed()
 
-              terraform providers
-
-              echo "=================================="
-              echo "Terraform Formatting Validation"
-              echo "=================================="
-
-              terraform fmt -check
-
-              echo "=================================="
-              echo "Terraform Validation"
-              echo "=================================="
-
-              terraform validate
-
-              echo "=================================="
-              echo "Terraform Plan"
-              echo "=================================="
-
-              terraform plan \
-                -input=false \
-                -out=tfplan
-
-              echo "=================================="
-              echo "Terraform Apply"
-              echo "=================================="
-
-              terraform apply \
-                -input=false \
-                -auto-approve \
-                tfplan
-
-              echo "=================================="
-              echo "AKS Credentials"
-              echo "=================================="
-
-              az aks get-credentials \
-                --resource-group $(resourceGroupName) \
-                --name $(aksClusterName) \
-                --admin \
-                --overwrite-existing
-
-              echo "=================================="
-              echo "Cluster Validation"
-              echo "=================================="
-
-              kubectl get nodes
-
-              kubectl get namespaces
-
-              echo "=================================="
-              echo "Cluster Info"
-              echo "=================================="
-
-              kubectl cluster-info
-
-              # ==================================
-              # Optional Future Destroy
-              # ==================================
-              # terraform destroy -auto-approve
-
-        # =====================================
-        # OPTIONAL FAILURE DIAGNOSTICS
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Terraform Failure Diagnostics"
-            echo "=================================="
-
-            terraform version || true
-
-          condition: failed()
-
-          displayName: Optional Failure Diagnostics
+            displayName: Optional Failure Diagnostics

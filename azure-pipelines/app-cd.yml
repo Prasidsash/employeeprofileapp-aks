@@ -64,13 +64,14 @@ stages:
                 displayName: Validate Tooling
 
               # =====================================
-              # WAIT FOR AKS
+              # WAIT FOR AKS READY
               # =====================================
 
               - task: AzureCLI@2
                 displayName: Wait For AKS Ready
 
                 inputs:
+
                   azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
@@ -92,7 +93,8 @@ stages:
                 displayName: Get AKS Credentials
 
                 inputs:
-                  azureSubscription: $(azureServiceConnection)
+
+                  azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
 
@@ -106,7 +108,7 @@ stages:
                       --overwrite-existing
 
               # =====================================
-              # AKS VALIDATION
+              # AKS CONNECTIVITY VALIDATION
               # =====================================
 
               - script: |
@@ -120,17 +122,7 @@ stages:
                 displayName: Validate AKS Connectivity
 
               # =====================================
-              # NAMESPACE VALIDATION
-              # =====================================
-
-              - script: |
-
-                  kubectl get namespace employeeprofileapp-dev
-
-                displayName: Validate Namespace
-
-              # =====================================
-              # HELM LINT
+              # HELM LINT VALIDATION
               # =====================================
 
               - script: |
@@ -147,6 +139,7 @@ stages:
                 displayName: Helm Upgrade Install
 
                 inputs:
+
                   connectionType: None
 
                   command: upgrade
@@ -186,7 +179,7 @@ stages:
                 displayName: Validate Deployment
 
               # =====================================
-              # OPTIONAL DIAGNOSTICS
+              # OPTIONAL DEPLOYMENT DIAGNOSTICS
               # =====================================
 
               - script: |
@@ -232,36 +225,16 @@ stages:
 
               - checkout: self
 
-              - script: |
-
-                  kubectl version --client
-
-                  helm version
-
-                displayName: Validate Tooling
-
-              - task: AzureCLI@2
-                displayName: Wait For AKS Ready
-
-                inputs:
-                  azureSubscription: $(azureServiceConnection)
-
-                  scriptType: bash
-
-                  scriptLocation: inlineScript
-
-                  inlineScript: |
-
-                    az aks wait \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --created
+              # =====================================
+              # GET AKS CREDENTIALS
+              # =====================================
 
               - task: AzureCLI@2
                 displayName: Get AKS Credentials
 
                 inputs:
-                  azureSubscription: $(azureServiceConnection)
+
+                  azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
 
@@ -273,52 +246,6 @@ stages:
                       --resource-group $(aksResourceGroup) \
                       --name $(aksClusterName) \
                       --overwrite-existing
-
-              - script: |
-
-                  kubectl get namespace employeeprofileapp-qa
-
-                displayName: Validate Namespace
-
-              - script: |
-
-                  helm lint helm/employeeprofileapp
-
-                displayName: Helm Lint Validation
-
-              - task: HelmDeploy@0
-                displayName: Helm Upgrade Install
-
-                inputs:
-                  connectionType: None
-
-                  command: upgrade
-
-                  chartType: FilePath
-
-                  chartPath: helm/employeeprofileapp
-
-                  releaseName: employeeprofileapp-qa
-
-                  namespace: employeeprofileapp-qa
-
-                  arguments: >
-                    --install
-                    --wait
-                    --timeout 10m
-                    --atomic
-                    --debug
-                    -f helm/employeeprofileapp/values-qa.yaml
-                    --set image.repository=$(imageRepository)
-                    --set image.tag=$(resources.pipeline.appci.runName)
-
-              - script: |
-
-                  kubectl rollout status deployment/employeeprofileapp-qa \
-                    -n employeeprofileapp-qa \
-                    --timeout=300s
-
-                displayName: Validate Deployment
 
 # =====================================
 # UAT STAGE
@@ -350,11 +277,16 @@ stages:
 
               - checkout: self
 
+              # =====================================
+              # GET AKS CREDENTIALS
+              # =====================================
+
               - task: AzureCLI@2
                 displayName: Get AKS Credentials
 
                 inputs:
-                  azureSubscription: $(azureServiceConnection)
+
+                  azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
 
@@ -366,46 +298,6 @@ stages:
                       --resource-group $(aksResourceGroup) \
                       --name $(aksClusterName) \
                       --overwrite-existing
-
-              - script: |
-
-                  helm lint helm/employeeprofileapp
-
-                displayName: Helm Lint Validation
-
-              - task: HelmDeploy@0
-                displayName: Helm Upgrade Install
-
-                inputs:
-                  connectionType: None
-
-                  command: upgrade
-
-                  chartType: FilePath
-
-                  chartPath: helm/employeeprofileapp
-
-                  releaseName: employeeprofileapp-uat
-
-                  namespace: employeeprofileapp-uat
-
-                  arguments: >
-                    --install
-                    --wait
-                    --timeout 10m
-                    --atomic
-                    --debug
-                    -f helm/employeeprofileapp/values-uat.yaml
-                    --set image.repository=$(imageRepository)
-                    --set image.tag=$(resources.pipeline.appci.runName)
-
-              - script: |
-
-                  kubectl rollout status deployment/employeeprofileapp-uat \
-                    -n employeeprofileapp-uat \
-                    --timeout=300s
-
-                displayName: Validate Deployment
 
 # =====================================
 # PROD STAGE
@@ -437,11 +329,16 @@ stages:
 
               - checkout: self
 
+              # =====================================
+              # GET AKS CREDENTIALS
+              # =====================================
+
               - task: AzureCLI@2
                 displayName: Get AKS Credentials
 
                 inputs:
-                  azureSubscription: $(azureServiceConnection)
+
+                  azureSubscription: $(azureDeployServiceConnection)
 
                   scriptType: bash
 
@@ -453,43 +350,3 @@ stages:
                       --resource-group $(aksResourceGroup) \
                       --name $(aksClusterName) \
                       --overwrite-existing
-
-              - script: |
-
-                  helm lint helm/employeeprofileapp
-
-                displayName: Helm Lint Validation
-
-              - task: HelmDeploy@0
-                displayName: Helm Upgrade Install
-
-                inputs:
-                  connectionType: None
-
-                  command: upgrade
-
-                  chartType: FilePath
-
-                  chartPath: helm/employeeprofileapp
-
-                  releaseName: employeeprofileapp-prod
-
-                  namespace: employeeprofileapp-prod
-
-                  arguments: >
-                    --install
-                    --wait
-                    --timeout 10m
-                    --atomic
-                    --debug
-                    -f helm/employeeprofileapp/values-prod.yaml
-                    --set image.repository=$(imageRepository)
-                    --set image.tag=$(resources.pipeline.appci.runName)
-
-              - script: |
-
-                  kubectl rollout status deployment/employeeprofileapp-prod \
-                    -n employeeprofileapp-prod \
-                    --timeout=300s
-
-                displayName: Validate Deployment
