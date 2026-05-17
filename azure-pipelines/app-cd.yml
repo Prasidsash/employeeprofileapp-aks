@@ -1,40 +1,43 @@
-trigger: none
-
-resources:
-  pipelines:
-    - pipeline: appci
-      source: CI
-
-      trigger:
-        branches:
-          include:
-            - main
+trigger:
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: ubuntu-latest
 
+variables:
+
+  dockerRegistryServiceConnection: 'dockerhub-service-connection'
+
+  imageRepository: 'prasidsash/employeeprofileapp-aks'
+
+  kubernetesServiceConnection: 'aks-service-connection'
+
+  imagePullSecret: 'dockerhub-secret'
+
+  helmChartPath: 'helm/employeeprofileapp'
+
 stages:
 
 # =====================================
-# DEV STAGE
+# DEV DEPLOYMENT
 # =====================================
 
 - stage: DEV
-  displayName: Deploy DEV
 
-  condition: succeeded()
-
-  variables:
-    - group: employeeprofileapp-dev-vars
+  displayName: DEV Deployment
 
   jobs:
 
     - deployment: DeployDEV
-      displayName: Deploy To DEV AKS
 
-      environment: DEV
+      displayName: Deploy DEV
+
+      environment: employeeprofileapp-dev
 
       strategy:
+
         runOnce:
 
           deploy:
@@ -43,180 +46,67 @@ stages:
 
               - checkout: self
 
-              # =====================================
-              # TOOLING VALIDATION
-              # =====================================
+              - task: KubernetesManifest@1
 
-              - script: |
-
-                  echo "=================================="
-                  echo "Kubectl Version"
-                  echo "=================================="
-
-                  kubectl version --client
-
-                  echo "=================================="
-                  echo "Helm Version"
-                  echo "=================================="
-
-                  helm version
-
-                displayName: Validate Tooling
-
-              # =====================================
-              # WAIT FOR AKS READY
-              # =====================================
-
-              - task: AzureCLI@2
-                displayName: Wait For AKS Ready
+                displayName: Create DEV Image Pull Secret
 
                 inputs:
 
-                  azureSubscription: 'AKS SCN'
+                  action: createSecret
 
-                  scriptType: bash
+                  secretName: $(imagePullSecret)
 
-                  scriptLocation: inlineScript
+                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                  inlineScript: |
-
-                    az aks wait \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --created
-
-              # =====================================
-              # GET AKS CREDENTIALS
-              # =====================================
-
-              - task: AzureCLI@2
-                displayName: Get AKS Credentials
-
-                inputs:
-
-                  azureSubscription: 'AKS SCN'
-
-                  scriptType: bash
-
-                  scriptLocation: inlineScript
-
-                  inlineScript: |
-
-                    az aks get-credentials \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --overwrite-existing
-
-              # =====================================
-              # AKS CONNECTIVITY VALIDATION
-              # =====================================
-
-              - script: |
-
-                  kubectl config current-context
-
-                  kubectl get nodes
-
-                  kubectl get ns
-
-                displayName: Validate AKS Connectivity
-
-              # =====================================
-              # HELM LINT VALIDATION
-              # =====================================
-
-              - script: |
-
-                  helm lint helm/employeeprofileapp
-
-                displayName: Helm Lint Validation
-
-              # =====================================
-              # HELM DEPLOYMENT
-              # =====================================
+                  namespace: employeeprofileapp-dev
 
               - task: HelmDeploy@0
-                displayName: Helm Upgrade Install
+
+                displayName: Deploy DEV Helm Chart
 
                 inputs:
 
-                  connectionType: None
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+
+                  namespace: employeeprofileapp-dev
 
                   command: upgrade
 
                   chartType: FilePath
 
-                  chartPath: helm/employeeprofileapp
+                  chartPath: $(helmChartPath)
 
                   releaseName: employeeprofileapp-dev
 
-                  namespace: employeeprofileapp-dev
+                  install: true
+
+                  valueFile: helm/employeeprofileapp/values-dev.yaml
 
                   arguments: >
-                    --install
-                    --wait
-                    --timeout 10m
-                    --atomic
-                    --debug
-                    -f helm/employeeprofileapp/values-dev.yaml
-                    --set image.repository=$(imageRepository)
-                    --set image.tag=$(resources.pipeline.appci.runName)
-
-              # =====================================
-              # DEPLOYMENT VALIDATION
-              # =====================================
-
-              - script: |
-
-                  kubectl get pods -n employeeprofileapp-dev
-
-                  kubectl get svc -n employeeprofileapp-dev
-
-                  kubectl rollout status deployment/employeeprofileapp-dev \
-                    -n employeeprofileapp-dev \
-                    --timeout=300s
-
-                displayName: Validate Deployment
-
-              # =====================================
-              # OPTIONAL DEPLOYMENT DIAGNOSTICS
-              # =====================================
-
-              - script: |
-
-                  echo "=================================="
-                  echo "Deployment Diagnostics"
-                  echo "=================================="
-
-                  kubectl describe deployment employeeprofileapp-dev \
-                    -n employeeprofileapp-dev || true
-
-                condition: failed()
-
-                displayName: Optional Deployment Diagnostics
+                    --set image.tag=$(Build.BuildId)
 
 # =====================================
-# QA STAGE
+# QA DEPLOYMENT
 # =====================================
 
 - stage: QA
-  displayName: Deploy QA
+
+  displayName: QA Deployment
 
   dependsOn: DEV
-
-  condition: succeeded()
-
-  variables:
-    - group: employeeprofileapp-qa-vars
 
   jobs:
 
     - deployment: DeployQA
-      displayName: Deploy To QA AKS
 
-      environment: QA
+      displayName: Deploy QA
+
+      environment: employeeprofileapp-qa
 
       strategy:
+
         runOnce:
 
           deploy:
@@ -225,50 +115,67 @@ stages:
 
               - checkout: self
 
-              # =====================================
-              # GET AKS CREDENTIALS
-              # =====================================
+              - task: KubernetesManifest@1
 
-              - task: AzureCLI@2
-                displayName: Get AKS Credentials
+                displayName: Create QA Image Pull Secret
 
                 inputs:
 
-                  azureSubscription: 'AKS SCN'
+                  action: createSecret
 
-                  scriptType: bash
+                  secretName: $(imagePullSecret)
 
-                  scriptLocation: inlineScript
+                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                  inlineScript: |
+                  namespace: employeeprofileapp-qa
 
-                    az aks get-credentials \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --overwrite-existing
+              - task: HelmDeploy@0
+
+                displayName: Deploy QA Helm Chart
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+
+                  namespace: employeeprofileapp-qa
+
+                  command: upgrade
+
+                  chartType: FilePath
+
+                  chartPath: $(helmChartPath)
+
+                  releaseName: employeeprofileapp-qa
+
+                  install: true
+
+                  valueFile: helm/employeeprofileapp/values-qa.yaml
+
+                  arguments: >
+                    --set image.tag=$(Build.BuildId)
 
 # =====================================
-# UAT STAGE
+# UAT DEPLOYMENT
 # =====================================
 
 - stage: UAT
-  displayName: Deploy UAT
+
+  displayName: UAT Deployment
 
   dependsOn: QA
-
-  condition: succeeded()
-
-  variables:
-    - group: employeeprofileapp-uat-vars
 
   jobs:
 
     - deployment: DeployUAT
-      displayName: Deploy To UAT AKS
 
-      environment: UAT
+      displayName: Deploy UAT
+
+      environment: employeeprofileapp-uat
 
       strategy:
+
         runOnce:
 
           deploy:
@@ -277,50 +184,67 @@ stages:
 
               - checkout: self
 
-              # =====================================
-              # GET AKS CREDENTIALS
-              # =====================================
+              - task: KubernetesManifest@1
 
-              - task: AzureCLI@2
-                displayName: Get AKS Credentials
+                displayName: Create UAT Image Pull Secret
 
                 inputs:
 
-                  azureSubscription: 'AKS SCN'
+                  action: createSecret
 
-                  scriptType: bash
+                  secretName: $(imagePullSecret)
 
-                  scriptLocation: inlineScript
+                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                  inlineScript: |
+                  namespace: employeeprofileapp-uat
 
-                    az aks get-credentials \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --overwrite-existing
+              - task: HelmDeploy@0
+
+                displayName: Deploy UAT Helm Chart
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+
+                  namespace: employeeprofileapp-uat
+
+                  command: upgrade
+
+                  chartType: FilePath
+
+                  chartPath: $(helmChartPath)
+
+                  releaseName: employeeprofileapp-uat
+
+                  install: true
+
+                  valueFile: helm/employeeprofileapp/values-uat.yaml
+
+                  arguments: >
+                    --set image.tag=$(Build.BuildId)
 
 # =====================================
-# PROD STAGE
+# PROD DEPLOYMENT
 # =====================================
 
 - stage: PROD
-  displayName: Deploy PROD
+
+  displayName: PROD Deployment
 
   dependsOn: UAT
-
-  condition: succeeded()
-
-  variables:
-    - group: employeeprofileapp-prod-vars
 
   jobs:
 
     - deployment: DeployPROD
-      displayName: Deploy To PROD AKS
 
-      environment: PROD
+      displayName: Deploy PROD
+
+      environment: employeeprofileapp-prod
 
       strategy:
+
         runOnce:
 
           deploy:
@@ -329,24 +253,43 @@ stages:
 
               - checkout: self
 
-              # =====================================
-              # GET AKS CREDENTIALS
-              # =====================================
+              - task: KubernetesManifest@1
 
-              - task: AzureCLI@2
-                displayName: Get AKS Credentials
+                displayName: Create PROD Image Pull Secret
 
                 inputs:
 
-                  azureSubscription: 'AKS SCN'
+                  action: createSecret
 
-                  scriptType: bash
+                  secretName: $(imagePullSecret)
 
-                  scriptLocation: inlineScript
+                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-                  inlineScript: |
+                  namespace: employeeprofileapp-prod
 
-                    az aks get-credentials \
-                      --resource-group $(aksResourceGroup) \
-                      --name $(aksClusterName) \
-                      --overwrite-existing
+              - task: HelmDeploy@0
+
+                displayName: Deploy PROD Helm Chart
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+
+                  namespace: employeeprofileapp-prod
+
+                  command: upgrade
+
+                  chartType: FilePath
+
+                  chartPath: $(helmChartPath)
+
+                  releaseName: employeeprofileapp-prod
+
+                  install: true
+
+                  valueFile: helm/employeeprofileapp/values-prod.yaml
+
+                  arguments: >
+                    --set image.tag=$(Build.BuildId)

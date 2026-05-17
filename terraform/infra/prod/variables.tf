@@ -619,3 +619,79 @@ variable "enable_loadbalancer" {
 
   default = true
 }
+
+# =====================================
+# SPOT NODE POOL
+# =====================================
+
+variable "enable_spot_node_pool" {
+
+  description = "Enable AKS Spot node pool"
+
+  type = bool
+
+  default = false
+}
+
+variable "spot_node_pool_name" {
+
+  description = "AKS Spot node pool name"
+
+  type = string
+
+  default = "spotpool"
+}
+
+variable "spot_node_vm_size" {
+
+  description = "AKS Spot node VM size"
+
+  type = string
+
+  default = "Standard_B2s"
+}
+
+variable "spot_max_price" {
+
+  description = "Maximum Spot node price"
+
+  type = number
+
+  default = -1
+}
+
+variable "spot_node_min_count" {
+
+  description = "Minimum Spot node count"
+
+  type = number
+
+  default = 0
+}
+
+variable "spot_node_max_count" {
+
+  description = "Maximum Spot node count"
+
+  type = number
+
+  default = 2
+}
+
+variable "spot_node_labels" {
+
+  description = "Spot node labels"
+
+  type = map(string)
+
+  default = {}
+}
+
+variable "spot_node_taints" {
+
+  description = "Spot node taints"
+
+  type = list(string)
+
+  default = []
+}
