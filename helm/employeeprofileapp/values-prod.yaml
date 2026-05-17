@@ -54,7 +54,7 @@ serviceSettings:
 # =====================================
 
 env:
-  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_ENVIRONMENT: prod
 
 # =====================================
 # RESOURCE SETTINGS
@@ -69,23 +69,6 @@ resources:
   limits:
     cpu: "100m"
     memory: "128Mi"
-
-# =====================================
-# SPOT NODE CONFIGURATION
-# =====================================
-
-nodeSelector:
-  workload: spot
-
-tolerations:
-
-  - key: "kubernetes.azure.com/scalesetpriority"
-
-    operator: "Equal"
-
-    value: "spot"
-
-    effect: "NoSchedule"
 
 # =====================================
 # INGRESS
@@ -155,27 +138,6 @@ configMapAnnotations: {}
 # =====================================
 
 extraConfig: {}
-
-# =====================================
-# NODE SELECTOR
-# =====================================
-
-nodeSelector:
-  workload: spot
-
-# =====================================
-# TOLERATIONS
-# =====================================
-
-tolerations:
-
-  - key: "kubernetes.azure.com/scalesetpriority"
-
-    operator: "Equal"
-
-    value: "spot"
-
-    effect: "NoSchedule"
 
 # =====================================
 # AFFINITY
