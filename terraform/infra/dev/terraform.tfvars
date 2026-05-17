@@ -320,10 +320,9 @@ enable_ingress = true
 
 # =====================================
 # SPOT NODE POOL
-# LOW-COST SCALABILITY TESTING
 # =====================================
 
-enable_spot_node_pool = true
+enable_spot_node_pool = false
 
 spot_node_pool_name = "spotpool"
 
@@ -333,7 +332,7 @@ spot_max_price = -1
 
 spot_node_min_count = 1
 
-spot_node_max_count = 2
+spot_node_max_count = 1
 
 spot_node_labels = {
 

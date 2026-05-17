@@ -183,6 +183,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
   name = var.spot_node_pool_name
 
+  temporary_name_for_rotation = "spottemp"
+
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
 
   vm_size = var.spot_node_vm_size
