@@ -76,22 +76,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     orchestrator_version = var.kubernetes_version
 
-    # =====================================
-    # OPTIONAL NODE LABELS
-    # =====================================
-
     node_labels = var.node_labels
-
-    # =====================================
-    # OPTIONAL NODE TAINTS
-    # =====================================
-    # Temporarily excluded because
-    # current AzureRM provider schema
-    # does not support node_taints
-    # safely in default_node_pool.
-    #
-    # Preserving runtime stability.
-    # =====================================
 
     upgrade_settings {
 
@@ -141,7 +126,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   # =====================================
   # MANAGED PROMETHEUS
-  # Preserve Existing Monitoring Behavior
   # =====================================
 
   dynamic "monitor_metrics" {
@@ -182,6 +166,63 @@ resource "azurerm_kubernetes_cluster" "aks" {
       managed_by = "terraform"
 
       project = "employeeprofileapp"
+    },
+
+    var.additional_tags
+  )
+}
+
+# =====================================
+# ADDITIVE SPOT NODE POOL
+# SAFE LOW-COST SCALABILITY TESTING
+# =====================================
+
+resource "azurerm_kubernetes_cluster_node_pool" "spot" {
+
+  name = "spotpool"
+
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+
+  vm_size = "Standard_B2s"
+
+  mode = "User"
+
+  priority = "Spot"
+
+  eviction_policy = "Delete"
+
+  spot_max_price = -1
+
+  enable_auto_scaling = true
+
+  min_count = 0
+
+  max_count = 2
+
+  vnet_subnet_id = var.subnet_id
+
+  orchestrator_version = var.kubernetes_version
+
+  node_labels = {
+
+    workload = "spot"
+  }
+
+  node_taints = [
+
+    "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+  ]
+
+  tags = merge(
+
+    {
+      environment = var.environment
+
+      managed_by = "terraform"
+
+      project = "employeeprofileapp"
+
+      nodepool = "spot"
     },
 
     var.additional_tags
