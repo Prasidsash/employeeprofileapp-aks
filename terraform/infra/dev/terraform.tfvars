@@ -331,7 +331,7 @@ spot_node_vm_size = "Standard_B2s"
 
 spot_max_price = -1
 
-spot_node_min_count = 0
+spot_node_min_count = 1
 
 spot_node_max_count = 2
 
