@@ -17,7 +17,7 @@ app:
 
 image:
   repository: prasidsash/employeeprofileapp-aks
-  tag: v1
+  tag: latest
   pullPolicy: Always
 
 # =====================================
@@ -26,7 +26,15 @@ image:
 
 service:
 
+  # =====================================
+  # REQUIRED FOR SERVICE TEMPLATE RENDERING
+  # =====================================
+
   enabled: true
+
+  # =====================================
+  # PUBLIC AKS LOAD BALANCER
+  # =====================================
 
   type: LoadBalancer
 
@@ -58,17 +66,18 @@ env:
 
 # =====================================
 # RESOURCE SETTINGS
+# LOW-COST SINGLE NODE OPTIMIZATION
 # =====================================
 
 resources:
 
   requests:
-    cpu: "100m"
-    memory: "128Mi"
+    cpu: "50m"
+    memory: "64Mi"
 
   limits:
-    cpu: "200m"
-    memory: "256Mi"
+    cpu: "100m"
+    memory: "128Mi"
 
 # =====================================
 # INGRESS
@@ -87,8 +96,13 @@ ingress:
 
   annotations: {}
 
+  # =====================================
+  # OPTIONAL FUTURE TLS SUPPORT
+  # =====================================
+
   tls:
     enabled: false
+
     secretName: ""
 
 # =====================================
@@ -104,7 +118,15 @@ hpa:
 
   averageUtilization: 70
 
+  # =====================================
+  # OPTIONAL MEMORY METRIC
+  # =====================================
+
   memoryAverageUtilization: null
+
+  # =====================================
+  # OPTIONAL FUTURE HPA BEHAVIOR
+  # =====================================
 
   stabilizationWindowSeconds: 300
 
