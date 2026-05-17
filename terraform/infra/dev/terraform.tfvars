@@ -327,7 +327,7 @@ enable_spot_node_pool = true
 
 spot_node_pool_name = "spotpool"
 
-spot_node_vm_size = "Standard_B2s"
+spot_node_vm_size = "Standard_D2s_v3"
 
 spot_max_price = -1
 
