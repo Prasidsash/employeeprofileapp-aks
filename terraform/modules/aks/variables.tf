@@ -2,7 +2,7 @@
 # COMMON
 # =====================================
 
-variable "environment" {
+variable "resource_group_name" {
   type = string
 }
 
@@ -10,17 +10,17 @@ variable "location" {
   type = string
 }
 
-variable "resource_group_name" {
-  type = string
-}
-
-# =====================================
-# AKS CLUSTER
-# =====================================
-
 variable "cluster_name" {
   type = string
 }
+
+variable "environment" {
+  type = string
+}
+
+# =====================================
+# AKS VERSION
+# =====================================
 
 variable "kubernetes_version" {
   type = string
@@ -38,50 +38,6 @@ variable "system_node_vm_size" {
   type = string
 }
 
-variable "subnet_id" {
-  type = string
-}
-
-# =====================================
-# NETWORKING
-# =====================================
-
-variable "service_cidr" {
-  type = string
-}
-
-variable "dns_service_ip" {
-  type = string
-}
-
-# =====================================
-# LOG ANALYTICS
-# =====================================
-
-variable "log_analytics_workspace_id" {
-
-  description = "Log Analytics Workspace ID"
-
-  type = string
-}
-
-# =====================================
-# MANAGED PROMETHEUS
-# =====================================
-
-variable "azure_monitor_workspace_id" {
-
-  description = "Azure Monitor Workspace ID"
-
-  type = string
-
-  default = null
-}
-
-# =====================================
-# NODE AUTOSCALING
-# =====================================
-
 variable "enable_node_autoscaling" {
   type = bool
 }
@@ -92,6 +48,35 @@ variable "system_node_min_count" {
 
 variable "system_node_max_count" {
   type = number
+}
+
+# =====================================
+# NETWORKING
+# =====================================
+
+variable "subnet_id" {
+  type = string
+}
+
+variable "service_cidr" {
+  type = string
+}
+
+variable "dns_service_ip" {
+  type = string
+}
+
+# =====================================
+# MONITORING
+# =====================================
+
+variable "log_analytics_workspace_id" {
+  type = string
+}
+
+variable "azure_monitor_workspace_id" {
+  type    = string
+  default = null
 }
 
 # =====================================
@@ -106,10 +91,6 @@ variable "enable_workload_identity" {
 
   default = false
 }
-
-# =====================================
-# OPTIONAL OIDC ISSUER
-# =====================================
 
 variable "enable_oidc_issuer" {
 
@@ -143,20 +124,7 @@ variable "image_cleaner_interval_hours" {
 }
 
 # =====================================
-# OPTIONAL SKU TIER
-# =====================================
-
-variable "sku_tier" {
-
-  description = "AKS SKU Tier"
-
-  type = string
-
-  default = "Free"
-}
-
-# =====================================
-# OPTIONAL NODE LABELS
+# NODE LABELS / TAINTS
 # =====================================
 
 variable "node_labels" {
@@ -168,10 +136,6 @@ variable "node_labels" {
   default = {}
 }
 
-# =====================================
-# OPTIONAL NODE TAINTS
-# =====================================
-
 variable "node_taints" {
 
   description = "Optional AKS node taints"
@@ -182,7 +146,7 @@ variable "node_taints" {
 }
 
 # =====================================
-# OPTIONAL API SERVER ACCESS PROFILE
+# API SERVER ACCESS PROFILE
 # =====================================
 
 variable "enable_api_server_access_profile" {
@@ -196,7 +160,7 @@ variable "enable_api_server_access_profile" {
 
 variable "authorized_ip_ranges" {
 
-  description = "Authorized IP ranges for AKS API server"
+  description = "Authorized IP ranges"
 
   type = list(string)
 
@@ -204,7 +168,7 @@ variable "authorized_ip_ranges" {
 }
 
 # =====================================
-# OPTIONAL ADDITIONAL TAGS
+# ADDITIONAL TAGS
 # =====================================
 
 variable "additional_tags" {
@@ -222,7 +186,7 @@ variable "additional_tags" {
 
 variable "enable_spot_node_pool" {
 
-  description = "Enable AKS Spot Node Pool"
+  description = "Enable AKS Spot node pool"
 
   type = bool
 
@@ -231,7 +195,7 @@ variable "enable_spot_node_pool" {
 
 variable "spot_node_pool_name" {
 
-  description = "AKS Spot Node Pool Name"
+  description = "AKS Spot node pool name"
 
   type = string
 
@@ -240,16 +204,25 @@ variable "spot_node_pool_name" {
 
 variable "spot_node_vm_size" {
 
-  description = "AKS Spot Node VM Size"
+  description = "AKS Spot node VM size"
 
   type = string
 
   default = "Standard_B2s"
 }
 
+variable "spot_max_price" {
+
+  description = "Maximum Spot node price"
+
+  type = number
+
+  default = -1
+}
+
 variable "spot_node_min_count" {
 
-  description = "Minimum Spot Node Count"
+  description = "Minimum Spot node count"
 
   type = number
 
@@ -258,42 +231,27 @@ variable "spot_node_min_count" {
 
 variable "spot_node_max_count" {
 
-  description = "Maximum Spot Node Count"
+  description = "Maximum Spot node count"
 
   type = number
 
   default = 2
 }
 
-variable "spot_max_price" {
-
-  description = "Maximum Spot Price"
-
-  type = number
-
-  default = -1
-}
-
 variable "spot_node_labels" {
 
-  description = "Spot Node Labels"
+  description = "Spot node labels"
 
   type = map(string)
 
-  default = {
-
-    workload = "spot"
-  }
+  default = {}
 }
 
 variable "spot_node_taints" {
 
-  description = "Spot Node Taints"
+  description = "Spot node taints"
 
   type = list(string)
 
-  default = [
-
-    "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
-  ]
+  default = []
 }

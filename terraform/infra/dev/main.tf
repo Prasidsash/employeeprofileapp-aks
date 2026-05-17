@@ -136,6 +136,26 @@ module "aks" {
   enable_node_autoscaling = var.enable_node_autoscaling
 
   # =====================================
+  # SPOT NODE POOL
+  # =====================================
+
+  enable_spot_node_pool = var.enable_spot_node_pool
+
+  spot_node_pool_name = var.spot_node_pool_name
+
+  spot_node_vm_size = var.spot_node_vm_size
+
+  spot_max_price = var.spot_max_price
+
+  spot_node_min_count = var.spot_node_min_count
+
+  spot_node_max_count = var.spot_node_max_count
+
+  spot_node_labels = var.spot_node_labels
+
+  spot_node_taints = var.spot_node_taints
+
+  # =====================================
   # AKS NETWORKING
   # =====================================
 
