@@ -54,7 +54,7 @@ serviceSettings:
 # =====================================
 
 env:
-  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_ENVIRONMENT: dev
 
 # =====================================
 # RESOURCE SETTINGS
@@ -69,23 +69,6 @@ resources:
   limits:
     cpu: "100m"
     memory: "128Mi"
-
-# =====================================
-# DEV SPOT NODE CONFIGURATION
-# =====================================
-
-nodeSelector:
-  workload: spot
-
-tolerations:
-
-  - key: "kubernetes.azure.com/scalesetpriority"
-
-    operator: "Equal"
-
-    value: "spot"
-
-    effect: "NoSchedule"
 
 # =====================================
 # INGRESS
@@ -116,9 +99,9 @@ ingress:
 hpa:
   enabled: false
 
-  minReplicas: 1
+  minReplicas: 2
 
-  maxReplicas: 2
+  maxReplicas: 10
 
   averageUtilization: 70
 
