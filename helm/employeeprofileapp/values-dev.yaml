@@ -71,7 +71,7 @@ resources:
     memory: "128Mi"
 
 # =====================================
-# SPOT NODE CONFIGURATION
+# DEV SPOT NODE CONFIGURATION
 # =====================================
 
 nodeSelector:
@@ -116,9 +116,9 @@ ingress:
 hpa:
   enabled: false
 
-  minReplicas: 2
+  minReplicas: 1
 
-  maxReplicas: 10
+  maxReplicas: 2
 
   averageUtilization: 70
 
@@ -155,27 +155,6 @@ configMapAnnotations: {}
 # =====================================
 
 extraConfig: {}
-
-# =====================================
-# NODE SELECTOR
-# =====================================
-
-nodeSelector:
-  workload: spot
-
-# =====================================
-# TOLERATIONS
-# =====================================
-
-tolerations:
-
-  - key: "kubernetes.azure.com/scalesetpriority"
-
-    operator: "Equal"
-
-    value: "spot"
-
-    effect: "NoSchedule"
 
 # =====================================
 # AFFINITY
