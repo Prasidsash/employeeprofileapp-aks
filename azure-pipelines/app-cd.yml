@@ -14,7 +14,7 @@ variables:
 
   dockerRegistryServiceConnection: 'Docker-SC'
 
-  kubernetesServiceConnection: 'AKS SCN'
+  azureServiceConnection: 'AzureAKS-SCN'
 
   imageRepository: 'prasidsash/employeeprofileapp-aks'
 
@@ -36,6 +36,18 @@ stages:
 
   displayName: DEV Deployment
 
+  variables:
+
+    aksResourceGroup: employeeprofileapp-dev-rg
+
+    aksClusterName: employeeprofileapp-dev-aks
+
+    namespace: employeeprofileapp-dev
+
+    helmReleaseName: employeeprofileapp-dev
+
+    valuesFile: helm/employeeprofileapp/values-dev.yaml
+
   jobs:
 
     - deployment: DeployDEV
@@ -55,22 +67,6 @@ stages:
               - checkout: self
 
               # =========================
-              # AKS LOGIN
-              # =========================
-
-              - task: Kubernetes@1
-
-                displayName: Get DEV AKS Credentials
-
-                inputs:
-
-                  connectionType: Kubernetes Service Connection
-
-                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
-
-                  command: login
-
-              # =========================
               # IMAGE PULL SECRET
               # =========================
 
@@ -82,11 +78,19 @@ stages:
 
                   action: createSecret
 
+                  connectionType: azureResourceManager
+
+                  azureSubscriptionConnection: $(azureServiceConnection)
+
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
+
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-                  namespace: employeeprofileapp-dev
 
               # =========================
               # HELM DEPLOY
@@ -98,11 +102,15 @@ stages:
 
                 inputs:
 
-                  connectionType: Kubernetes Service Connection
+                  connectionType: Azure Resource Manager
 
-                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+                  azureSubscription: $(azureServiceConnection)
 
-                  namespace: employeeprofileapp-dev
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
 
                   command: upgrade
 
@@ -110,11 +118,11 @@ stages:
 
                   chartPath: $(helmChartPath)
 
-                  releaseName: employeeprofileapp-dev
+                  releaseName: $(helmReleaseName)
 
                   install: true
 
-                  valueFile: helm/employeeprofileapp/values-dev.yaml
+                  valueFile: $(valuesFile)
 
                   arguments: >
                     --set image.repository=$(imageRepository)
@@ -129,6 +137,18 @@ stages:
   displayName: QA Deployment
 
   dependsOn: DEV
+
+  variables:
+
+    aksResourceGroup: employeeprofileapp-qa-rg
+
+    aksClusterName: employeeprofileapp-qa-aks
+
+    namespace: employeeprofileapp-qa
+
+    helmReleaseName: employeeprofileapp-qa
+
+    valuesFile: helm/employeeprofileapp/values-qa.yaml
 
   jobs:
 
@@ -149,22 +169,6 @@ stages:
               - checkout: self
 
               # =========================
-              # AKS LOGIN
-              # =========================
-
-              - task: Kubernetes@1
-
-                displayName: Get QA AKS Credentials
-
-                inputs:
-
-                  connectionType: Kubernetes Service Connection
-
-                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
-
-                  command: login
-
-              # =========================
               # IMAGE PULL SECRET
               # =========================
 
@@ -176,11 +180,19 @@ stages:
 
                   action: createSecret
 
+                  connectionType: azureResourceManager
+
+                  azureSubscriptionConnection: $(azureServiceConnection)
+
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
+
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-                  namespace: employeeprofileapp-qa
 
               # =========================
               # HELM DEPLOY
@@ -192,11 +204,15 @@ stages:
 
                 inputs:
 
-                  connectionType: Kubernetes Service Connection
+                  connectionType: Azure Resource Manager
 
-                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+                  azureSubscription: $(azureServiceConnection)
 
-                  namespace: employeeprofileapp-qa
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
 
                   command: upgrade
 
@@ -204,11 +220,11 @@ stages:
 
                   chartPath: $(helmChartPath)
 
-                  releaseName: employeeprofileapp-qa
+                  releaseName: $(helmReleaseName)
 
                   install: true
 
-                  valueFile: helm/employeeprofileapp/values-qa.yaml
+                  valueFile: $(valuesFile)
 
                   arguments: >
                     --set image.repository=$(imageRepository)
@@ -223,6 +239,18 @@ stages:
   displayName: UAT Deployment
 
   dependsOn: QA
+
+  variables:
+
+    aksResourceGroup: employeeprofileapp-uat-rg
+
+    aksClusterName: employeeprofileapp-uat-aks
+
+    namespace: employeeprofileapp-uat
+
+    helmReleaseName: employeeprofileapp-uat
+
+    valuesFile: helm/employeeprofileapp/values-uat.yaml
 
   jobs:
 
@@ -243,22 +271,6 @@ stages:
               - checkout: self
 
               # =========================
-              # AKS LOGIN
-              # =========================
-
-              - task: Kubernetes@1
-
-                displayName: Get UAT AKS Credentials
-
-                inputs:
-
-                  connectionType: Kubernetes Service Connection
-
-                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
-
-                  command: login
-
-              # =========================
               # IMAGE PULL SECRET
               # =========================
 
@@ -270,11 +282,19 @@ stages:
 
                   action: createSecret
 
+                  connectionType: azureResourceManager
+
+                  azureSubscriptionConnection: $(azureServiceConnection)
+
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
+
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-                  namespace: employeeprofileapp-uat
 
               # =========================
               # HELM DEPLOY
@@ -286,11 +306,15 @@ stages:
 
                 inputs:
 
-                  connectionType: Kubernetes Service Connection
+                  connectionType: Azure Resource Manager
 
-                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+                  azureSubscription: $(azureServiceConnection)
 
-                  namespace: employeeprofileapp-uat
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
 
                   command: upgrade
 
@@ -298,11 +322,11 @@ stages:
 
                   chartPath: $(helmChartPath)
 
-                  releaseName: employeeprofileapp-uat
+                  releaseName: $(helmReleaseName)
 
                   install: true
 
-                  valueFile: helm/employeeprofileapp/values-uat.yaml
+                  valueFile: $(valuesFile)
 
                   arguments: >
                     --set image.repository=$(imageRepository)
@@ -317,6 +341,18 @@ stages:
   displayName: PROD Deployment
 
   dependsOn: UAT
+
+  variables:
+
+    aksResourceGroup: employeeprofileapp-prod-rg
+
+    aksClusterName: employeeprofileapp-prod-aks
+
+    namespace: employeeprofileapp-prod
+
+    helmReleaseName: employeeprofileapp-prod
+
+    valuesFile: helm/employeeprofileapp/values-prod.yaml
 
   jobs:
 
@@ -337,22 +373,6 @@ stages:
               - checkout: self
 
               # =========================
-              # AKS LOGIN
-              # =========================
-
-              - task: Kubernetes@1
-
-                displayName: Get PROD AKS Credentials
-
-                inputs:
-
-                  connectionType: Kubernetes Service Connection
-
-                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
-
-                  command: login
-
-              # =========================
               # IMAGE PULL SECRET
               # =========================
 
@@ -364,11 +384,19 @@ stages:
 
                   action: createSecret
 
+                  connectionType: azureResourceManager
+
+                  azureSubscriptionConnection: $(azureServiceConnection)
+
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
+
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-                  namespace: employeeprofileapp-prod
 
               # =========================
               # HELM DEPLOY
@@ -380,11 +408,15 @@ stages:
 
                 inputs:
 
-                  connectionType: Kubernetes Service Connection
+                  connectionType: Azure Resource Manager
 
-                  kubernetesServiceConnection: $(kubernetesServiceConnection)
+                  azureSubscription: $(azureServiceConnection)
 
-                  namespace: employeeprofileapp-prod
+                  azureResourceGroup: $(aksResourceGroup)
+
+                  kubernetesCluster: $(aksClusterName)
+
+                  namespace: $(namespace)
 
                   command: upgrade
 
@@ -392,11 +424,11 @@ stages:
 
                   chartPath: $(helmChartPath)
 
-                  releaseName: employeeprofileapp-prod
+                  releaseName: $(helmReleaseName)
 
                   install: true
 
-                  valueFile: helm/employeeprofileapp/values-prod.yaml
+                  valueFile: $(valuesFile)
 
                   arguments: >
                     --set image.repository=$(imageRepository)
