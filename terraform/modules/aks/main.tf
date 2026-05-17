@@ -179,11 +179,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
 resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
-  name = "spotpool"
+  count = var.enable_spot_node_pool ? 1 : 0
+
+  name = var.spot_node_pool_name
 
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
 
-  vm_size = "Standard_B2s"
+  vm_size = var.spot_node_vm_size
 
   mode = "User"
 
@@ -191,27 +193,21 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
   eviction_policy = "Delete"
 
-  spot_max_price = -1
+  spot_max_price = var.spot_max_price
 
-  enable_auto_scaling = true
+  auto_scaling_enabled = true
 
-  min_count = 0
+  min_count = var.spot_node_min_count
 
-  max_count = 2
+  max_count = var.spot_node_max_count
 
   vnet_subnet_id = var.subnet_id
 
   orchestrator_version = var.kubernetes_version
 
-  node_labels = {
+  node_labels = var.spot_node_labels
 
-    workload = "spot"
-  }
-
-  node_taints = [
-
-    "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
-  ]
+  node_taints = var.spot_node_taints
 
   tags = merge(
 

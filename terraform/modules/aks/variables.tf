@@ -215,3 +215,85 @@ variable "additional_tags" {
 
   default = {}
 }
+
+# =====================================
+# SPOT NODE POOL
+# =====================================
+
+variable "enable_spot_node_pool" {
+
+  description = "Enable AKS Spot Node Pool"
+
+  type = bool
+
+  default = false
+}
+
+variable "spot_node_pool_name" {
+
+  description = "AKS Spot Node Pool Name"
+
+  type = string
+
+  default = "spotpool"
+}
+
+variable "spot_node_vm_size" {
+
+  description = "AKS Spot Node VM Size"
+
+  type = string
+
+  default = "Standard_B2s"
+}
+
+variable "spot_node_min_count" {
+
+  description = "Minimum Spot Node Count"
+
+  type = number
+
+  default = 0
+}
+
+variable "spot_node_max_count" {
+
+  description = "Maximum Spot Node Count"
+
+  type = number
+
+  default = 2
+}
+
+variable "spot_max_price" {
+
+  description = "Maximum Spot Price"
+
+  type = number
+
+  default = -1
+}
+
+variable "spot_node_labels" {
+
+  description = "Spot Node Labels"
+
+  type = map(string)
+
+  default = {
+
+    workload = "spot"
+  }
+}
+
+variable "spot_node_taints" {
+
+  description = "Spot Node Taints"
+
+  type = list(string)
+
+  default = [
+
+    "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+  ]
+}
