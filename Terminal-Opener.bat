@@ -5,7 +5,10 @@ set PROJECT_ROOT=D:\2026\Project-EmpProfApp\AzureDevops-AKS\employeeprofileapp-a
 REM Launch Windows Terminal with startup tabs using the variable
 wt ^
   new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\bootstrap\backend" --title "BACKEND" ; ^
-  new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\infra\dev" --title "INFRA" ; ^
+  new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\infra\dev" --title "DEV-INFRA" ; ^
+  new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\infra\qa" --title "QA-INFRA" ; ^
+  new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\infra\uat" --title "UAT-INFRA" ; ^
+  new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\terraform\infra\prod" --title "PROD-INFRA" ; ^
   new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%" --title "PROJ-HOME" ; ^
   new-tab -p "Windows PowerShell" -d "%PROJECT_ROOT%\helm\employeeprofileapp" --title "HELM" ; ^
   new-tab -p "Windows PowerShell" -d "C:\Users\aixra" --title "KUBECTL" ; ^

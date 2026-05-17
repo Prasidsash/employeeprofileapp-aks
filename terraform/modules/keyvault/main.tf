@@ -23,21 +23,28 @@ locals {
   )
 
   # =====================================
-  # ENVIRONMENT-SAFE KEY VAULT NAME
-  # PRESERVES EXISTING OVERRIDE LOGIC
+  # SAFE KEY VAULT NAME
   # =====================================
 
-  generated_key_vault_name = substr(
-    "${local.key_vault_base_name}-kv",
-    0,
-    24
+  generated_key_vault_name = trim(
+
+    substr(
+      "${local.key_vault_base_name}kv",
+      0,
+      24
+    ),
+
+    "-"
   )
 
   # =====================================
   # OPTIONAL CUSTOM NAME OVERRIDE
   # =====================================
 
-  key_vault_name = var.key_vault_name != null ? var.key_vault_name : local.generated_key_vault_name
+  key_vault_name = (
+    var.key_vault_name != null &&
+    var.key_vault_name != ""
+  ) ? var.key_vault_name : local.generated_key_vault_name
 }
 
 # =====================================
@@ -72,7 +79,6 @@ resource "azurerm_key_vault" "kv" {
 
   # =====================================
   # OPTIONAL NETWORK ACL PLACEHOLDER
-  # Preserve Existing Behavior
   # =====================================
 
   dynamic "network_acls" {
@@ -115,16 +121,11 @@ resource "azurerm_role_assignment" "kv_admin" {
 
   role_definition_name = var.keyvault_role_definition_name
 
-  # =====================================
-  # STABLE PRINCIPAL ASSIGNMENT
-  # =====================================
-
   principal_id = var.keyvault_admin_object_id
 }
 
 # =====================================
-# Optional Sample Secret
-# Lab-safe behavior
+# OPTIONAL SAMPLE SECRET
 # =====================================
 
 resource "azurerm_key_vault_secret" "app_secret" {
