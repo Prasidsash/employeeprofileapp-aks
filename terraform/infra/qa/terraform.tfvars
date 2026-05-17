@@ -317,3 +317,29 @@ enable_governance = true
 enable_secret = true
 
 enable_ingress = true
+
+# =====================================
+# SPOT NODE POOL
+# =====================================
+
+enable_spot_node_pool = false
+
+spot_node_pool_name = "spotpool"
+
+spot_node_vm_size = "Standard_D2s_v3"
+
+spot_max_price = -1
+
+spot_node_min_count = 1
+
+spot_node_max_count = 1
+
+spot_node_labels = {
+
+  workload = "spot"
+}
+
+spot_node_taints = [
+
+  "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+]
