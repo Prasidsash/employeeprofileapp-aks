@@ -228,7 +228,7 @@ stages:
 
                   arguments: >
                     --set image.repository=$(imageRepository)
-                    --set image.tag=latest
+                    --set image.tag=$(Build.BuildNumber)
 
 # =====================================
 # UAT DEPLOYMENT
@@ -330,7 +330,7 @@ stages:
 
                   arguments: >
                     --set image.repository=$(imageRepository)
-                    --set image.tag=latest
+                    --set image.tag=$(Build.BuildNumber)
 
 # =====================================
 # PROD DEPLOYMENT
@@ -432,4 +432,4 @@ stages:
 
                   arguments: >
                     --set image.repository=$(imageRepository)
-                    --set image.tag=latest
+                    --set image.tag=$(Build.BuildNumber)
