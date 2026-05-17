@@ -6,17 +6,25 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+# =====================================
+# GLOBAL VARIABLES
+# =====================================
+
 variables:
 
-  dockerRegistryServiceConnection: 'dockerhub-service-connection'
+  dockerRegistryServiceConnection: 'Docker-SC'
+
+  kubernetesServiceConnection: 'AKS SCN'
 
   imageRepository: 'prasidsash/employeeprofileapp-aks'
-
-  kubernetesServiceConnection: 'aks-service-connection'
 
   imagePullSecret: 'dockerhub-secret'
 
   helmChartPath: 'helm/employeeprofileapp'
+
+# =====================================
+# STAGES
+# =====================================
 
 stages:
 
@@ -46,6 +54,26 @@ stages:
 
               - checkout: self
 
+              # =========================
+              # AKS LOGIN
+              # =========================
+
+              - task: Kubernetes@1
+
+                displayName: Get DEV AKS Credentials
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
+
+                  command: login
+
+              # =========================
+              # IMAGE PULL SECRET
+              # =========================
+
               - task: KubernetesManifest@1
 
                 displayName: Create DEV Image Pull Secret
@@ -59,6 +87,10 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
                   namespace: employeeprofileapp-dev
+
+              # =========================
+              # HELM DEPLOY
+              # =========================
 
               - task: HelmDeploy@0
 
@@ -85,6 +117,7 @@ stages:
                   valueFile: helm/employeeprofileapp/values-dev.yaml
 
                   arguments: >
+                    --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildId)
 
 # =====================================
@@ -115,6 +148,26 @@ stages:
 
               - checkout: self
 
+              # =========================
+              # AKS LOGIN
+              # =========================
+
+              - task: Kubernetes@1
+
+                displayName: Get QA AKS Credentials
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
+
+                  command: login
+
+              # =========================
+              # IMAGE PULL SECRET
+              # =========================
+
               - task: KubernetesManifest@1
 
                 displayName: Create QA Image Pull Secret
@@ -128,6 +181,10 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
                   namespace: employeeprofileapp-qa
+
+              # =========================
+              # HELM DEPLOY
+              # =========================
 
               - task: HelmDeploy@0
 
@@ -154,6 +211,7 @@ stages:
                   valueFile: helm/employeeprofileapp/values-qa.yaml
 
                   arguments: >
+                    --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildId)
 
 # =====================================
@@ -184,6 +242,26 @@ stages:
 
               - checkout: self
 
+              # =========================
+              # AKS LOGIN
+              # =========================
+
+              - task: Kubernetes@1
+
+                displayName: Get UAT AKS Credentials
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
+
+                  command: login
+
+              # =========================
+              # IMAGE PULL SECRET
+              # =========================
+
               - task: KubernetesManifest@1
 
                 displayName: Create UAT Image Pull Secret
@@ -197,6 +275,10 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
                   namespace: employeeprofileapp-uat
+
+              # =========================
+              # HELM DEPLOY
+              # =========================
 
               - task: HelmDeploy@0
 
@@ -223,6 +305,7 @@ stages:
                   valueFile: helm/employeeprofileapp/values-uat.yaml
 
                   arguments: >
+                    --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildId)
 
 # =====================================
@@ -253,6 +336,26 @@ stages:
 
               - checkout: self
 
+              # =========================
+              # AKS LOGIN
+              # =========================
+
+              - task: Kubernetes@1
+
+                displayName: Get PROD AKS Credentials
+
+                inputs:
+
+                  connectionType: Kubernetes Service Connection
+
+                  kubernetesServiceEndpoint: $(kubernetesServiceConnection)
+
+                  command: login
+
+              # =========================
+              # IMAGE PULL SECRET
+              # =========================
+
               - task: KubernetesManifest@1
 
                 displayName: Create PROD Image Pull Secret
@@ -266,6 +369,10 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
                   namespace: employeeprofileapp-prod
+
+              # =========================
+              # HELM DEPLOY
+              # =========================
 
               - task: HelmDeploy@0
 
@@ -292,4 +399,5 @@ stages:
                   valueFile: helm/employeeprofileapp/values-prod.yaml
 
                   arguments: >
+                    --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildId)
