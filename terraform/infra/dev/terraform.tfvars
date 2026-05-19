@@ -34,17 +34,11 @@ kubernetes_version = "1.34.6"
 
 system_node_count = 1
 
-system_node_vm_size = "Standard_D2s_v3"
-
 # =====================================
-# SYSTEM NODE POOL PRIORITY
+# LOW-COST REGULAR SYSTEM NODE
 # =====================================
 
-system_node_pool_priority = "Spot"
-
-system_node_pool_eviction_policy = "Delete"
-
-system_node_spot_max_price = -1
+system_node_vm_size = "Standard_B2s"
 
 # =====================================
 # AKS NETWORKING
@@ -330,13 +324,14 @@ enable_ingress = true
 
 # =====================================
 # SPOT NODE POOL
+# TOGGLE ENABLE / DISABLE
 # =====================================
 
-enable_spot_node_pool = false
+enable_spot_node_pool = true
 
 spot_node_pool_name = "spotpool"
 
-spot_node_vm_size = "Standard_D2s_v3"
+spot_node_vm_size = "Standard_B2s"
 
 spot_max_price = -1
 

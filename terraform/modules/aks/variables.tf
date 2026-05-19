@@ -51,47 +51,6 @@ variable "system_node_max_count" {
 }
 
 # =====================================
-# SYSTEM NODE POOL PRIORITY
-# =====================================
-
-variable "system_node_pool_priority" {
-
-  description = "AKS system node pool priority"
-
-  type = string
-
-  default = "Regular"
-
-  validation {
-
-    condition = contains(
-      ["Regular", "Spot"],
-      var.system_node_pool_priority
-    )
-
-    error_message = "Allowed values: Regular or Spot."
-  }
-}
-
-variable "system_node_pool_eviction_policy" {
-
-  description = "AKS Spot eviction policy"
-
-  type = string
-
-  default = "Delete"
-}
-
-variable "system_node_spot_max_price" {
-
-  description = "AKS Spot max price"
-
-  type = number
-
-  default = -1
-}
-
-# =====================================
 # NETWORKING
 # =====================================
 
