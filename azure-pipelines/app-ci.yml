@@ -10,7 +10,7 @@ trigger:
       - src/**
       - helm/**
       - Dockerfile
-      - azure-pipelines/app-ci.yml
+      - azure-pipelines/app-ci-security.yml
 
     exclude:
       - terraform/**
@@ -25,82 +25,205 @@ variables:
 
 stages:
 
-  # =====================================
-  # BUILD STAGE
-  # =====================================
-  - stage: Build
-    displayName: Build And Push Docker Image
-    jobs:
-      - job: DockerBuildPush
-        displayName: Docker Build And Push
-        steps:
-          - checkout: self
+# =====================================
+# BUILD + DEVSECOPS STAGE
+# =====================================
 
-          # =====================================
-          # TOOLING VALIDATION
-          # =====================================
-          - script: |
-              echo "=================================="
-              echo "Docker Version"
-              echo "=================================="
-              docker --version
-            displayName: Validate Docker Tooling
+- stage: BuildAndSecurityScan
 
-          # =====================================
-          # BUILD INFORMATION
-          # =====================================
-          - script: |
-              echo "=================================="
-              echo "Build Information"
-              echo "=================================="
-              echo "Repository: $(imageRepository)"
-              echo "Build Number: $(Build.BuildNumber)"
-              echo "Source Branch: $(Build.SourceBranchName)"
-            displayName: Build Metadata
+  displayName: Build Scan And Push
 
-          # =====================================
-          # DOCKER BUILD AND PUSH
-          # =====================================
-          - task: Docker@2
-            displayName: Docker Build And Push
-            inputs:
-              command: buildAndPush
-              containerRegistry: $(dockerRegistryServiceConnection)
-              repository: $(imageRepository)
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              buildContext: '$(Build.SourcesDirectory)'
-              tags: |
-                $(Build.BuildNumber)
-                latest
+  jobs:
 
-          # =====================================
-          # OPTIONAL IMAGE VALIDATION
-          # =====================================
-          - script: |
-              echo "=================================="
-              echo "Docker Image Validation"
-              echo "=================================="
-              echo "Image successfully pushed:"
-              echo "$(imageRepository):$(Build.BuildNumber)"
-            displayName: Validate Docker Image
+    - job: DockerBuildScanPush
 
-          # =====================================
-          # OPTIONAL FUTURE IMAGE SCAN
-          # =====================================
-          - script: |
-              echo "=================================="
-              echo "Optional Future Image Scan"
-              echo "=================================="
-              # trivy image $(imageRepository):$(Build.BuildNumber)
-            displayName: Future Image Scan Placeholder
+      displayName: Docker Build Scan Push
 
-  # =====================================
-  # SECURITY SCAN STAGE
-  # =====================================
-  - stage: SecurityScan
-    displayName: DevSecOps Vulnerability Scan
-    dependsOn: Build
-    jobs:
-      - template: security-scan.yml
-        parameters:
-          environment: dev
+      steps:
+
+        - checkout: self
+
+        # =====================================
+        # TOOLING VALIDATION
+        # =====================================
+
+        - script: |
+            echo "=================================="
+            echo "Docker Version"
+            echo "=================================="
+
+            docker --version
+
+          displayName: Validate Docker Tooling
+
+        # =====================================
+        # BUILD INFORMATION
+        # =====================================
+
+        - script: |
+            echo "=================================="
+            echo "Build Information"
+            echo "=================================="
+
+            echo "Repository: $(imageRepository)"
+            echo "Build Number: $(Build.BuildNumber)"
+            echo "Source Branch: $(Build.SourceBranchName)"
+
+          displayName: Build Metadata
+
+        # =====================================
+        # .NET RESTORE
+        # =====================================
+
+        - task: DotNetCoreCLI@2
+
+          displayName: Dotnet Restore
+
+          inputs:
+            command: restore
+            projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+
+        # =====================================
+        # .NET BUILD
+        # =====================================
+
+        - task: DotNetCoreCLI@2
+
+          displayName: Dotnet Build
+
+          inputs:
+            command: build
+            projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+            arguments: '--configuration Release'
+
+        # =====================================
+        # .NET TEST
+        # =====================================
+
+        - task: DotNetCoreCLI@2
+
+          displayName: Dotnet Test
+
+          inputs:
+            command: test
+            projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+            arguments: '--configuration Release'
+
+        # =====================================
+        # DOCKER BUILD
+        # =====================================
+
+        - task: Docker@2
+
+          displayName: Docker Build
+
+          inputs:
+            command: build
+            repository: $(imageRepository)
+            dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+            buildContext: '$(Build.SourcesDirectory)'
+            tags: |
+              $(Build.BuildNumber)
+              latest
+
+        # =====================================
+        # INSTALL TRIVY
+        # =====================================
+
+        - script: |
+
+            echo "=================================="
+            echo "Install Trivy"
+            echo "=================================="
+
+            sudo apt-get update
+
+            sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+
+            wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+
+            echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+
+            sudo apt-get update
+
+            sudo apt-get install trivy -y
+
+            trivy --version
+
+          displayName: Install Trivy
+
+        # =====================================
+        # FILE SYSTEM SCAN
+        # =====================================
+
+        - script: |
+
+            echo "=================================="
+            echo "Trivy Filesystem Scan"
+            echo "=================================="
+
+            trivy fs \
+              --exit-code 1 \
+              --severity HIGH,CRITICAL \
+              .
+
+          displayName: Trivy Filesystem Scan
+
+        # =====================================
+        # IMAGE SCAN
+        # =====================================
+
+        - script: |
+
+            echo "=================================="
+            echo "Trivy Docker Image Scan"
+            echo "=================================="
+
+            trivy image \
+              --exit-code 1 \
+              --severity HIGH,CRITICAL \
+              $(imageRepository):$(Build.BuildNumber)
+
+          displayName: Trivy Image Scan
+
+        # =====================================
+        # DOCKER LOGIN
+        # =====================================
+
+        - task: Docker@2
+
+          displayName: Docker Login
+
+          inputs:
+            command: login
+            containerRegistry: $(dockerRegistryServiceConnection)
+
+        # =====================================
+        # DOCKER PUSH
+        # =====================================
+
+        - task: Docker@2
+
+          displayName: Docker Push
+
+          inputs:
+            command: push
+            containerRegistry: $(dockerRegistryServiceConnection)
+            repository: $(imageRepository)
+            tags: |
+              $(Build.BuildNumber)
+              latest
+
+        # =====================================
+        # IMAGE VALIDATION
+        # =====================================
+
+        - script: |
+
+            echo "=================================="
+            echo "Docker Image Successfully Pushed"
+            echo "=================================="
+
+            echo "$(imageRepository):$(Build.BuildNumber)"
+
+          displayName: Validate Docker Push
