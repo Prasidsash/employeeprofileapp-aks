@@ -208,7 +208,7 @@ variable "spot_node_vm_size" {
 
   type = string
 
-  default = "Standard_B2s"
+  default = "Standard_D2s_v3"
 }
 
 variable "spot_max_price" {

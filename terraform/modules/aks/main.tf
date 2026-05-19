@@ -62,6 +62,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     name = "system"
 
+    temporary_name_for_rotation = "systemtemp"
+
     node_count = var.enable_node_autoscaling ? null : var.system_node_count
 
     vm_size = var.system_node_vm_size
