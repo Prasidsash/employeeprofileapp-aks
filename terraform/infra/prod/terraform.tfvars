@@ -34,7 +34,7 @@ kubernetes_version = "1.34.6"
 
 system_node_count = 1
 
-system_node_vm_size = "Standard_D2s_v3"
+system_node_vm_size = "Standard_B2s"
 
 # =====================================
 # AKS NETWORKING
