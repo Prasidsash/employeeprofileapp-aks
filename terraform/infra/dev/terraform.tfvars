@@ -38,7 +38,7 @@ system_node_count = 1
 # LOW-COST REGULAR SYSTEM NODE
 # =====================================
 
-system_node_vm_size = "Standard_B2s"
+system_node_vm_size = "Standard_D2s_v3"
 
 # =====================================
 # AKS NETWORKING
@@ -331,7 +331,7 @@ enable_spot_node_pool = true
 
 spot_node_pool_name = "spotpool"
 
-spot_node_vm_size = "Standard_B2s"
+spot_node_vm_size = "Standard_D2s_v3"
 
 spot_max_price = -1
 
