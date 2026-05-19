@@ -37,6 +37,16 @@ system_node_count = 1
 system_node_vm_size = "Standard_D2s_v3"
 
 # =====================================
+# SYSTEM NODE POOL PRIORITY
+# =====================================
+
+system_node_pool_priority = "Spot"
+
+system_node_pool_eviction_policy = "Delete"
+
+system_node_spot_max_price = -1
+
+# =====================================
 # AKS NETWORKING
 # =====================================
 

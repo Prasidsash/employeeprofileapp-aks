@@ -66,6 +66,24 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     vm_size = var.system_node_vm_size
 
+    priority = (
+      var.system_node_pool_priority == "Spot"
+      ? "Spot"
+      : null
+)
+
+    eviction_policy = (
+      var.system_node_pool_priority == "Spot"
+      ? var.system_node_pool_eviction_policy
+      : null
+    )
+
+    spot_max_price = (
+      var.system_node_pool_priority == "Spot"
+      ? var.system_node_spot_max_price
+      : null
+    )
+
     auto_scaling_enabled = var.enable_node_autoscaling
 
     min_count = var.enable_node_autoscaling ? var.system_node_min_count : null
