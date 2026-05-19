@@ -21,106 +21,86 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-
   - group: employeeprofileapp-dev-vars
 
 stages:
 
-# =====================================
-# BUILD STAGE
-# =====================================
+  # =====================================
+  # BUILD STAGE
+  # =====================================
+  - stage: Build
+    displayName: Build And Push Docker Image
+    jobs:
+      - job: DockerBuildPush
+        displayName: Docker Build And Push
+        steps:
+          - checkout: self
 
-- stage: Build
-  displayName: Build And Push Docker Image
+          # =====================================
+          # TOOLING VALIDATION
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Docker Version"
+              echo "=================================="
+              docker --version
+            displayName: Validate Docker Tooling
 
-  jobs:
+          # =====================================
+          # BUILD INFORMATION
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Build Information"
+              echo "=================================="
+              echo "Repository: $(imageRepository)"
+              echo "Build Number: $(Build.BuildNumber)"
+              echo "Source Branch: $(Build.SourceBranchName)"
+            displayName: Build Metadata
 
-    - job: DockerBuildPush
-      displayName: Docker Build And Push
+          # =====================================
+          # DOCKER BUILD AND PUSH
+          # =====================================
+          - task: Docker@2
+            displayName: Docker Build And Push
+            inputs:
+              command: buildAndPush
+              containerRegistry: $(dockerRegistryServiceConnection)
+              repository: $(imageRepository)
+              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              buildContext: '$(Build.SourcesDirectory)'
+              tags: |
+                $(Build.BuildNumber)
+                latest
 
-      steps:
+          # =====================================
+          # OPTIONAL IMAGE VALIDATION
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Docker Image Validation"
+              echo "=================================="
+              echo "Image successfully pushed:"
+              echo "$(imageRepository):$(Build.BuildNumber)"
+            displayName: Validate Docker Image
 
-        - checkout: self
+          # =====================================
+          # OPTIONAL FUTURE IMAGE SCAN
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Optional Future Image Scan"
+              echo "=================================="
+              # trivy image $(imageRepository):$(Build.BuildNumber)
+            displayName: Future Image Scan Placeholder
 
-        # =====================================
-        # TOOLING VALIDATION
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Docker Version"
-            echo "=================================="
-
-            docker --version
-
-          displayName: Validate Docker Tooling
-
-        # =====================================
-        # BUILD INFORMATION
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Build Information"
-            echo "=================================="
-
-            echo "Repository: $(imageRepository)"
-
-            echo "Build Number: $(Build.BuildNumber)"
-
-            echo "Source Branch: $(Build.SourceBranchName)"
-
-          displayName: Build Metadata
-
-        # =====================================
-        # DOCKER BUILD AND PUSH
-        # =====================================
-
-        - task: Docker@2
-          displayName: Docker Build And Push
-
-          inputs:
-            command: buildAndPush
-
-            containerRegistry: $(dockerRegistryServiceConnection)
-
-            repository: $(imageRepository)
-
-            dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-
-            buildContext: '$(Build.SourcesDirectory)'
-
-            tags: |
-              $(Build.BuildNumber)
-              latest
-
-        # =====================================
-        # OPTIONAL IMAGE VALIDATION
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Docker Image Validation"
-            echo "=================================="
-
-            echo "Image successfully pushed:"
-            echo "$(imageRepository):$(Build.BuildNumber)"
-
-          displayName: Validate Docker Image
-
-        # =====================================
-        # OPTIONAL FUTURE IMAGE SCAN
-        # =====================================
-
-        - script: |
-
-            echo "=================================="
-            echo "Optional Future Image Scan"
-            echo "=================================="
-
-            # trivy image $(imageRepository):$(Build.BuildNumber)
-
-          displayName: Future Image Scan Placeholder
+  # =====================================
+  # SECURITY SCAN STAGE
+  # =====================================
+  - stage: SecurityScan
+    displayName: DevSecOps Vulnerability Scan
+    dependsOn: Build
+    jobs:
+      - template: security-scan.yml
+        parameters:
+          environment: dev

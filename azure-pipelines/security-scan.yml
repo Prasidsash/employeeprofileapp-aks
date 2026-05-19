@@ -1,0 +1,67 @@
+# =====================================
+# SECURITY SCAN PIPELINE TEMPLATE
+# =====================================
+
+parameters:
+  - name: environment
+    type: string
+    default: dev
+
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: employeeprofileapp-${{ parameters.environment }}-vars
+
+stages:
+  - stage: SecurityScan
+    displayName: DevSecOps Vulnerability Scan
+    jobs:
+      - job: ScanDockerImage
+        displayName: Container Vulnerability Scan
+        steps:
+          - checkout: self
+
+          # =====================================
+          # TOOLING VALIDATION
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Trivy Version"
+              echo "=================================="
+              trivy --version || true
+            displayName: Validate Trivy Tooling
+
+          # =====================================
+          # VULNERABILITY SCAN
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Running Vulnerability Scan"
+              echo "=================================="
+
+              trivy image \
+                --exit-code 0 \
+                --severity HIGH,CRITICAL \
+                $(imageRepository):$(Build.BuildNumber)
+
+              echo "=================================="
+              echo "Scan Completed"
+              echo "=================================="
+            displayName: Run Vulnerability Scan
+
+          # =====================================
+          # OPTIONAL FUTURE REPORT EXPORT
+          # =====================================
+          - script: |
+              echo "=================================="
+              echo "Export Scan Report (Optional)"
+              echo "=================================="
+              trivy image \
+                --format json \
+                --output $(Build.ArtifactStagingDirectory)/trivy-report.json \
+                $(imageRepository):$(Build.BuildNumber)
+            displayName: Export Vulnerability Report
+            condition: succeededOrFailed()
