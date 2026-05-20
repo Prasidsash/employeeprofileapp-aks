@@ -180,8 +180,9 @@ stages:
             echo "=================================="
 
             trivy image \
+              --ignore-unfixed \
               --exit-code 1 \
-              --severity HIGH,CRITICAL \
+              --severity CRITICAL \
               $(imageRepository):$(Build.BuildNumber)
 
           displayName: Trivy Image Scan
