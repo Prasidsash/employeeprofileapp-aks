@@ -2,7 +2,7 @@
 # BUILD STAGE
 # =====================================
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 
 WORKDIR /src
 
@@ -39,7 +39,7 @@ RUN dotnet publish EmployeeProfileApp.csproj \
 # RUNTIME STAGE
 # =====================================
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 
 WORKDIR /app
 
