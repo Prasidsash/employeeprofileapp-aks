@@ -12,6 +12,8 @@ location = "Central India"
 # NETWORK
 # =====================================
 
+enable_network = true
+
 vnet_name = "employeeprofileapp-dev-vnet"
 
 vnet_address_space = [
@@ -28,27 +30,25 @@ service_cidr = "172.16.0.0/16"
 
 dns_service_ip = "172.16.0.10"
 
-enable_network = true
-
 # =====================================
 # AKS CLUSTER
 # =====================================
+
+enable_aks = true
 
 cluster_name = "employeeprofileapp-dev-aks"
 
 kubernetes_version = "1.34.6"
 
-enable_aks = true
-
 # =====================================
 # SYSTEM NODE POOL
 # =====================================
 
+enable_node_autoscaling = false
+
 system_node_count = 1
 
 system_node_vm_size = "Standard_B2s"
-
-enable_node_autoscaling = false
 
 system_node_min_count = 1
 
@@ -96,9 +96,9 @@ enable_oidc_issuer = true
 
 enable_image_cleaner = false
 
-image_cleaner_interval_hours = 48
-
 enable_api_server_access_profile = false
+
+image_cleaner_interval_hours = 48
 
 authorized_ip_ranges = []
 
@@ -110,15 +110,15 @@ aks_additional_tags = {}
 
 enable_monitoring = false
 
+enable_alerts = false
+
+enable_managed_prometheus = false
+
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
 
 log_analytics_sku = "PerGB2018"
 
 log_retention_in_days = 30
-
-enable_alerts = false
-
-enable_managed_prometheus = false
 
 grafana_major_version = 11
 
@@ -147,7 +147,7 @@ namespace_annotations = {}
 # GOVERNANCE
 # =====================================
 
-enable_governance = true
+enable_governance = false
 
 quota_limits = {
 
@@ -253,9 +253,9 @@ secret_additional_annotations = {}
 # KEY VAULT
 # =====================================
 
-keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
-
 enable_network_acls = false
+
+keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 
 keyvault_additional_tags = {}
 
@@ -264,6 +264,10 @@ keyvault_additional_tags = {}
 # =====================================
 
 enable_ingress = true
+
+enable_rewrite_target = false
+
+enable_proxy_body_size = false
 
 ingress_name = "employee-ingress"
 
@@ -276,10 +280,6 @@ ingress_path_type = "Prefix"
 service_name = "employeeprofileapp-service-dev"
 
 ingress_class_name = "nginx"
-
-enable_rewrite_target = false
-
-enable_proxy_body_size = false
 
 proxy_body_size = "10m"
 
