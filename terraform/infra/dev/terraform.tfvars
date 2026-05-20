@@ -24,6 +24,12 @@ aks_subnet_prefixes = [
   "10.10.1.0/24"
 ]
 
+service_cidr = "172.16.0.0/16"
+
+dns_service_ip = "172.16.0.10"
+
+enable_network = true
+
 # =====================================
 # AKS CLUSTER
 # =====================================
@@ -32,25 +38,15 @@ cluster_name = "employeeprofileapp-dev-aks"
 
 kubernetes_version = "1.34.6"
 
+enable_aks = true
+
+# =====================================
+# SYSTEM NODE POOL
+# =====================================
+
 system_node_count = 1
 
-# =====================================
-# LOW-COST REGULAR SYSTEM NODE
-# =====================================
-
 system_node_vm_size = "Standard_B2s"
-
-# =====================================
-# AKS NETWORKING
-# =====================================
-
-service_cidr = "172.16.0.0/16"
-
-dns_service_ip = "172.16.0.10"
-
-# =====================================
-# AKS NODE AUTOSCALING
-# =====================================
 
 enable_node_autoscaling = false
 
@@ -58,9 +54,40 @@ system_node_min_count = 1
 
 system_node_max_count = 2
 
+node_labels = {}
+
+node_taints = []
+
 # =====================================
-# OPTIONAL FUTURE AKS FEATURES
-# Preserve Existing Runtime Behavior
+# SPOT NODE POOL
+# =====================================
+
+enable_spot_node_pool = false
+
+spot_node_pool_name = "spotpool"
+
+spot_node_vm_size = "Standard_D2s_v3"
+
+spot_max_price = -1
+
+spot_node_min_count = 1
+
+spot_node_max_count = 1
+
+spot_node_labels = {
+
+  workload = "spot"
+
+  "kubernetes.azure.com/scalesetpriority" = "spot"
+}
+
+spot_node_taints = [
+
+  "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+]
+
+# =====================================
+# OPTIONAL AKS FEATURES
 # =====================================
 
 enable_workload_identity = false
@@ -71,10 +98,6 @@ enable_image_cleaner = false
 
 image_cleaner_interval_hours = 48
 
-node_labels = {}
-
-node_taints = []
-
 enable_api_server_access_profile = false
 
 authorized_ip_ranges = []
@@ -82,31 +105,10 @@ authorized_ip_ranges = []
 aks_additional_tags = {}
 
 # =====================================
-# AKS BACKUP
-# =====================================
-
-backup_vault_name = "employeeprofileapp-dev-backup-vault"
-
-backup_storage_account_name = "empprofdevbackup2026"
-
-backup_container_name = "aks-backups"
-
-backup_policy_name = "employeeprofileapp-dev-backup-policy"
-
-backup_schedule_repeating_time_intervals = [
-  "R/2026-01-01T02:00:00+00:00/PT24H"
-]
-
-backup_retention_duration_count = 30
-
-backup_retention_duration_type = "D"
-
-backup_additional_tags = {}
-
-# =====================================
 # MONITORING
-# LOW-COST SINGLE NODE OPTIMIZATION
 # =====================================
+
+enable_monitoring = true
 
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
 
@@ -118,10 +120,6 @@ enable_alerts = false
 
 enable_managed_prometheus = false
 
-# =====================================
-# OPTIONAL MONITORING SETTINGS
-# =====================================
-
 grafana_major_version = 11
 
 grafana_api_key_enabled = false
@@ -129,8 +127,10 @@ grafana_api_key_enabled = false
 monitoring_additional_tags = {}
 
 # =====================================
-# KUBERNETES NAMESPACE
+# NAMESPACE
 # =====================================
+
+enable_namespace = true
 
 namespace_name = "employeeprofileapp-dev"
 
@@ -141,16 +141,13 @@ namespace_labels = {
   app = "employeeprofileapp"
 }
 
-# =====================================
-# OPTIONAL NAMESPACE ANNOTATIONS
-# =====================================
-
 namespace_annotations = {}
 
 # =====================================
 # GOVERNANCE
-# LOW-COST DEV SAFE LIMITS
 # =====================================
+
+enable_governance = true
 
 quota_limits = {
 
@@ -193,10 +190,6 @@ limit_default_request = {
   memory = "64Mi"
 }
 
-# =====================================
-# OPTIONAL GOVERNANCE METADATA
-# =====================================
-
 governance_labels = {}
 
 governance_annotations = {}
@@ -204,6 +197,8 @@ governance_annotations = {}
 # =====================================
 # RBAC
 # =====================================
+
+enable_rbac = true
 
 service_account_name = "employee-sa"
 
@@ -224,10 +219,6 @@ allowed_verbs = [
   "watch"
 ]
 
-# =====================================
-# OPTIONAL RBAC METADATA
-# =====================================
-
 service_account_annotations = {}
 
 role_annotations = {}
@@ -242,13 +233,11 @@ rbac_additional_annotations = {}
 # SECRETS
 # =====================================
 
+enable_secret = true
+
 secret_name = "employee-db-secret"
 
 secret_data = {}
-
-# =====================================
-# OPTIONAL SECRET SETTINGS
-# =====================================
 
 secret_annotations = {}
 
@@ -261,14 +250,10 @@ secret_additional_labels = {}
 secret_additional_annotations = {}
 
 # =====================================
-# KEY VAULT RBAC STABILIZATION
+# KEY VAULT
 # =====================================
 
 keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
-
-# =====================================
-# OPTIONAL KEY VAULT FEATURES
-# =====================================
 
 enable_network_acls = false
 
@@ -277,6 +262,8 @@ keyvault_additional_tags = {}
 # =====================================
 # INGRESS
 # =====================================
+
+enable_ingress = true
 
 ingress_name = "employee-ingress"
 
@@ -287,10 +274,6 @@ ingress_path = "/"
 ingress_path_type = "Prefix"
 
 service_name = "employeeprofileapp-service-dev"
-
-# =====================================
-# OPTIONAL INGRESS FEATURES
-# =====================================
 
 ingress_class_name = "nginx"
 
@@ -325,56 +308,25 @@ enable_hpa = false
 enable_loadbalancer = false
 
 # =====================================
-# MODULE TOGGLES
-# =====================================
-
-enable_aks = true
-
-enable_network = true
-
-enable_monitoring = true
-
-enable_namespace = true
-
-enable_rbac = true
-
-enable_governance = true
-
-enable_secret = true
-
-enable_ingress = true
-
-# =====================================
-# SPOT NODE POOL
-# TOGGLE ENABLE / DISABLE
-# =====================================
-
-enable_spot_node_pool = false
-
-spot_node_pool_name = "spotpool"
-
-spot_node_vm_size = "Standard_D2s_v3"
-
-spot_max_price = -1
-
-spot_node_min_count = 1
-
-spot_node_max_count = 1
-
-spot_node_labels = {
-
-  workload = "spot"
-
-  "kubernetes.azure.com/scalesetpriority" = "spot"
-}
-
-spot_node_taints = [
-
-  "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
-]
-
-# =====================================
-# AKS BACKUP FEATURE TOGGLE
+# AKS BACKUP
 # =====================================
 
 enable_aks_backup = false
+
+backup_vault_name = "employeeprofileapp-dev-backup-vault"
+
+backup_storage_account_name = "empprofdevbackup2026"
+
+backup_container_name = "aks-backups"
+
+backup_policy_name = "employeeprofileapp-dev-backup-policy"
+
+backup_schedule_repeating_time_intervals = [
+  "R/2026-01-01T02:00:00+00:00/PT24H"
+]
+
+backup_retention_duration_count = 30
+
+backup_retention_duration_type = "D"
+
+backup_additional_tags = {}
