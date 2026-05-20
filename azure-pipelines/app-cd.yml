@@ -5,9 +5,9 @@ trigger:
 
 resources:
   pipelines:
-    - pipeline: app-ci
-      source: app-ci
-      trigger: true   # CD runs only after CI completes successfully
+    - pipeline: ciPipeline   # local alias, can be any name
+      source: CI   # must match the CI pipeline name in Azure DevOps
+      trigger: true
 
 pool:
   vmImage: ubuntu-latest
