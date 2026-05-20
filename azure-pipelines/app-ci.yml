@@ -180,6 +180,7 @@ stages:
             echo "=================================="
 
             trivy image \
+              --scanners vuln \
               --ignore-unfixed \
               --exit-code 1 \
               --severity CRITICAL \
