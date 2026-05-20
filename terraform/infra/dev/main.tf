@@ -211,6 +211,47 @@ module "aks" {
 }
 
 # =====================================
+# AKS BACKUP MODULE
+# =====================================
+
+module "aks_backup" {
+
+  count = var.enable_aks_backup ? 1 : 0
+
+  source = "../../modules/aks_backup"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  aks_cluster_id = module.aks.cluster_id
+
+  aks_cluster_name = module.aks.cluster_name
+
+  backup_vault_name = var.backup_vault_name
+
+  backup_storage_account_name = var.backup_storage_account_name
+
+  backup_container_name = var.backup_container_name
+
+  backup_policy_name = var.backup_policy_name
+
+  backup_schedule_repeating_time_intervals = var.backup_schedule_repeating_time_intervals
+
+  backup_retention_duration_count = var.backup_retention_duration_count
+
+  backup_retention_duration_type = var.backup_retention_duration_type
+
+  additional_tags = var.backup_additional_tags
+
+  depends_on = [
+    module.aks
+  ]
+}
+
+# =====================================
 # AKS READINESS WAIT
 # =====================================
 

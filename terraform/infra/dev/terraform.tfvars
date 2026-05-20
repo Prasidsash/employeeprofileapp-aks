@@ -82,6 +82,28 @@ authorized_ip_ranges = []
 aks_additional_tags = {}
 
 # =====================================
+# AKS BACKUP
+# =====================================
+
+backup_vault_name = "employeeprofileapp-dev-backup-vault"
+
+backup_storage_account_name = "empprofdevbackup2026"
+
+backup_container_name = "aks-backups"
+
+backup_policy_name = "employeeprofileapp-dev-backup-policy"
+
+backup_schedule_repeating_time_intervals = [
+  "R/2026-01-01T02:00:00+00:00/PT24H"
+]
+
+backup_retention_duration_count = 30
+
+backup_retention_duration_type = "D"
+
+backup_additional_tags = {}
+
+# =====================================
 # MONITORING
 # LOW-COST SINGLE NODE OPTIMIZATION
 # =====================================
@@ -327,7 +349,7 @@ enable_ingress = true
 # TOGGLE ENABLE / DISABLE
 # =====================================
 
-enable_spot_node_pool = true
+enable_spot_node_pool = false
 
 spot_node_pool_name = "spotpool"
 
@@ -342,9 +364,17 @@ spot_node_max_count = 1
 spot_node_labels = {
 
   workload = "spot"
+
+  "kubernetes.azure.com/scalesetpriority" = "spot"
 }
 
 spot_node_taints = [
 
   "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
 ]
+
+# =====================================
+# AKS BACKUP FEATURE TOGGLE
+# =====================================
+
+enable_aks_backup = true

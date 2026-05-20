@@ -164,6 +164,68 @@ variable "aks_additional_tags" {
 }
 
 # =====================================
+# AKS BACKUP
+# =====================================
+
+variable "backup_vault_name" {
+
+  description = "AKS Backup Vault Name"
+
+  type = string
+}
+
+variable "backup_storage_account_name" {
+
+  description = "AKS Backup Storage Account Name"
+
+  type = string
+}
+
+variable "backup_container_name" {
+
+  description = "AKS Backup Storage Container Name"
+
+  type = string
+}
+
+variable "backup_policy_name" {
+
+  description = "AKS Backup Policy Name"
+
+  type = string
+}
+
+variable "backup_schedule_repeating_time_intervals" {
+
+  description = "AKS Backup Schedule Intervals"
+
+  type = list(string)
+}
+
+variable "backup_retention_duration_count" {
+
+  description = "AKS Backup Retention Count"
+
+  type = number
+}
+
+variable "backup_retention_duration_type" {
+
+  description = "AKS Backup Retention Duration Type"
+
+  type = string
+}
+
+variable "backup_additional_tags" {
+
+  description = "Additional AKS Backup Tags"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # NAMESPACE
 # =====================================
 
@@ -694,4 +756,17 @@ variable "spot_node_taints" {
   type = list(string)
 
   default = []
+}
+
+# =====================================
+# AKS BACKUP FEATURE TOGGLE
+# =====================================
+
+variable "enable_aks_backup" {
+
+  description = "Enable AKS Backup Module"
+
+  type = bool
+
+  default = false
 }

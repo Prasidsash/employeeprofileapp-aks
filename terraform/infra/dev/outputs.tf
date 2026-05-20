@@ -123,6 +123,45 @@ output "key_vault_uri" {
 }
 
 # =====================================
+# AKS BACKUP
+# =====================================
+
+output "backup_vault_name" {
+
+  description = "AKS Backup Vault Name"
+
+  value = try(module.aks_backup[0].backup_vault_name, null)
+}
+
+output "backup_vault_id" {
+
+  description = "AKS Backup Vault ID"
+
+  value = try(module.aks_backup[0].backup_vault_id, null)
+}
+
+output "backup_policy_id" {
+
+  description = "AKS Backup Policy ID"
+
+  value = try(module.aks_backup[0].backup_policy_id, null)
+}
+
+output "backup_instance_id" {
+
+  description = "AKS Backup Instance ID"
+
+  value = try(module.aks_backup[0].backup_instance_id, null)
+}
+
+output "backup_storage_account_name" {
+
+  description = "Backup Storage Account Name"
+
+  value = try(module.aks_backup[0].backup_storage_account_name, null)
+}
+
+# =====================================
 # OPTIONAL FUTURE INGRESS OUTPUTS
 # =====================================
 
