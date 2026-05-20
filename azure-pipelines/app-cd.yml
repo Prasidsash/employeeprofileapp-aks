@@ -1,7 +1,11 @@
+trigger: none
+
+pr: none
+
 resources:
   pipelines:
-    - pipeline: ciPipeline   # local alias, can be any name
-      source: CI   # must match the CI pipeline name in Azure DevOps
+    - pipeline: ciPipeline
+      source: CI
       trigger: true
 
 pool:
