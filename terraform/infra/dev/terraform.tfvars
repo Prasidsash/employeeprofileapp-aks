@@ -44,11 +44,11 @@ kubernetes_version = "1.34.6"
 # SYSTEM NODE POOL
 # =====================================
 
-enable_node_autoscaling = false
+enable_node_autoscaling = true
 
 system_node_count = 1
 
-system_node_vm_size = "Standard_B2s"
+system_node_vm_size = "Standard_D2s_v5"
 
 system_node_min_count = 1
 
@@ -62,11 +62,11 @@ node_taints = []
 # SPOT NODE POOL
 # =====================================
 
-enable_spot_node_pool = false
+enable_spot_node_pool = true
 
 spot_node_pool_name = "spotpool"
 
-spot_node_vm_size = "Standard_D2s_v3"
+spot_node_vm_size = "Standard_D2s_v5"
 
 spot_max_price = -1
 
@@ -108,7 +108,7 @@ aks_additional_tags = {}
 # MONITORING
 # =====================================
 
-enable_monitoring = false
+enable_monitoring = true
 
 enable_alerts = false
 
@@ -147,7 +147,7 @@ namespace_annotations = {}
 # GOVERNANCE
 # =====================================
 
-enable_governance = false
+enable_governance = true
 
 quota_limits = {
 
@@ -198,7 +198,7 @@ governance_annotations = {}
 # RBAC
 # =====================================
 
-enable_rbac = false
+enable_rbac = true
 
 service_account_name = "employee-sa"
 
@@ -253,7 +253,7 @@ secret_additional_annotations = {}
 # KEY VAULT
 # =====================================
 
-enable_network_acls = false
+enable_network_acls = true
 
 keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 
@@ -311,7 +311,7 @@ enable_loadbalancer = false
 # AKS BACKUP
 # =====================================
 
-enable_aks_backup = false
+enable_aks_backup = true
 
 backup_vault_name = "employeeprofileapp-dev-backup-vault"
 
