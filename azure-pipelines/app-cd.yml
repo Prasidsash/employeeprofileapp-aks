@@ -3,6 +3,12 @@ trigger:
     include:
       - main
 
+resources:
+  pipelines:
+    - pipeline: app-ci
+      source: app-ci
+      trigger: true   # CD runs only after CI completes successfully
+
 pool:
   vmImage: ubuntu-latest
 
