@@ -108,7 +108,7 @@ aks_additional_tags = {}
 # MONITORING
 # =====================================
 
-enable_monitoring = true
+enable_monitoring = false
 
 log_analytics_workspace_name = "employeeprofileapp-dev-law"
 
@@ -198,7 +198,7 @@ governance_annotations = {}
 # RBAC
 # =====================================
 
-enable_rbac = true
+enable_rbac = false
 
 service_account_name = "employee-sa"
 
