@@ -124,7 +124,7 @@ enable_managed_prometheus = false
 
 grafana_major_version = 11
 
-grafana_api_key_enabled = true
+grafana_api_key_enabled = false
 
 monitoring_additional_tags = {}
 
@@ -377,4 +377,4 @@ spot_node_taints = [
 # AKS BACKUP FEATURE TOGGLE
 # =====================================
 
-enable_aks_backup = true
+enable_aks_backup = false
