@@ -132,7 +132,7 @@ stages:
 
                   arguments: >
                     --set image.repository=$(imageRepository)
-                    --set image.tag=$(Build.BuildNumber)
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
 
 # =====================================
 # QA DEPLOYMENT
