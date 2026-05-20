@@ -119,7 +119,8 @@ namespace: employeeprofileapp-dev
 # IMAGE PULL SECRETS
 # =====================================
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: dockerhub-secret
 
 # =====================================
 # POD ANNOTATIONS
