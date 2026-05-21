@@ -303,9 +303,9 @@ release_name = "employeeprofileapp-dev-release"
 # PLATFORM FEATURES
 # =====================================
 
-enable_hpa = false
-
 enable_loadbalancer = true
+
+enable_hpa = false
 
 # =====================================
 # AKS BACKUP
