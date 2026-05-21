@@ -233,7 +233,7 @@ rbac_additional_annotations = {}
 # SECRETS
 # =====================================
 
-enable_secret = false
+enable_secret = true
 
 secret_name = "employee-db-secret"
 
