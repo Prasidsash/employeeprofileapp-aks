@@ -65,7 +65,10 @@ output "log_analytics_workspace_id" {
 
   description = "Log Analytics Workspace ID"
 
-  value = module.monitoring.log_analytics_workspace_id
+  value = try(
+    module.monitoring[0].log_analytics_workspace_id,
+    null
+  )
 }
 
 # =====================================
@@ -77,7 +80,7 @@ output "monitor_workspace_id" {
   description = "Azure Monitor Workspace ID"
 
   value = try(
-    module.monitoring.monitor_workspace_id,
+    module.monitoring[0].monitor_workspace_id,
     null
   )
 }
@@ -91,7 +94,7 @@ output "grafana_id" {
   description = "Managed Grafana ID"
 
   value = try(
-    module.monitoring.grafana_id,
+    module.monitoring[0].grafana_id,
     null
   )
 }

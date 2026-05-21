@@ -48,6 +48,8 @@ module "network" {
 
 module "monitoring" {
 
+  count = var.enable_monitoring ? 1 : 0
+
   source = "../../modules/monitoring"
 
   resource_group_name = azurerm_resource_group.main.name
@@ -72,7 +74,7 @@ module "monitoring" {
   # OPTIONAL TAGS
   # =====================================
 
-  additional_tags = {}
+  additional_tags = var.monitoring_additional_tags
 }
 
 # =====================================
@@ -100,9 +102,9 @@ module "keyvault" {
   # OPTIONAL FEATURES
   # =====================================
 
-  enable_network_acls = false
+  enable_network_acls = var.enable_network_acls
 
-  additional_tags = {}
+  additional_tags = var.keyvault_additional_tags
 
   depends_on = [
     azurerm_resource_group.main
@@ -169,10 +171,13 @@ module "aks" {
   # MONITORING
   # =====================================
 
-  log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+  log_analytics_workspace_id = try(
+    module.monitoring[0].log_analytics_workspace_id,
+    null
+  )
 
   azure_monitor_workspace_id = try(
-    module.monitoring.monitor_workspace_id,
+    module.monitoring[0].monitor_workspace_id,
     null
   )
 
@@ -276,7 +281,7 @@ module "namespace" {
 
   namespace_labels = var.namespace_labels
 
-  namespace_annotations = {}
+  namespace_annotations = var.namespace_annotations
 
   depends_on = [
     time_sleep.wait_for_aks
@@ -301,15 +306,15 @@ module "rbac" {
 
   allowed_verbs = var.allowed_verbs
 
-  service_account_annotations = {}
+  service_account_annotations = var.service_account_annotations
 
-  role_annotations = {}
+  role_annotations = var.role_annotations
 
-  role_binding_annotations = {}
+  role_binding_annotations = var.role_binding_annotations
 
-  additional_labels = {}
+  additional_labels = var.rbac_additional_labels
 
-  additional_annotations = {}
+  additional_annotations = var.rbac_additional_annotations
 
   depends_on = [
     module.namespace
@@ -322,6 +327,8 @@ module "rbac" {
 
 module "secret" {
 
+  count = var.enable_secret ? 1 : 0
+
   source = "../../modules/employee_secret"
 
   namespace_name = var.namespace_name
@@ -330,15 +337,15 @@ module "secret" {
 
   secret_data = var.secret_data
 
-  secret_annotations = {}
+  secret_annotations = var.secret_annotations
 
-  additional_labels = {}
+  additional_labels = var.secret_additional_labels
 
-  additional_annotations = {}
+  additional_annotations = var.secret_additional_annotations
 
-  secret_type = "Opaque"
+  secret_type = var.secret_type
 
-  secret_immutable = false
+  secret_immutable = var.secret_immutable
 
   depends_on = [
     module.namespace,
@@ -351,6 +358,8 @@ module "secret" {
 # =====================================
 
 module "ingress" {
+
+  count = var.enable_ingress ? 1 : 0
 
   source = "../../modules/employee_ingress"
 
@@ -376,13 +385,13 @@ module "ingress" {
 
   ingress_class_name = var.ingress_class_name
 
-  enable_rewrite_target = false
+  enable_rewrite_target = var.enable_rewrite_target
 
-  enable_proxy_body_size = false
+  enable_proxy_body_size = var.enable_proxy_body_size
 
-  proxy_body_size = "10m"
+  proxy_body_size = var.proxy_body_size
 
-  cluster_issuer = null
+  cluster_issuer = var.cluster_issuer
 
   depends_on = [
     module.namespace,
@@ -395,6 +404,8 @@ module "ingress" {
 # =====================================
 
 module "governance" {
+
+  count = var.enable_governance ? 1 : 0
 
   source = "../../modules/employee_governance"
 
@@ -410,9 +421,9 @@ module "governance" {
 
   limit_default_request = var.limit_default_request
 
-  labels = {}
+  labels = var.governance_labels
 
-  annotations = {}
+  annotations = var.governance_annotations
 
   additional_labels = {}
 
