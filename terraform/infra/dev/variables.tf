@@ -770,3 +770,52 @@ variable "enable_aks_backup" {
 
   default = false
 }
+
+# =====================================
+# INGRESS NGINX CONTROLLER
+# =====================================
+
+variable "enable_ingress_controller" {
+
+  description = "Enable NGINX ingress controller"
+
+  type = bool
+
+  default = false
+}
+
+variable "ingress_controller_namespace" {
+
+  description = "Ingress controller namespace"
+
+  type = string
+
+  default = "ingress-nginx"
+}
+
+variable "ingress_controller_chart_version" {
+
+  description = "Ingress NGINX chart version"
+
+  type = string
+
+  default = "4.12.2"
+}
+
+variable "ingress_controller_service_type" {
+
+  description = "Ingress controller service type"
+
+  type = string
+
+  default = "LoadBalancer"
+}
+
+variable "ingress_controller_replica_count" {
+
+  description = "Ingress controller replica count"
+
+  type = number
+
+  default = 1
+}

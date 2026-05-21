@@ -260,6 +260,20 @@ keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 keyvault_additional_tags = {}
 
 # =====================================
+# INGRESS CONTROLLER
+# =====================================
+
+enable_ingress_controller = true
+
+ingress_controller_namespace = "ingress-nginx"
+
+ingress_controller_chart_version = "4.12.2"
+
+ingress_controller_service_type = "LoadBalancer"
+
+ingress_controller_replica_count = 1
+
+# =====================================
 # INGRESS
 # =====================================
 

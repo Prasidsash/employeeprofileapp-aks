@@ -354,6 +354,31 @@ module "secret" {
 }
 
 # =====================================
+# INGRESS NGINX CONTROLLER
+# =====================================
+
+module "ingress_nginx" {
+
+  count = var.enable_ingress_controller ? 1 : 0
+
+  source = "../../modules/ingress_nginx"
+
+  namespace = var.ingress_controller_namespace
+
+  chart_version = var.ingress_controller_chart_version
+
+  service_type = var.ingress_controller_service_type
+
+  replica_count = var.ingress_controller_replica_count
+
+  depends_on = [
+    module.aks,
+    module.namespace,
+    time_sleep.wait_for_aks
+  ]
+}
+
+# =====================================
 # INGRESS MODULE
 # =====================================
 
