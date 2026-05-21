@@ -48,7 +48,7 @@ enable_node_autoscaling = true
 
 system_node_count = 1
 
-system_node_vm_size = "Standard_B2s"
+system_node_vm_size = "Standard_D2s_v5"
 
 system_node_min_count = 1
 
@@ -72,7 +72,7 @@ spot_max_price = -1
 
 spot_node_min_count = 1
 
-spot_node_max_count = 1
+spot_node_max_count = 2
 
 spot_node_labels = {
 
@@ -297,7 +297,7 @@ tls_secret_name = null
 # HELM
 # =====================================
 
-release_name = "employeeprofileapp-dev"
+release_name = "employeeprofileapp-dev-release"
 
 # =====================================
 # PLATFORM FEATURES
