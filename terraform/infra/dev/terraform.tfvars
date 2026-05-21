@@ -108,7 +108,7 @@ aks_additional_tags = {}
 # MONITORING
 # =====================================
 
-enable_monitoring = true
+enable_monitoring = false
 
 enable_alerts = false
 
@@ -147,7 +147,7 @@ namespace_annotations = {}
 # GOVERNANCE
 # =====================================
 
-enable_governance = true
+enable_governance = false
 
 quota_limits = {
 
@@ -233,7 +233,7 @@ rbac_additional_annotations = {}
 # SECRETS
 # =====================================
 
-enable_secret = true
+enable_secret = false
 
 secret_name = "employee-db-secret"
 
@@ -305,13 +305,13 @@ release_name = "employeeprofileapp-dev-release"
 
 enable_hpa = false
 
-enable_loadbalancer = false
+enable_loadbalancer = true
 
 # =====================================
 # AKS BACKUP
 # =====================================
 
-enable_aks_backup = true
+enable_aks_backup = false
 
 backup_vault_name = "employeeprofileapp-dev-backup-vault"
 

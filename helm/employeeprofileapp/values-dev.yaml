@@ -28,7 +28,7 @@ service:
 
   enabled: true
 
-  type: LoadBalancer
+  type: ClusterIP
 
   port: 80
 
@@ -41,13 +41,6 @@ service:
   sessionAffinity: ""
 
   loadBalancerIP: ""
-
-# =====================================
-# OPTIONAL SERVICE SETTINGS
-# =====================================
-
-serviceSettings:
-  enableLoadBalancer: true
 
 # =====================================
 # ENVIRONMENT VARIABLES
@@ -75,9 +68,9 @@ resources:
 # =====================================
 
 ingress:
-  enabled: false
+  enabled: true
 
-  className: ""
+  className: nginx
 
   host: ""
 
