@@ -941,3 +941,25 @@ variable "pod_disruption_budget_annotations" {
 
   default = {}
 }
+
+# =====================================
+# OPTIONAL USER ASSIGNED IDENTITY
+# =====================================
+
+variable "enable_user_assigned_identity" {
+
+  description = "Enable User Assigned Managed Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  type = list(string)
+
+  default = []
+}

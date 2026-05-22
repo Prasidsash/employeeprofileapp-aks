@@ -40,7 +40,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     node_labels = var.node_labels
 
-    node_taints = var.node_taints
   }
 
   # =====================================
@@ -187,7 +186,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
   spot_max_price = var.spot_max_price
 
-  enable_auto_scaling = true
+  auto_scaling_enabled = true
 
   min_count = var.spot_node_min_count
 
