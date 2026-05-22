@@ -868,3 +868,54 @@ variable "cluster_issuer_name" {
 
   default = "selfsigned-cluster-issuer"
 }
+
+# =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+variable "enable_pod_disruption_budget" {
+
+  description = "Enable or disable Pod Disruption Budget"
+
+  type = bool
+
+  default = false
+}
+
+variable "pod_disruption_budget_name" {
+
+  description = "Pod Disruption Budget name"
+
+  type = string
+
+  default = "employeeprofileapp-pdb"
+}
+
+variable "pdb_max_unavailable" {
+
+  description = "Maximum unavailable pods during voluntary disruptions"
+
+  type = string
+
+  default = "1"
+}
+
+variable "pdb_match_labels" {
+
+  description = "Labels used for Pod Disruption Budget selector"
+
+  type = map(string)
+
+  default = {
+    app = "employeeprofileapp"
+  }
+}
+
+variable "pod_disruption_budget_annotations" {
+
+  description = "Annotations for Pod Disruption Budget"
+
+  type = map(string)
+
+  default = {}
+}

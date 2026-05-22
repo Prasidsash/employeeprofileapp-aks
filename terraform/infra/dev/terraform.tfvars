@@ -205,7 +205,7 @@ pod_disruption_budget_name = "employeeprofileapp-dev-pdb"
 pdb_max_unavailable = "1"
 
 pdb_match_labels = {
-  app = "employeeprofileapp-dev"
+  app = "employeeprofileapp"
 }
 
 pod_disruption_budget_annotations = {}
