@@ -199,7 +199,7 @@ governance_annotations = {}
 # POD DISRUPTION BUDGET
 # =====================================
 
-enable_pod_disruption_budget = true
+enable_pod_disruption_budget = false
 
 pod_disruption_budget_name = "employeeprofileapp-dev-pdb"
 
