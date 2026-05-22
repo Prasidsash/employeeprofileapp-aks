@@ -396,6 +396,17 @@ module "cert_manager" {
 
   source = "../../modules/cert_manager"
 
+  # =====================================
+  # EXPLICIT PROVIDER MAPPING
+  # Prevents localhost:80 kubectl fallback
+  # =====================================
+
+  providers = {
+
+    helm    = helm
+    kubectl = kubectl
+  }
+
   namespace = var.cert_manager_namespace
 
   chart_version = var.cert_manager_chart_version
