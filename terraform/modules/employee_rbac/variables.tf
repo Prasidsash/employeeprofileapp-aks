@@ -113,3 +113,34 @@ variable "additional_annotations" {
 
   default = {}
 }
+
+# =====================================
+# OPTIONAL HUMAN USER / GROUP RBAC
+# =====================================
+
+variable "enable_user_role_binding" {
+
+  description = "Enable Azure AD User/Group RoleBinding"
+
+  type = bool
+
+  default = false
+}
+
+variable "aad_user_object_ids" {
+
+  description = "Azure AD User Object IDs"
+
+  type = list(string)
+
+  default = []
+}
+
+variable "aad_group_object_ids" {
+
+  description = "Azure AD Group Object IDs"
+
+  type = list(string)
+
+  default = []
+}

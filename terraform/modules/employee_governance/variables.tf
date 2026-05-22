@@ -125,3 +125,54 @@ variable "limit_range_annotations" {
 
   default = {}
 }
+
+# =====================================
+# OPTIONAL POD DISRUPTION BUDGET
+# =====================================
+
+variable "enable_pod_disruption_budget" {
+
+  description = "Enable PodDisruptionBudget"
+
+  type = bool
+
+  default = false
+}
+
+variable "pod_disruption_budget_name" {
+
+  description = "PodDisruptionBudget name"
+
+  type = string
+
+  default = "employeeprofileapp-pdb"
+}
+
+variable "pdb_max_unavailable" {
+
+  description = "Maximum unavailable pods during disruption"
+
+  type = string
+
+  default = "1"
+}
+
+variable "pdb_match_labels" {
+
+  description = "Match labels for PodDisruptionBudget"
+
+  type = map(string)
+
+  default = {
+    app = "employeeprofileapp"
+  }
+}
+
+variable "pod_disruption_budget_annotations" {
+
+  description = "Optional PodDisruptionBudget annotations"
+
+  type = map(string)
+
+  default = {}
+}

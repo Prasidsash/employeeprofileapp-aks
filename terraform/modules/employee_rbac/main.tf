@@ -163,3 +163,90 @@ resource "kubernetes_role_binding_v1" "binding" {
     namespace = var.namespace_name
   }
 }
+
+# =====================================
+# OPTIONAL HUMAN USER / GROUP ROLE BINDING
+# =====================================
+
+resource "kubernetes_role_binding_v1" "aad_binding" {
+
+  count = var.enable_user_role_binding ? 1 : 0
+
+  metadata {
+
+    name = "${var.role_name}-aad-binding"
+
+    namespace = var.namespace_name
+
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
+
+    labels = merge(
+
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL ROLE BINDING ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.role_binding_annotations
+    )
+  }
+
+  role_ref {
+
+    api_group = "rbac.authorization.k8s.io"
+
+    kind = "Role"
+
+    name = kubernetes_role_v1.role.metadata[0].name
+  }
+
+  # =====================================
+  # AAD USERS
+  # =====================================
+
+  dynamic "subject" {
+
+    for_each = var.aad_user_object_ids
+
+    content {
+
+      kind = "User"
+
+      name = subject.value
+
+      api_group = "rbac.authorization.k8s.io"
+    }
+  }
+
+  # =====================================
+  # AAD GROUPS
+  # =====================================
+
+  dynamic "subject" {
+
+    for_each = var.aad_group_object_ids
+
+    content {
+
+      kind = "Group"
+
+      name = subject.value
+
+      api_group = "rbac.authorization.k8s.io"
+    }
+  }
+}

@@ -153,3 +153,17 @@ output "cluster_ca_certificate" {
 
   sensitive = true
 }
+
+# =====================================
+# OPTIONAL USER ASSIGNED IDENTITY OUTPUT
+# =====================================
+
+output "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].identity_ids,
+    []
+  )
+}

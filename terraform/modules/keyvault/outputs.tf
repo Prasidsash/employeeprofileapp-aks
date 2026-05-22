@@ -44,3 +44,15 @@ output "key_vault_tenant_id" {
 
   value = azurerm_key_vault.kv.tenant_id
 }
+
+# =====================================
+# OPTIONAL KEY VAULT NAME OUTPUT
+# FOR FUTURE CSI / WORKLOAD IDENTITY
+# =====================================
+
+output "key_vault_resource_group_name" {
+
+  description = "Key Vault Resource Group Name"
+
+  value = azurerm_key_vault.kv.resource_group_name
+}

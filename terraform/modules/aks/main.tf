@@ -92,7 +92,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   identity {
 
-    type = "SystemAssigned"
+  type = var.enable_user_assigned_identity ? "UserAssigned" : "SystemAssigned"
+
+  identity_ids = var.enable_user_assigned_identity ? var.user_assigned_identity_ids : null
   }
 
   # =====================================

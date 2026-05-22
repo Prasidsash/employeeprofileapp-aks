@@ -67,9 +67,9 @@ resource "azurerm_key_vault" "kv" {
   # LAB-SAFE SETTINGS
   # =====================================
 
-  soft_delete_retention_days = 7
+  soft_delete_retention_days = var.soft_delete_retention_days
 
-  purge_protection_enabled = false
+  purge_protection_enabled = var.enable_purge_protection
 
   # =====================================
   # RBAC AUTHORIZATION

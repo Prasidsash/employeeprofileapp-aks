@@ -106,3 +106,55 @@ resource "kubernetes_limit_range_v1" "limits" {
     }
   }
 }
+
+# =====================================
+# OPTIONAL POD DISRUPTION BUDGET
+# =====================================
+
+resource "kubernetes_pod_disruption_budget_v1" "pdb" {
+
+  count = var.enable_pod_disruption_budget ? 1 : 0
+
+  metadata {
+
+    name = var.pod_disruption_budget_name
+
+    namespace = var.namespace_name
+
+    # =====================================
+    # STANDARD PLATFORM LABELS
+    # =====================================
+
+    labels = merge(
+
+      {
+        managed_by = "terraform"
+
+        project = "employeeprofileapp"
+      },
+
+      var.additional_labels
+    )
+
+    # =====================================
+    # OPTIONAL PDB ANNOTATIONS
+    # =====================================
+
+    annotations = merge(
+
+      var.additional_annotations,
+
+      var.pod_disruption_budget_annotations
+    )
+  }
+
+  spec {
+
+    max_unavailable = var.pdb_max_unavailable
+
+    selector {
+
+      match_labels = var.pdb_match_labels
+    }
+  }
+}

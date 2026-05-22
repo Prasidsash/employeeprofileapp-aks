@@ -25,10 +25,6 @@ spec:
 
   metrics:
 
-    # =====================================
-    # CPU METRIC
-    # =====================================
-
     - type: Resource
 
       resource:
@@ -38,10 +34,6 @@ spec:
           type: Utilization
 
           averageUtilization: {{ .Values.hpa.averageUtilization }}
-
-    # =====================================
-    # OPTIONAL MEMORY METRIC
-    # =====================================
 
     {{- if .Values.hpa.memoryAverageUtilization }}
 
@@ -56,10 +48,6 @@ spec:
           averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
 
     {{- end }}
-
-  # =====================================
-  # OPTIONAL SCALING BEHAVIOR
-  # =====================================
 
   behavior:
 

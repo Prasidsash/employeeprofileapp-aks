@@ -87,3 +87,29 @@ variable "additional_tags" {
 
   default = {}
 }
+
+# =====================================
+# OPTIONAL PURGE PROTECTION
+# =====================================
+
+variable "enable_purge_protection" {
+
+  description = "Enable Key Vault purge protection"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# OPTIONAL SOFT DELETE RETENTION
+# =====================================
+
+variable "soft_delete_retention_days" {
+
+  description = "Key Vault soft delete retention days"
+
+  type = number
+
+  default = 7
+}

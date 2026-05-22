@@ -147,7 +147,7 @@ namespace_annotations = {}
 # GOVERNANCE
 # =====================================
 
-enable_governance = false
+enable_governance = true
 
 quota_limits = {
 
@@ -193,6 +193,22 @@ limit_default_request = {
 governance_labels = {}
 
 governance_annotations = {}
+
+# =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+enable_pod_disruption_budget = true
+
+pod_disruption_budget_name = "employeeprofileapp-dev-pdb"
+
+pdb_max_unavailable = "1"
+
+pdb_match_labels = {
+  app = "employeeprofileapp-dev"
+}
+
+pod_disruption_budget_annotations = {}
 
 # =====================================
 # RBAC
@@ -344,3 +360,17 @@ backup_retention_duration_count = 30
 backup_retention_duration_type = "D"
 
 backup_additional_tags = {}
+
+# =====================================
+# CERT MANAGER
+# =====================================
+
+enable_cert_manager = true
+
+cert_manager_namespace = "cert-manager"
+
+cert_manager_chart_version = "v1.18.2"
+
+enable_cluster_issuer = true
+
+cluster_issuer_name = "selfsigned-cluster-issuer"

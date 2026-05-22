@@ -195,6 +195,14 @@ module "aks" {
 
   enable_oidc_issuer = var.enable_oidc_issuer
 
+  # =====================================
+  # OPTIONAL USER ASSIGNED IDENTITY
+  # =====================================
+
+  enable_user_assigned_identity = false
+
+  user_assigned_identity_ids = []
+
   enable_image_cleaner = var.enable_image_cleaner
 
   image_cleaner_interval_hours = var.image_cleaner_interval_hours
@@ -379,6 +387,31 @@ module "ingress_nginx" {
 }
 
 # =====================================
+# CERT MANAGER MODULE
+# =====================================
+
+module "cert_manager" {
+
+  count = var.enable_cert_manager ? 1 : 0
+
+  source = "../../modules/cert_manager"
+
+  namespace = var.cert_manager_namespace
+
+  chart_version = var.cert_manager_chart_version
+
+  enable_cluster_issuer = var.enable_cluster_issuer
+
+  cluster_issuer_name = var.cluster_issuer_name
+
+  depends_on = [
+    module.aks,
+    module.ingress_nginx,
+    time_sleep.wait_for_aks
+  ]
+}
+
+# =====================================
 # INGRESS MODULE
 # =====================================
 
@@ -457,6 +490,20 @@ module "governance" {
   resource_quota_annotations = {}
 
   limit_range_annotations = {}
+
+  # =====================================
+  # OPTIONAL POD DISRUPTION BUDGET
+  # =====================================
+
+  enable_pod_disruption_budget = var.enable_pod_disruption_budget
+
+  pod_disruption_budget_name = var.pod_disruption_budget_name
+
+  pdb_max_unavailable = var.pdb_max_unavailable
+
+  pdb_match_labels = var.pdb_match_labels
+
+  pod_disruption_budget_annotations = var.pod_disruption_budget_annotations
 
   depends_on = [
     module.namespace

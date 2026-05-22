@@ -255,3 +255,26 @@ variable "spot_node_taints" {
 
   default = []
 }
+
+# =====================================
+# OPTIONAL USER-ASSIGNED MANAGED IDENTITY
+# FOR FUTURE WORKLOAD IDENTITY EXPANSION
+# =====================================
+
+variable "enable_user_assigned_identity" {
+
+  description = "Enable User Assigned Managed Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  type = list(string)
+
+  default = []
+}

@@ -96,6 +96,12 @@ spec:
 
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
 
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+
           {{- end }}
 
           {{- if and .Values.livenessProbe .Values.livenessProbe.enabled }}
@@ -108,6 +114,10 @@ spec:
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
 
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
 
           {{- end }}
 

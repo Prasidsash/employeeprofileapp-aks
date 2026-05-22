@@ -819,3 +819,52 @@ variable "ingress_controller_replica_count" {
 
   default = 1
 }
+
+# =====================================
+# CERT MANAGER
+# =====================================
+
+variable "enable_cert_manager" {
+
+  description = "Enable cert-manager"
+
+  type = bool
+
+  default = false
+}
+
+variable "cert_manager_namespace" {
+
+  description = "cert-manager namespace"
+
+  type = string
+
+  default = "cert-manager"
+}
+
+variable "cert_manager_chart_version" {
+
+  description = "cert-manager Helm chart version"
+
+  type = string
+
+  default = "v1.18.2"
+}
+
+variable "enable_cluster_issuer" {
+
+  description = "Enable ClusterIssuer"
+
+  type = bool
+
+  default = false
+}
+
+variable "cluster_issuer_name" {
+
+  description = "ClusterIssuer name"
+
+  type = string
+
+  default = "selfsigned-cluster-issuer"
+}
