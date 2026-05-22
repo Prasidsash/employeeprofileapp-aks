@@ -40,6 +40,12 @@ spec:
 
     spec:
 
+      # =====================================
+      # SERVICE ACCOUNT
+      # =====================================
+
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
 {{ toYaml .Values.imagePullSecrets | indent 8 }}
@@ -82,6 +88,22 @@ spec:
 
             - name: ASPNETCORE_ENVIRONMENT
               value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
+
+          {{- end }}
+
+          # =====================================
+          # AZURE KEY VAULT CSI DRIVER
+          # =====================================
+
+          {{- if .Values.keyVault.enabled }}
+
+          volumeMounts:
+
+            - name: secrets-store-inline
+
+              mountPath: {{ .Values.keyVault.mountPath }}
+
+              readOnly: true
 
           {{- end }}
 
@@ -130,3 +152,25 @@ spec:
             limits:
               cpu: {{ .Values.resources.limits.cpu }}
               memory: {{ .Values.resources.limits.memory }}
+
+      # =====================================
+      # AZURE KEY VAULT CSI DRIVER
+      # =====================================
+
+      {{- if .Values.keyVault.enabled }}
+
+      volumes:
+
+        - name: secrets-store-inline
+
+          csi:
+
+            driver: secrets-store.csi.k8s.io
+
+            readOnly: true
+
+            volumeAttributes:
+
+              secretProviderClass: {{ .Values.keyVault.secretProviderClass }}
+
+      {{- end }}

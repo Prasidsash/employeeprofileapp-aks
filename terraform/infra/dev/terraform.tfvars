@@ -91,7 +91,7 @@ spot_node_taints = [
 # OPTIONAL AKS FEATURES
 # =====================================
 
-enable_workload_identity = false
+enable_workload_identity = true
 
 enable_oidc_issuer = true
 
@@ -104,6 +104,22 @@ image_cleaner_interval_hours = 48
 authorized_ip_ranges = []
 
 aks_additional_tags = {}
+
+# =====================================
+# OPTIONAL KEY VAULT CSI DRIVER
+# =====================================
+
+enable_key_vault_secrets_provider = true
+
+secret_rotation_enabled = true
+
+# =====================================
+# OPTIONAL USER ASSIGNED IDENTITY
+# =====================================
+
+enable_user_assigned_identity = false
+
+user_assigned_identity_ids = []
 
 # =====================================
 # MONITORING
@@ -236,7 +252,14 @@ allowed_verbs = [
   "watch"
 ]
 
-service_account_annotations = {}
+# =====================================
+# WORKLOAD IDENTITY ANNOTATION
+# =====================================
+
+service_account_annotations = {
+
+  "azure.workload.identity/client-id" = ""
+}
 
 role_annotations = {}
 
@@ -250,7 +273,7 @@ rbac_additional_annotations = {}
 # SECRETS
 # =====================================
 
-enable_secret = true
+enable_secret = false
 
 secret_name = "employee-db-secret"
 

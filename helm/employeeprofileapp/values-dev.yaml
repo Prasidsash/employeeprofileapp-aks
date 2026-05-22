@@ -21,6 +21,20 @@ image:
   pullPolicy: Always
 
 # =====================================
+# SERVICE ACCOUNT
+# =====================================
+
+serviceAccount:
+
+  create: false
+
+  name: employee-sa
+
+  annotations:
+
+    azure.workload.identity/client-id: ""
+
+# =====================================
 # SERVICE
 # =====================================
 
@@ -62,6 +76,32 @@ resources:
   limits:
     cpu: "500m"
     memory: "512Mi"
+
+# =====================================
+# AZURE KEY VAULT
+# =====================================
+
+keyVault:
+
+  enabled: true
+
+  keyVaultName: ""
+
+  tenantId: ""
+
+  clientId: ""
+
+  secretProviderClass: employeeprofileapp-spc
+
+  mountPath: "/mnt/secrets-store"
+
+  secrets:
+
+    - objectName: db-username
+      objectType: secret
+
+    - objectName: db-password
+      objectType: secret
 
 # =====================================
 # INGRESS

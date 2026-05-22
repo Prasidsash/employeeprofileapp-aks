@@ -196,12 +196,20 @@ module "aks" {
   enable_oidc_issuer = var.enable_oidc_issuer
 
   # =====================================
+  # OPTIONAL KEY VAULT CSI DRIVER
+  # =====================================
+
+  enable_key_vault_secrets_provider = var.enable_key_vault_secrets_provider
+
+  secret_rotation_enabled = var.secret_rotation_enabled
+
+  # =====================================
   # OPTIONAL USER ASSIGNED IDENTITY
   # =====================================
 
-  enable_user_assigned_identity = false
+  enable_user_assigned_identity = var.enable_user_assigned_identity
 
-  user_assigned_identity_ids = []
+  user_assigned_identity_ids = var.user_assigned_identity_ids
 
   enable_image_cleaner = var.enable_image_cleaner
 

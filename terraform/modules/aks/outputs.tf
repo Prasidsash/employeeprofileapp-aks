@@ -115,6 +115,24 @@ output "workload_identity_enabled" {
 }
 
 # =====================================
+# OPTIONAL KEY VAULT CSI DRIVER
+# =====================================
+
+output "key_vault_secrets_provider_enabled" {
+
+  description = "Azure Key Vault CSI Driver Enabled"
+
+  value = var.enable_key_vault_secrets_provider
+}
+
+output "secret_rotation_enabled" {
+
+  description = "Azure Key Vault Secret Rotation Enabled"
+
+  value = var.secret_rotation_enabled
+}
+
+# =====================================
 # KUBECONFIG DETAILS
 # =====================================
 

@@ -17,6 +17,20 @@ image:
   pullPolicy: IfNotPresent
 
 # =====================================
+# SERVICE ACCOUNT
+# =====================================
+
+serviceAccount:
+
+  create: true
+
+  name: employee-sa
+
+  annotations:
+
+    azure.workload.identity/client-id: ""
+
+# =====================================
 # SERVICE
 # =====================================
 
@@ -98,6 +112,32 @@ hpa:
 
 env:
   ASPNETCORE_ENVIRONMENT: Development
+
+# =====================================
+# AZURE KEY VAULT
+# =====================================
+
+keyVault:
+
+  enabled: true
+
+  secretProviderClass: employeeprofileapp-spc
+
+  mountPath: /mnt/secrets-store
+
+  tenantId: ""
+
+  keyVaultName: ""
+
+  objects:
+
+    - objectName: db-username
+
+      objectType: secret
+
+    - objectName: db-password
+
+      objectType: secret
 
 # =====================================
 # IMAGE PULL SECRETS

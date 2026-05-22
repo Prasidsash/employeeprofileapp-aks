@@ -102,6 +102,28 @@ variable "enable_oidc_issuer" {
 }
 
 # =====================================
+# OPTIONAL KEY VAULT CSI DRIVER
+# =====================================
+
+variable "enable_key_vault_secrets_provider" {
+
+  description = "Enable Azure Key Vault CSI Driver"
+
+  type = bool
+
+  default = false
+}
+
+variable "secret_rotation_enabled" {
+
+  description = "Enable Azure Key Vault secret rotation"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
 # OPTIONAL IMAGE CLEANER
 # =====================================
 

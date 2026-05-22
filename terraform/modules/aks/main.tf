@@ -1,58 +1,20 @@
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_kubernetes_cluster" "aks" {
 
-  name = var.cluster_name
+  name                = var.cluster_name
 
-  location = var.location
+  location            = var.location
 
   resource_group_name = var.resource_group_name
 
-  dns_prefix = "${var.environment}-aks"
+  dns_prefix          = "${var.cluster_name}-${var.environment}"
 
-  kubernetes_version = var.kubernetes_version
+  kubernetes_version  = var.kubernetes_version
 
-  # =====================================
-  # Prevent Accidental Destroy
-  # =====================================
-
-  lifecycle {
-
-    prevent_destroy = false
-  }
-
-  # =====================================
-  # AKS Security Hardening
-  # =====================================
-
-  role_based_access_control_enabled = true
-
-  azure_policy_enabled = true
-
-  local_account_disabled = false
-
-  # =====================================
-  # Optional Future Features
-  # Preserve Existing Cluster Behavior
-  # =====================================
-
-  sku_tier = "Free"
-
-  # =====================================
-  # OPTIONAL WORKLOAD IDENTITY
-  # =====================================
-
-  workload_identity_enabled = var.enable_workload_identity
+  sku_tier            = "Standard"
 
   oidc_issuer_enabled = var.enable_oidc_issuer
 
-  # =====================================
-  # OPTIONAL IMAGE CLEANER
-  # =====================================
-
-  image_cleaner_enabled = var.enable_image_cleaner
-
-  image_cleaner_interval_hours = var.image_cleaner_interval_hours
+  workload_identity_enabled = var.enable_workload_identity
 
   # =====================================
   # DEFAULT SYSTEM NODE POOL
@@ -62,39 +24,53 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     name = "system"
 
-    temporary_name_for_rotation = "systemtemp"
-
-    node_count = var.enable_node_autoscaling ? null : var.system_node_count
-
     vm_size = var.system_node_vm_size
+
+    node_count = var.system_node_count
 
     auto_scaling_enabled = var.enable_node_autoscaling
 
-    min_count = var.enable_node_autoscaling ? var.system_node_min_count : null
+    min_count = var.system_node_min_count
 
-    max_count = var.enable_node_autoscaling ? var.system_node_max_count : null
+    max_count = var.system_node_max_count
 
     vnet_subnet_id = var.subnet_id
 
-    orchestrator_version = var.kubernetes_version
+    only_critical_addons_enabled = true
 
     node_labels = var.node_labels
 
-    upgrade_settings {
+    node_taints = var.node_taints
+  }
 
-      max_surge = "10%"
+  # =====================================
+  # SYSTEM ASSIGNED IDENTITY
+  # =====================================
+
+  dynamic "identity" {
+
+    for_each = var.enable_user_assigned_identity ? [] : [1]
+
+    content {
+
+      type = "SystemAssigned"
     }
   }
 
   # =====================================
-  # MANAGED IDENTITY
+  # USER ASSIGNED IDENTITY
   # =====================================
 
-  identity {
+  dynamic "identity" {
 
-  type = var.enable_user_assigned_identity ? "UserAssigned" : "SystemAssigned"
+    for_each = var.enable_user_assigned_identity ? [1] : []
 
-  identity_ids = var.enable_user_assigned_identity ? var.user_assigned_identity_ids : null
+    content {
+
+      type = "UserAssigned"
+
+      identity_ids = var.user_assigned_identity_ids
+    }
   }
 
   # =====================================
@@ -107,29 +83,24 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     network_policy = "azure"
 
-    load_balancer_sku = "standard"
-
     service_cidr = var.service_cidr
 
     dns_service_ip = var.dns_service_ip
+
+    load_balancer_sku = "standard"
   }
 
   # =====================================
-  # OMS / LOG ANALYTICS
+  # OMS AGENT
   # =====================================
 
-  dynamic "oms_agent" {
+  oms_agent {
 
-    for_each = var.log_analytics_workspace_id != null ? [1] : []
-
-    content {
-
-      log_analytics_workspace_id = var.log_analytics_workspace_id
-    }
+    log_analytics_workspace_id = var.log_analytics_workspace_id
   }
 
   # =====================================
-  # MANAGED PROMETHEUS
+  # AZURE MONITOR METRICS
   # =====================================
 
   dynamic "monitor_metrics" {
@@ -145,7 +116,29 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
-  # OPTIONAL API SERVER ACCESS PROFILE
+  # IMAGE CLEANER
+  # =====================================
+
+  image_cleaner_enabled = var.enable_image_cleaner
+
+  image_cleaner_interval_hours = var.image_cleaner_interval_hours
+
+  # =====================================
+  # KEY VAULT CSI DRIVER
+  # =====================================
+
+  dynamic "key_vault_secrets_provider" {
+
+    for_each = var.enable_key_vault_secrets_provider ? [1] : []
+
+    content {
+
+      secret_rotation_enabled = var.secret_rotation_enabled
+    }
+  }
+
+  # =====================================
+  # API SERVER ACCESS PROFILE
   # =====================================
 
   dynamic "api_server_access_profile" {
@@ -166,10 +159,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     {
       environment = var.environment
-
-      managed_by = "terraform"
-
-      project = "employeeprofileapp"
+      managed_by  = "terraform"
+      module      = "aks"
     },
 
     var.additional_tags
@@ -177,8 +168,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 }
 
 # =====================================
-# ADDITIVE SPOT NODE POOL
-# SAFE LOW-COST SCALABILITY TESTING
+# OPTIONAL SPOT NODE POOL
 # =====================================
 
 resource "azurerm_kubernetes_cluster_node_pool" "spot" {
@@ -187,13 +177,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
   name = var.spot_node_pool_name
 
-  temporary_name_for_rotation = "spottemp"
-
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
 
   vm_size = var.spot_node_vm_size
-
-  mode = "User"
 
   priority = "Spot"
 
@@ -201,30 +187,42 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
   spot_max_price = var.spot_max_price
 
-  auto_scaling_enabled = true
+  enable_auto_scaling = true
 
   min_count = var.spot_node_min_count
 
   max_count = var.spot_node_max_count
 
-  vnet_subnet_id = var.subnet_id
+  mode = "User"
 
   orchestrator_version = var.kubernetes_version
 
-  node_labels = var.spot_node_labels
+  vnet_subnet_id = var.subnet_id
 
-  node_taints = var.spot_node_taints
+  node_labels = merge(
+
+    {
+      workload = "spot"
+    },
+
+    var.spot_node_labels
+  )
+
+  node_taints = concat(
+
+    [
+      "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+    ],
+
+    var.spot_node_taints
+  )
 
   tags = merge(
 
     {
       environment = var.environment
-
-      managed_by = "terraform"
-
-      project = "employeeprofileapp"
-
-      nodepool = "spot"
+      managed_by  = "terraform"
+      module      = "aks-spotpool"
     },
 
     var.additional_tags
