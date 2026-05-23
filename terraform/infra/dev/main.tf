@@ -145,6 +145,29 @@ module "keyvault" {
 }
 
 # =====================================
+# ACR MODULE
+# =====================================
+
+module "acr" {
+
+  count = var.enable_acr ? 1 : 0
+
+  source = "../../modules/acr"
+
+  acr_name = var.acr_name
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  acr_sku = var.acr_sku
+
+  environment = var.environment
+
+  additional_tags = var.aks_additional_tags
+}
+
+# =====================================
 # AKS MODULE
 # =====================================
 
@@ -258,19 +281,19 @@ module "aks" {
 
   additional_tags = var.aks_additional_tags
 
+  # =====================================
+  # ACR
+  # =====================================
+
+  enable_acr_pull_role_assignment = var.enable_acr
+
+  acr_id = try(module.acr[0].acr_id, null)
+
   depends_on = [
     module.network,
     module.monitoring
   ]
 }
-
-  # =====================================
-  # OPTIONAL ACR
-  # =====================================
-
-  enable_acr_pull_role_assignment = var.enable_acr
-
-  acr_id = var.acr_id
 
 # =====================================
 # AKS BACKUP MODULE

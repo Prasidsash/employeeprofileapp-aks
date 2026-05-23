@@ -124,14 +124,14 @@ enable_user_assigned_identity = false
 user_assigned_identity_ids = []
 
 # =====================================
-# OPTIONAL ACR
+# ACR
 # =====================================
 
 enable_acr = true
 
-acr_id = "/subscriptions/.../resourceGroups/.../providers/Microsoft.ContainerRegistry/registries/<acr-name>"
+acr_name = "empprofacr2026"
 
-acr_login_server = "<acr-name>.azurecr.io"
+acr_sku = "Basic"
 
 # =====================================
 # MONITORING

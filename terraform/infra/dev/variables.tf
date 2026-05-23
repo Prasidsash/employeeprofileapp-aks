@@ -974,34 +974,32 @@ variable "user_assigned_identity_ids" {
 }
 
 # =====================================
-# OPTIONAL ACR
+# ACR
 # =====================================
 
 variable "enable_acr" {
 
-  description = "Enable Azure Container Registry integration"
+  description = "Enable Azure Container Registry"
 
   type = bool
 
-  default = false
+  default = true
 }
 
-variable "acr_id" {
+variable "acr_name" {
 
-  description = "Azure Container Registry ID"
+  description = "Azure Container Registry name"
+
+  type = string
+}
+
+variable "acr_sku" {
+
+  description = "Azure Container Registry SKU"
 
   type = string
 
-  default = null
-}
-
-variable "acr_login_server" {
-
-  description = "Azure Container Registry login server"
-
-  type = string
-
-  default = null
+  default = "Basic"
 }
 
 # =====================================

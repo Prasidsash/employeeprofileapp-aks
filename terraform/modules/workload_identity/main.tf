@@ -35,9 +35,7 @@ resource "azurerm_federated_identity_credential" "workload_identity" {
   count = var.enable_workload_identity_resources ? 1 : 0
 
   name = "employeeprofileapp-${var.environment}-fic"
-
-  resource_group_name = var.resource_group_name
-
+  
   audience = [
     "api://AzureADTokenExchange"
   ]
