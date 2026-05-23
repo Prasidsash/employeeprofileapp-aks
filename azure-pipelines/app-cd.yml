@@ -17,35 +17,47 @@ pool:
 
 variables:
 
-- group: employeeprofileapp-dev-vars
+  - group: employeeprofileapp-dev-vars
 
-- name: dockerRegistryServiceConnection
-  value: 'Docker-SC'
+  # =====================================
+  # DOCKER HUB CONFIGURATION
+  # =====================================
 
-- name: azureServiceConnection
-  value: 'AzureAKS-SCN'
+  - name: dockerRegistryServiceConnection
+    value: 'Docker-SC'
 
-- name: imageRepository
-  value: 'prasidsash/employeeprofileapp-aks'
+  - name: imageRepository
+    value: 'prasidsash/employeeprofileapp-aks'
 
-# =====================================
-# OPTIONAL ACR SUPPORT
-# =====================================
+  - name: imagePullSecret
+    value: 'dockerhub-secret'
 
-- name: enableAcr
-  value: false
+  # =====================================
+  # ACR CONFIGURATION
+  # =====================================
 
-- name: acrRepository
-  value: ''
+  - name: enableAcr
+    value: 'false'
 
-- name: finalImageRepository
-  value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
+  - name: acrRepository
+    value: ''
 
-- name: imagePullSecret
-  value: 'dockerhub-secret'
+  # =====================================
+  # AZURE CONFIGURATION
+  # =====================================
 
-- name: helmChartPath
-  value: 'helm/employeeprofileapp'
+  - name: azureServiceConnection
+    value: 'AzureAKS-SCN'
+
+  - name: helmChartPath
+    value: 'helm/employeeprofileapp'
+
+  # =====================================
+  # FINAL REPOSITORY RESOLUTION
+  # =====================================
+
+  - name: finalImageRepository
+    value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
 
 # =====================================
 # STAGES
@@ -92,12 +104,14 @@ stages:
               - checkout: self
 
               # =========================
-              # IMAGE PULL SECRET
+              # DOCKER HUB IMAGE PULL SECRET
               # =========================
 
               - task: KubernetesManifest@1
 
                 displayName: Create DEV Image Pull Secret
+
+                condition: eq(variables['enableAcr'], 'false')
 
                 inputs:
 
@@ -198,12 +212,14 @@ stages:
               - checkout: self
 
               # =========================
-              # IMAGE PULL SECRET
+              # DOCKER HUB IMAGE PULL SECRET
               # =========================
 
               - task: KubernetesManifest@1
 
                 displayName: Create QA Image Pull Secret
+
+                condition: eq(variables['enableAcr'], 'false')
 
                 inputs:
 
@@ -257,10 +273,11 @@ stages:
 
                   arguments: >
                     --set image.repository=$(finalImageRepository)
-                    --set image.tag=$(Build.BuildNumber)
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
                     --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
+                    --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
 
 # =====================================
 # UAT DEPLOYMENT
@@ -303,12 +320,14 @@ stages:
               - checkout: self
 
               # =========================
-              # IMAGE PULL SECRET
+              # DOCKER HUB IMAGE PULL SECRET
               # =========================
 
               - task: KubernetesManifest@1
 
                 displayName: Create UAT Image Pull Secret
+
+                condition: eq(variables['enableAcr'], 'false')
 
                 inputs:
 
@@ -362,10 +381,11 @@ stages:
 
                   arguments: >
                     --set image.repository=$(finalImageRepository)
-                    --set image.tag=$(Build.BuildNumber)
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
                     --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
+                    --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
 
 # =====================================
 # PROD DEPLOYMENT
@@ -408,12 +428,14 @@ stages:
               - checkout: self
 
               # =========================
-              # IMAGE PULL SECRET
+              # DOCKER HUB IMAGE PULL SECRET
               # =========================
 
               - task: KubernetesManifest@1
 
                 displayName: Create PROD Image Pull Secret
+
+                condition: eq(variables['enableAcr'], 'false')
 
                 inputs:
 
@@ -467,7 +489,8 @@ stages:
 
                   arguments: >
                     --set image.repository=$(finalImageRepository)
-                    --set image.tag=$(Build.BuildNumber)
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
                     --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
+                    --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)

@@ -20,28 +20,50 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+# =====================================
+# VARIABLES
+# =====================================
+
 variables:
 
   - group: employeeprofileapp-dev-vars
 
+  # =====================================
+  # DOCKER HUB CONFIGURATION
+  # =====================================
+
   - name: dockerRegistryServiceConnection
-  value: Docker-SC
+    value: 'Docker-SC'
 
-- name: imageRepository
-  value: prasidsash/employeeprofileapp-aks
+  - name: imageRepository
+    value: 'prasidsash/employeeprofileapp-aks'
+
+  # =====================================
+  # OPTIONAL ACR SUPPORT
+  # =====================================
+
+  - name: enableAcr
+    value: 'false'
+
+  - name: acrServiceConnection
+    value: 'ACR-SC'
+
+  - name: acrRepository
+    value: ''
+
+  # =====================================
+  # FINAL REPOSITORY RESOLUTION
+  # =====================================
+
+  - name: finalImageRepository
+    value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
+
+  - name: finalContainerRegistryServiceConnection
+    value: $[eq(variables['enableAcr'], 'true') ? variables['acrServiceConnection'] : variables['dockerRegistryServiceConnection']]
 
 # =====================================
-# OPTIONAL ACR SUPPORT
+# STAGES
 # =====================================
-
-- name: enableAcr
-  value: false
-
-- name: acrRepository
-  value: ""
-
-- name: finalImageRepository
-  value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
 
 stages:
 
@@ -90,6 +112,7 @@ stages:
               echo "Repository: $(finalImageRepository)"
               echo "Build Number: $(Build.BuildNumber)"
               echo "Source Branch: $(Build.SourceBranchName)"
+              echo "ACR Enabled: $(enableAcr)"
 
             displayName: Build Metadata
 
@@ -215,16 +238,16 @@ stages:
             displayName: Trivy Image Scan
 
           # =====================================
-          # DOCKER LOGIN
+          # REGISTRY LOGIN
           # =====================================
 
           - task: Docker@2
 
-            displayName: Docker Login
+            displayName: Registry Login
 
             inputs:
               command: login
-              containerRegistry: $(dockerRegistryServiceConnection)
+              containerRegistry: $(finalContainerRegistryServiceConnection)
 
           # =====================================
           # DOCKER PUSH
@@ -236,22 +259,8 @@ stages:
 
             inputs:
               command: push
-              containerRegistry: $(dockerRegistryServiceConnection)
+              containerRegistry: $(finalContainerRegistryServiceConnection)
               repository: $(finalImageRepository)
               tags: |
                 $(Build.BuildNumber)
                 latest
-
-          # =====================================
-          # IMAGE VALIDATION
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Docker Image Successfully Pushed"
-              echo "=================================="
-
-              echo "$(finalImageRepository):$(Build.BuildNumber)"
-
-            displayName: Validate Docker Push
