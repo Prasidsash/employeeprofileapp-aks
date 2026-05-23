@@ -247,6 +247,20 @@ stages:
 
             condition: eq(variables['enableAcr'], 'false')
 
+                    # =====================================
+          # ACR LOGIN FOR TRIVY
+          # =====================================
+
+          - task: Docker@2
+
+            displayName: ACR Login For Trivy
+
+            condition: eq(variables['enableAcr'], 'true')
+
+            inputs:
+              command: login
+              containerRegistry: 'ACR-SC'
+
           # =====================================
           # TRIVY IMAGE SCAN - ACR
           # =====================================
@@ -256,6 +270,8 @@ stages:
               echo "=================================="
               echo "Trivy ACR Image Scan"
               echo "=================================="
+
+              docker pull $(acrRepository):$(Build.BuildNumber)
 
               trivy image \
                 --scanners vuln \
