@@ -25,10 +25,23 @@ variables:
   - group: employeeprofileapp-dev-vars
 
   - name: dockerRegistryServiceConnection
-    value: Docker-SC
+  value: Docker-SC
 
-  - name: imageRepository
-    value: prasidsash/employeeprofileapp-aks
+- name: imageRepository
+  value: prasidsash/employeeprofileapp-aks
+
+# =====================================
+# OPTIONAL ACR SUPPORT
+# =====================================
+
+- name: enableAcr
+  value: false
+
+- name: acrRepository
+  value: ""
+
+- name: finalImageRepository
+  value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
 
 stages:
 
@@ -74,7 +87,7 @@ stages:
               echo "Build Information"
               echo "=================================="
 
-              echo "Repository: $(imageRepository)"
+              echo "Repository: $(finalImageRepository)"
               echo "Build Number: $(Build.BuildNumber)"
               echo "Source Branch: $(Build.SourceBranchName)"
 
@@ -128,7 +141,7 @@ stages:
 
             inputs:
               command: build
-              repository: $(imageRepository)
+              repository: $(finalImageRepository)
               dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
               buildContext: '$(Build.SourcesDirectory)'
               tags: |
@@ -197,7 +210,7 @@ stages:
                 --ignorefile .trivyignore \
                 --exit-code 1 \
                 --severity CRITICAL \
-                $(imageRepository):$(Build.BuildNumber)
+                $(finalImageRepository):$(Build.BuildNumber)
 
             displayName: Trivy Image Scan
 
@@ -224,7 +237,7 @@ stages:
             inputs:
               command: push
               containerRegistry: $(dockerRegistryServiceConnection)
-              repository: $(imageRepository)
+              repository: $(finalImageRepository)
               tags: |
                 $(Build.BuildNumber)
                 latest
@@ -239,6 +252,6 @@ stages:
               echo "Docker Image Successfully Pushed"
               echo "=================================="
 
-              echo "$(imageRepository):$(Build.BuildNumber)"
+              echo "$(finalImageRepository):$(Build.BuildNumber)"
 
             displayName: Validate Docker Push

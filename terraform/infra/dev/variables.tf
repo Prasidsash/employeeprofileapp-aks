@@ -974,6 +974,37 @@ variable "user_assigned_identity_ids" {
 }
 
 # =====================================
+# OPTIONAL ACR
+# =====================================
+
+variable "enable_acr" {
+
+  description = "Enable Azure Container Registry integration"
+
+  type = bool
+
+  default = false
+}
+
+variable "acr_id" {
+
+  description = "Azure Container Registry ID"
+
+  type = string
+
+  default = null
+}
+
+variable "acr_login_server" {
+
+  description = "Azure Container Registry login server"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
 # WORKLOAD IDENTITY
 # =====================================
 

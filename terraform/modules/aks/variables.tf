@@ -327,3 +327,25 @@ variable "only_critical_addons_enabled" {
 
   default = false
 }
+
+# =====================================
+# OPTIONAL ACR INTEGRATION
+# =====================================
+
+variable "enable_acr_pull_role_assignment" {
+
+  description = "Enable AcrPull role assignment for AKS kubelet identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "acr_id" {
+
+  description = "Azure Container Registry ID"
+
+  type = string
+
+  default = null
+}

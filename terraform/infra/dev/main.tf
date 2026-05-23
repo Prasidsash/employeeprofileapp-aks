@@ -264,6 +264,14 @@ module "aks" {
   ]
 }
 
+  # =====================================
+  # OPTIONAL ACR
+  # =====================================
+
+  enable_acr_pull_role_assignment = var.enable_acr
+
+  acr_id = var.acr_id
+
 # =====================================
 # AKS BACKUP MODULE
 # =====================================
