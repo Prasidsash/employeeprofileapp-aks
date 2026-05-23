@@ -39,7 +39,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     only_critical_addons_enabled = true
 
     node_labels = var.node_labels
-
   }
 
   # =====================================
@@ -93,9 +92,14 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # OMS AGENT
   # =====================================
 
-  oms_agent {
+  dynamic "oms_agent" {
 
-    log_analytics_workspace_id = var.log_analytics_workspace_id
+    for_each = var.enable_monitoring ? [1] : []
+
+    content {
+
+      log_analytics_workspace_id = var.log_analytics_workspace_id
+    }
   }
 
   # =====================================
@@ -104,15 +108,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   dynamic "monitor_metrics" {
 
-    for_each = var.azure_monitor_workspace_id != null ? [1] : []
+  for_each = var.azure_monitor_workspace_id != null ? [1] : []
 
-    content {
+  content {
 
-      annotations_allowed = null
+    annotations_allowed = null
 
-      labels_allowed = null
-    }
+    labels_allowed = null
   }
+}
 
   # =====================================
   # IMAGE CLEANER

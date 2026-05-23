@@ -70,12 +70,30 @@ variable "dns_service_ip" {
 # MONITORING
 # =====================================
 
+variable "enable_monitoring" {
+
+  description = "Enable Azure Monitor / OMS Agent"
+
+  type = bool
+
+  default = false
+}
+
 variable "log_analytics_workspace_id" {
+
+  description = "Log Analytics Workspace ID"
+
   type = string
+
+  default = null
 }
 
 variable "azure_monitor_workspace_id" {
-  type    = string
+
+  description = "Azure Monitor Workspace ID"
+
+  type = string
+
   default = null
 }
 
