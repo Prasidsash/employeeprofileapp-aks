@@ -43,23 +43,13 @@ variables:
   # =====================================
 
   - name: enableAcr
-    value: 'false'
+    value: 'true'
 
   - name: acrServiceConnection
     value: 'ACR-SC'
 
   - name: acrRepository
-    value: ''
-
-  # =====================================
-  # FINAL REPOSITORY RESOLUTION
-  # =====================================
-
-  - name: finalImageRepository
-    value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
-
-  - name: finalContainerRegistryServiceConnection
-    value: $[eq(variables['enableAcr'], 'true') ? variables['acrServiceConnection'] : variables['dockerRegistryServiceConnection']]
+    value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
 
 # =====================================
 # STAGES
@@ -98,6 +88,32 @@ stages:
               docker --version
 
             displayName: Validate Docker Tooling
+
+          # =====================================
+          # RESOLVE FINAL REGISTRY
+          # =====================================
+
+          - script: |
+
+              if [ "$(enableAcr)" = "true" ]; then
+
+                echo "Using ACR Registry"
+
+                echo "##vso[task.setvariable variable=finalImageRepository]$(acrRepository)"
+
+                echo "##vso[task.setvariable variable=finalContainerRegistryServiceConnection]$(acrServiceConnection)"
+
+              else
+
+                echo "Using Docker Hub Registry"
+
+                echo "##vso[task.setvariable variable=finalImageRepository]$(imageRepository)"
+
+                echo "##vso[task.setvariable variable=finalContainerRegistryServiceConnection]$(dockerRegistryServiceConnection)"
+
+              fi
+
+            displayName: Resolve Final Registry
 
           # =====================================
           # BUILD INFORMATION
