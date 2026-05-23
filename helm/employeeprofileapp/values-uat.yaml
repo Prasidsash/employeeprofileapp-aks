@@ -21,6 +21,20 @@ image:
   pullPolicy: Always
 
 # =====================================
+# SERVICE ACCOUNT
+# =====================================
+
+serviceAccount:
+
+  create: false
+
+  name: employee-sa
+
+  annotations:
+
+    azure.workload.identity/client-id: ""
+
+# =====================================
 # SERVICE
 # =====================================
 
@@ -28,7 +42,7 @@ service:
 
   enabled: true
 
-  type: LoadBalancer
+  type: ClusterIP
 
   port: 80
 
@@ -41,13 +55,6 @@ service:
   sessionAffinity: ""
 
   loadBalancerIP: ""
-
-# =====================================
-# OPTIONAL SERVICE SETTINGS
-# =====================================
-
-serviceSettings:
-  enableLoadBalancer: true
 
 # =====================================
 # ENVIRONMENT VARIABLES
@@ -63,21 +70,47 @@ env:
 resources:
 
   requests:
-    cpu: "50m"
-    memory: "64Mi"
+    cpu: "100m"
+    memory: "256Mi"
 
   limits:
-    cpu: "100m"
-    memory: "128Mi"
+    cpu: "500m"
+    memory: "512Mi"
+
+# =====================================
+# AZURE KEY VAULT
+# =====================================
+
+keyVault:
+
+  enabled: true
+
+  keyVaultName: ""
+
+  tenantId: ""
+
+  clientId: ""
+
+  secretProviderClass: employeeprofileapp-spc
+
+  mountPath: "/mnt/secrets-store"
+
+  secrets:
+
+    - objectName: db-username
+      objectType: secret
+
+    - objectName: db-password
+      objectType: secret
 
 # =====================================
 # INGRESS
 # =====================================
 
 ingress:
-  enabled: false
+  enabled: true
 
-  className: ""
+  className: nginx
 
   host: ""
 
@@ -97,15 +130,15 @@ ingress:
 # =====================================
 
 hpa:
-  enabled: false
+  enabled: true
 
-  minReplicas: 2
+  minReplicas: 1
 
-  maxReplicas: 10
+  maxReplicas: 3
 
   averageUtilization: 70
 
-  memoryAverageUtilization: null
+  memoryAverageUtilization: 80
 
   stabilizationWindowSeconds: 300
 
@@ -119,7 +152,8 @@ namespace: employeeprofileapp-uat
 # IMAGE PULL SECRETS
 # =====================================
 
-imagePullSecrets: []
+imagePullSecrets:
+  - name: dockerhub-secret
 
 # =====================================
 # POD ANNOTATIONS
@@ -156,7 +190,7 @@ securityContext: {}
 # =====================================
 
 readinessProbe:
-  enabled: false
+  enabled: true
 
   path: /
 
@@ -166,8 +200,14 @@ readinessProbe:
 
   periodSeconds: 10
 
+  timeoutSeconds: 5
+
+  successThreshold: 1
+
+  failureThreshold: 3
+
 livenessProbe:
-  enabled: false
+  enabled: true
 
   path: /
 
@@ -176,3 +216,7 @@ livenessProbe:
   initialDelaySeconds: 15
 
   periodSeconds: 20
+
+  timeoutSeconds: 5
+
+  failureThreshold: 3

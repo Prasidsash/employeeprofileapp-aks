@@ -19,6 +19,11 @@ terraform {
       version = "~> 2.13"
     }
 
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "~> 1.14"
+    }
+
     time = {
       source  = "hashicorp/time"
       version = "~> 0.11"
@@ -86,6 +91,30 @@ provider "helm" {
       module.aks.cluster_ca_certificate
     )
   }
+}
+
+# =====================================
+# KUBECTL PROVIDER
+# Stable AKS Provider Authentication
+# =====================================
+
+provider "kubectl" {
+
+  host = module.aks.host
+
+  client_certificate = base64decode(
+    module.aks.client_certificate
+  )
+
+  client_key = base64decode(
+    module.aks.client_key
+  )
+
+  cluster_ca_certificate = base64decode(
+    module.aks.cluster_ca_certificate
+  )
+
+  load_config_file = false
 }
 
 # =====================================

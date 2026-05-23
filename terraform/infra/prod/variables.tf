@@ -70,6 +70,15 @@ variable "enable_node_autoscaling" {
   type = bool
 }
 
+variable "only_critical_addons_enabled" {
+
+  description = "Allow only critical system addons on system node pool"
+
+  type = bool
+
+  default = false
+}
+
 variable "system_node_min_count" {
   type = number
 }
@@ -98,6 +107,28 @@ variable "enable_oidc_issuer" {
   type = bool
 
   default = false
+}
+
+# =====================================
+# OPTIONAL KEY VAULT CSI DRIVER
+# =====================================
+
+variable "enable_key_vault_secrets_provider" {
+
+  description = "Enable Azure Key Vault CSI Driver"
+
+  type = bool
+
+  default = false
+}
+
+variable "secret_rotation_enabled" {
+
+  description = "Enable Azure Key Vault Secret Rotation"
+
+  type = bool
+
+  default = true
 }
 
 variable "enable_image_cleaner" {
@@ -157,6 +188,68 @@ variable "authorized_ip_ranges" {
 variable "aks_additional_tags" {
 
   description = "Additional AKS tags"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
+# AKS BACKUP
+# =====================================
+
+variable "backup_vault_name" {
+
+  description = "AKS Backup Vault Name"
+
+  type = string
+}
+
+variable "backup_storage_account_name" {
+
+  description = "AKS Backup Storage Account Name"
+
+  type = string
+}
+
+variable "backup_container_name" {
+
+  description = "AKS Backup Storage Container Name"
+
+  type = string
+}
+
+variable "backup_policy_name" {
+
+  description = "AKS Backup Policy Name"
+
+  type = string
+}
+
+variable "backup_schedule_repeating_time_intervals" {
+
+  description = "AKS Backup Schedule Intervals"
+
+  type = list(string)
+}
+
+variable "backup_retention_duration_count" {
+
+  description = "AKS Backup Retention Count"
+
+  type = number
+}
+
+variable "backup_retention_duration_type" {
+
+  description = "AKS Backup Retention Duration Type"
+
+  type = string
+}
+
+variable "backup_additional_tags" {
+
+  description = "Additional AKS Backup Tags"
 
   type = map(string)
 
@@ -694,4 +787,201 @@ variable "spot_node_taints" {
   type = list(string)
 
   default = []
+}
+
+# =====================================
+# AKS BACKUP FEATURE TOGGLE
+# =====================================
+
+variable "enable_aks_backup" {
+
+  description = "Enable AKS Backup Module"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# INGRESS NGINX CONTROLLER
+# =====================================
+
+variable "enable_ingress_controller" {
+
+  description = "Enable NGINX ingress controller"
+
+  type = bool
+
+  default = false
+}
+
+variable "ingress_controller_namespace" {
+
+  description = "Ingress controller namespace"
+
+  type = string
+
+  default = "ingress-nginx"
+}
+
+variable "ingress_controller_chart_version" {
+
+  description = "Ingress NGINX chart version"
+
+  type = string
+
+  default = "4.12.2"
+}
+
+variable "ingress_controller_service_type" {
+
+  description = "Ingress controller service type"
+
+  type = string
+
+  default = "LoadBalancer"
+}
+
+variable "ingress_controller_replica_count" {
+
+  description = "Ingress controller replica count"
+
+  type = number
+
+  default = 1
+}
+
+# =====================================
+# CERT MANAGER
+# =====================================
+
+variable "enable_cert_manager" {
+
+  description = "Enable cert-manager"
+
+  type = bool
+
+  default = false
+}
+
+variable "cert_manager_namespace" {
+
+  description = "cert-manager namespace"
+
+  type = string
+
+  default = "cert-manager"
+}
+
+variable "cert_manager_chart_version" {
+
+  description = "cert-manager Helm chart version"
+
+  type = string
+
+  default = "v1.18.2"
+}
+
+variable "enable_cluster_issuer" {
+
+  description = "Enable ClusterIssuer"
+
+  type = bool
+
+  default = false
+}
+
+variable "cluster_issuer_name" {
+
+  description = "ClusterIssuer name"
+
+  type = string
+
+  default = "selfsigned-cluster-issuer"
+}
+
+# =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+variable "enable_pod_disruption_budget" {
+
+  description = "Enable or disable Pod Disruption Budget"
+
+  type = bool
+
+  default = false
+}
+
+variable "pod_disruption_budget_name" {
+
+  description = "Pod Disruption Budget name"
+
+  type = string
+
+  default = "employeeprofileapp-pdb"
+}
+
+variable "pdb_max_unavailable" {
+
+  description = "Maximum unavailable pods during voluntary disruptions"
+
+  type = string
+
+  default = "1"
+}
+
+variable "pdb_match_labels" {
+
+  description = "Labels used for Pod Disruption Budget selector"
+
+  type = map(string)
+
+  default = {
+    app = "employeeprofileapp"
+  }
+}
+
+variable "pod_disruption_budget_annotations" {
+
+  description = "Annotations for Pod Disruption Budget"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
+# OPTIONAL USER ASSIGNED IDENTITY
+# =====================================
+
+variable "enable_user_assigned_identity" {
+
+  description = "Enable User Assigned Managed Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  type = list(string)
+
+  default = []
+}
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+variable "enable_workload_identity_resources" {
+
+  description = "Enable Workload Identity Resources"
+
+  type = bool
+
+  default = true
 }

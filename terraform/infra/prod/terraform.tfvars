@@ -12,6 +12,8 @@ location = "Central India"
 # NETWORK
 # =====================================
 
+enable_network = true
+
 vnet_name = "employeeprofileapp-prod-vnet"
 
 vnet_address_space = [
@@ -24,63 +26,112 @@ aks_subnet_prefixes = [
   "10.10.1.0/24"
 ]
 
-# =====================================
-# AKS CLUSTER
-# =====================================
-
-cluster_name = "employeeprofileapp-prod-aks"
-
-kubernetes_version = "1.34.6"
-
-system_node_count = 1
-
-system_node_vm_size = "Standard_B2s"
-
-# =====================================
-# AKS NETWORKING
-# =====================================
-
 service_cidr = "172.16.0.0/16"
 
 dns_service_ip = "172.16.0.10"
 
 # =====================================
-# AKS NODE AUTOSCALING
+# AKS CLUSTER
 # =====================================
 
-enable_node_autoscaling = false
+enable_aks = true
+
+cluster_name = "employeeprofileapp-prod-aks"
+
+kubernetes_version = "1.34.6"
+
+# =====================================
+# SYSTEM NODE POOL
+# =====================================
+
+enable_node_autoscaling = true
+
+only_critical_addons_enabled = false
+
+system_node_count = 1
+
+#system_node_vm_size = "Standard_D2s_v5"
+system_node_vm_size = "Standard_B2s"
 
 system_node_min_count = 1
 
 system_node_max_count = 2
 
+node_labels = {}
+
+node_taints = []
+
 # =====================================
-# OPTIONAL FUTURE AKS FEATURES
-# Preserve Existing Runtime Behavior
+# SPOT NODE POOL
 # =====================================
 
-enable_workload_identity = false
+enable_spot_node_pool = false
+
+spot_node_pool_name = "spotpool"
+
+spot_node_vm_size = "Standard_D2s_v5"
+
+spot_max_price = -1
+
+spot_node_min_count = 1
+
+spot_node_max_count = 2
+
+spot_node_labels = {
+
+  workload = "spot"
+
+  "kubernetes.azure.com/scalesetpriority" = "spot"
+}
+
+spot_node_taints = [
+
+  "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+]
+
+# =====================================
+# OPTIONAL AKS FEATURES
+# =====================================
+
+enable_workload_identity = true
 
 enable_oidc_issuer = true
 
 enable_image_cleaner = false
 
-image_cleaner_interval_hours = 48
-
-node_labels = {}
-
-node_taints = []
-
 enable_api_server_access_profile = false
+
+image_cleaner_interval_hours = 48
 
 authorized_ip_ranges = []
 
 aks_additional_tags = {}
 
 # =====================================
-# MONITORING
-# LOW-COST SINGLE NODE OPTIMIZATION
+# OPTIONAL KEY VAULT CSI DRIVER
 # =====================================
+
+enable_key_vault_secrets_provider = true
+
+secret_rotation_enabled = true
+
+# =====================================
+# OPTIONAL USER ASSIGNED IDENTITY
+# =====================================
+
+enable_user_assigned_identity = false
+
+user_assigned_identity_ids = []
+
+# =====================================
+# MONITORING
+# =====================================
+
+enable_monitoring = false
+
+enable_alerts = false
+
+enable_managed_prometheus = false
 
 log_analytics_workspace_name = "employeeprofileapp-prod-law"
 
@@ -88,23 +139,17 @@ log_analytics_sku = "PerGB2018"
 
 log_retention_in_days = 30
 
-enable_alerts = false
-
-enable_managed_prometheus = false
-
-# =====================================
-# OPTIONAL MONITORING SETTINGS
-# =====================================
-
 grafana_major_version = 11
 
-grafana_api_key_enabled = true
+grafana_api_key_enabled = false
 
 monitoring_additional_tags = {}
 
 # =====================================
-# KUBERNETES NAMESPACE
+# NAMESPACE
 # =====================================
+
+enable_namespace = true
 
 namespace_name = "employeeprofileapp-prod"
 
@@ -115,16 +160,13 @@ namespace_labels = {
   app = "employeeprofileapp"
 }
 
-# =====================================
-# OPTIONAL NAMESPACE ANNOTATIONS
-# =====================================
-
 namespace_annotations = {}
 
 # =====================================
 # GOVERNANCE
-# LOW-COST PROD SAFE LIMITS
 # =====================================
+
+enable_governance = true
 
 quota_limits = {
 
@@ -167,17 +209,31 @@ limit_default_request = {
   memory = "64Mi"
 }
 
-# =====================================
-# OPTIONAL GOVERNANCE METADATA
-# =====================================
-
 governance_labels = {}
 
 governance_annotations = {}
 
 # =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+enable_pod_disruption_budget = false
+
+pod_disruption_budget_name = "employeeprofileapp-prod-pdb"
+
+pdb_max_unavailable = "1"
+
+pdb_match_labels = {
+  app = "employeeprofileapp"
+}
+
+pod_disruption_budget_annotations = {}
+
+# =====================================
 # RBAC
 # =====================================
+
+enable_rbac = true
 
 service_account_name = "employee-sa"
 
@@ -198,10 +254,6 @@ allowed_verbs = [
   "watch"
 ]
 
-# =====================================
-# OPTIONAL RBAC METADATA
-# =====================================
-
 service_account_annotations = {}
 
 role_annotations = {}
@@ -213,16 +265,20 @@ rbac_additional_labels = {}
 rbac_additional_annotations = {}
 
 # =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+enable_workload_identity_resources = true
+
+# =====================================
 # SECRETS
 # =====================================
+
+enable_secret = false
 
 secret_name = "employee-db-secret"
 
 secret_data = {}
-
-# =====================================
-# OPTIONAL SECRET SETTINGS
-# =====================================
 
 secret_annotations = {}
 
@@ -235,22 +291,38 @@ secret_additional_labels = {}
 secret_additional_annotations = {}
 
 # =====================================
-# KEY VAULT RBAC STABILIZATION
+# KEY VAULT
 # =====================================
+
+enable_network_acls = true
 
 keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
-
-# =====================================
-# OPTIONAL KEY VAULT FEATURES
-# =====================================
-
-enable_network_acls = false
 
 keyvault_additional_tags = {}
 
 # =====================================
+# INGRESS CONTROLLER
+# =====================================
+
+enable_ingress_controller = true
+
+ingress_controller_namespace = "ingress-nginx"
+
+ingress_controller_chart_version = "4.12.2"
+
+ingress_controller_service_type = "LoadBalancer"
+
+ingress_controller_replica_count = 1
+
+# =====================================
 # INGRESS
 # =====================================
+
+enable_ingress = true
+
+enable_rewrite_target = false
+
+enable_proxy_body_size = false
 
 ingress_name = "employee-ingress"
 
@@ -262,15 +334,7 @@ ingress_path_type = "Prefix"
 
 service_name = "employeeprofileapp-service-prod"
 
-# =====================================
-# OPTIONAL INGRESS FEATURES
-# =====================================
-
 ingress_class_name = "nginx"
-
-enable_rewrite_target = false
-
-enable_proxy_body_size = false
 
 proxy_body_size = "10m"
 
@@ -288,58 +352,50 @@ tls_secret_name = null
 # HELM
 # =====================================
 
-release_name = "employeeprofileapp-prod"
+release_name = "employeeprofileapp-prod-release"
 
 # =====================================
 # PLATFORM FEATURES
 # =====================================
 
+enable_loadbalancer = true
+
 enable_hpa = false
 
-enable_loadbalancer = false
-
 # =====================================
-# MODULE TOGGLES
+# AKS BACKUP
 # =====================================
 
-enable_aks = true
+enable_aks_backup = false
 
-enable_network = true
+backup_vault_name = "employeeprofileapp-prod-backup-vault"
 
-enable_monitoring = true
+backup_storage_account_name = "empprofprodbackup2026"
 
-enable_namespace = true
+backup_container_name = "aks-backups"
 
-enable_rbac = true
+backup_policy_name = "employeeprofileapp-prod-backup-policy"
 
-enable_governance = true
-
-enable_secret = true
-
-enable_ingress = true
-
-# =====================================
-# SPOT NODE POOL
-# =====================================
-
-enable_spot_node_pool = false
-
-spot_node_pool_name = "spotpool"
-
-spot_node_vm_size = "Standard_D2s_v3"
-
-spot_max_price = -1
-
-spot_node_min_count = 1
-
-spot_node_max_count = 1
-
-spot_node_labels = {
-
-  workload = "spot"
-}
-
-spot_node_taints = [
-
-  "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+backup_schedule_repeating_time_intervals = [
+  "R/2026-01-01T02:00:00+00:00/PT24H"
 ]
+
+backup_retention_duration_count = 30
+
+backup_retention_duration_type = "D"
+
+backup_additional_tags = {}
+
+# =====================================
+# CERT MANAGER
+# =====================================
+
+enable_cert_manager = true
+
+cert_manager_namespace = "cert-manager"
+
+cert_manager_chart_version = "v1.18.2"
+
+enable_cluster_issuer = true
+
+cluster_issuer_name = "selfsigned-cluster-issuer"

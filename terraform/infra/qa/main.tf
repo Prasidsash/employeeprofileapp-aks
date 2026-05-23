@@ -19,6 +19,39 @@ resource "azurerm_resource_group" "main" {
 }
 
 # =====================================
+# WORKLOAD IDENTITY MODULE
+# =====================================
+
+module "workload_identity" {
+
+  source = "../../modules/workload_identity"
+
+  enable_workload_identity_resources = var.enable_workload_identity_resources
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
+
+  additional_tags = var.aks_additional_tags
+
+  depends_on = [
+    module.aks,
+    module.keyvault,
+    module.rbac
+  ]
+}
+
+# =====================================
 # NETWORK MODULE
 # =====================================
 
@@ -48,6 +81,8 @@ module "network" {
 
 module "monitoring" {
 
+  count = var.enable_monitoring ? 1 : 0
+
   source = "../../modules/monitoring"
 
   resource_group_name = azurerm_resource_group.main.name
@@ -72,7 +107,7 @@ module "monitoring" {
   # OPTIONAL TAGS
   # =====================================
 
-  additional_tags = {}
+  additional_tags = var.monitoring_additional_tags
 }
 
 # =====================================
@@ -100,9 +135,9 @@ module "keyvault" {
   # OPTIONAL FEATURES
   # =====================================
 
-  enable_network_acls = false
+  enable_network_acls = var.enable_network_acls
 
-  additional_tags = {}
+  additional_tags = var.keyvault_additional_tags
 
   depends_on = [
     azurerm_resource_group.main
@@ -136,6 +171,26 @@ module "aks" {
   enable_node_autoscaling = var.enable_node_autoscaling
 
   # =====================================
+  # SPOT NODE POOL
+  # =====================================
+
+  enable_spot_node_pool = var.enable_spot_node_pool
+
+  spot_node_pool_name = var.spot_node_pool_name
+
+  spot_node_vm_size = var.spot_node_vm_size
+
+  spot_max_price = var.spot_max_price
+
+  spot_node_min_count = var.spot_node_min_count
+
+  spot_node_max_count = var.spot_node_max_count
+
+  spot_node_labels = var.spot_node_labels
+
+  spot_node_taints = var.spot_node_taints
+
+  # =====================================
   # AKS NETWORKING
   # =====================================
 
@@ -149,10 +204,13 @@ module "aks" {
   # MONITORING
   # =====================================
 
-  log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+  log_analytics_workspace_id = try(
+    module.monitoring[0].log_analytics_workspace_id,
+    null
+  )
 
   azure_monitor_workspace_id = try(
-    module.monitoring.monitor_workspace_id,
+    module.monitoring[0].monitor_workspace_id,
     null
   )
 
@@ -169,6 +227,22 @@ module "aks" {
   enable_workload_identity = var.enable_workload_identity
 
   enable_oidc_issuer = var.enable_oidc_issuer
+
+  # =====================================
+  # OPTIONAL KEY VAULT CSI DRIVER
+  # =====================================
+
+  enable_key_vault_secrets_provider = var.enable_key_vault_secrets_provider
+
+  secret_rotation_enabled = var.secret_rotation_enabled
+
+  # =====================================
+  # OPTIONAL USER ASSIGNED IDENTITY
+  # =====================================
+
+  enable_user_assigned_identity = var.enable_user_assigned_identity
+
+  user_assigned_identity_ids = var.user_assigned_identity_ids
 
   enable_image_cleaner = var.enable_image_cleaner
 
@@ -187,6 +261,47 @@ module "aks" {
   depends_on = [
     module.network,
     module.monitoring
+  ]
+}
+
+# =====================================
+# AKS BACKUP MODULE
+# =====================================
+
+module "aks_backup" {
+
+  count = var.enable_aks_backup ? 1 : 0
+
+  source = "../../modules/aks_backup"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  aks_cluster_id = module.aks.cluster_id
+
+  aks_cluster_name = module.aks.cluster_name
+
+  backup_vault_name = var.backup_vault_name
+
+  backup_storage_account_name = var.backup_storage_account_name
+
+  backup_container_name = var.backup_container_name
+
+  backup_policy_name = var.backup_policy_name
+
+  backup_schedule_repeating_time_intervals = var.backup_schedule_repeating_time_intervals
+
+  backup_retention_duration_count = var.backup_retention_duration_count
+
+  backup_retention_duration_type = var.backup_retention_duration_type
+
+  additional_tags = var.backup_additional_tags
+
+  depends_on = [
+    module.aks
   ]
 }
 
@@ -215,7 +330,7 @@ module "namespace" {
 
   namespace_labels = var.namespace_labels
 
-  namespace_annotations = {}
+  namespace_annotations = var.namespace_annotations
 
   depends_on = [
     time_sleep.wait_for_aks
@@ -240,15 +355,15 @@ module "rbac" {
 
   allowed_verbs = var.allowed_verbs
 
-  service_account_annotations = {}
+  service_account_annotations = var.service_account_annotations
 
-  role_annotations = {}
+  role_annotations = var.role_annotations
 
-  role_binding_annotations = {}
+  role_binding_annotations = var.role_binding_annotations
 
-  additional_labels = {}
+  additional_labels = var.rbac_additional_labels
 
-  additional_annotations = {}
+  additional_annotations = var.rbac_additional_annotations
 
   depends_on = [
     module.namespace
@@ -261,6 +376,8 @@ module "rbac" {
 
 module "secret" {
 
+  count = var.enable_secret ? 1 : 0
+
   source = "../../modules/employee_secret"
 
   namespace_name = var.namespace_name
@@ -269,18 +386,79 @@ module "secret" {
 
   secret_data = var.secret_data
 
-  secret_annotations = {}
+  secret_annotations = var.secret_annotations
 
-  additional_labels = {}
+  additional_labels = var.secret_additional_labels
 
-  additional_annotations = {}
+  additional_annotations = var.secret_additional_annotations
 
-  secret_type = "Opaque"
+  secret_type = var.secret_type
 
-  secret_immutable = false
+  secret_immutable = var.secret_immutable
 
   depends_on = [
     module.namespace,
+    time_sleep.wait_for_aks
+  ]
+}
+
+# =====================================
+# INGRESS NGINX CONTROLLER
+# =====================================
+
+module "ingress_nginx" {
+
+  count = var.enable_ingress_controller ? 1 : 0
+
+  source = "../../modules/ingress_nginx"
+
+  namespace = var.ingress_controller_namespace
+
+  chart_version = var.ingress_controller_chart_version
+
+  service_type = var.ingress_controller_service_type
+
+  replica_count = var.ingress_controller_replica_count
+
+  depends_on = [
+    module.aks,
+    module.namespace,
+    time_sleep.wait_for_aks
+  ]
+}
+
+# =====================================
+# CERT MANAGER MODULE
+# =====================================
+
+module "cert_manager" {
+
+  count = var.enable_cert_manager ? 1 : 0
+
+  source = "../../modules/cert_manager"
+
+  # =====================================
+  # EXPLICIT PROVIDER MAPPING
+  # Prevents localhost:80 kubectl fallback
+  # =====================================
+
+  providers = {
+
+    helm    = helm
+    kubectl = kubectl
+  }
+
+  namespace = var.cert_manager_namespace
+
+  chart_version = var.cert_manager_chart_version
+
+  enable_cluster_issuer = var.enable_cluster_issuer
+
+  cluster_issuer_name = var.cluster_issuer_name
+
+  depends_on = [
+    module.aks,
+    module.ingress_nginx,
     time_sleep.wait_for_aks
   ]
 }
@@ -290,6 +468,8 @@ module "secret" {
 # =====================================
 
 module "ingress" {
+
+  count = var.enable_ingress ? 1 : 0
 
   source = "../../modules/employee_ingress"
 
@@ -315,13 +495,13 @@ module "ingress" {
 
   ingress_class_name = var.ingress_class_name
 
-  enable_rewrite_target = false
+  enable_rewrite_target = var.enable_rewrite_target
 
-  enable_proxy_body_size = false
+  enable_proxy_body_size = var.enable_proxy_body_size
 
-  proxy_body_size = "10m"
+  proxy_body_size = var.proxy_body_size
 
-  cluster_issuer = null
+  cluster_issuer = var.cluster_issuer
 
   depends_on = [
     module.namespace,
@@ -334,6 +514,8 @@ module "ingress" {
 # =====================================
 
 module "governance" {
+
+  count = var.enable_governance ? 1 : 0
 
   source = "../../modules/employee_governance"
 
@@ -349,9 +531,9 @@ module "governance" {
 
   limit_default_request = var.limit_default_request
 
-  labels = {}
+  labels = var.governance_labels
 
-  annotations = {}
+  annotations = var.governance_annotations
 
   additional_labels = {}
 
@@ -360,6 +542,20 @@ module "governance" {
   resource_quota_annotations = {}
 
   limit_range_annotations = {}
+
+  # =====================================
+  # OPTIONAL POD DISRUPTION BUDGET
+  # =====================================
+
+  enable_pod_disruption_budget = var.enable_pod_disruption_budget
+
+  pod_disruption_budget_name = var.pod_disruption_budget_name
+
+  pdb_max_unavailable = var.pdb_max_unavailable
+
+  pdb_match_labels = var.pdb_match_labels
+
+  pod_disruption_budget_annotations = var.pod_disruption_budget_annotations
 
   depends_on = [
     module.namespace
