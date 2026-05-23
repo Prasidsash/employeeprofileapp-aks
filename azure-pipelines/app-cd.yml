@@ -33,11 +33,11 @@ variables:
     value: 'dockerhub-secret'
 
   # =====================================
-  # ACR CONFIGURATION
+  # OPTIONAL ACR SUPPORT
   # =====================================
 
   - name: enableAcr
-    value: 'false'
+    value: 'true'
 
   - name: acrRepository
     value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
@@ -53,11 +53,11 @@ variables:
     value: 'helm/employeeprofileapp'
 
   # =====================================
-  # FINAL REPOSITORY RESOLUTION
+  # FINAL IMAGE REPOSITORY
   # =====================================
 
   - name: finalImageRepository
-    value: $[eq(variables['enableAcr'], 'true') ? variables['acrRepository'] : variables['imageRepository']]
+    value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
 
 # =====================================
 # STAGES
@@ -130,6 +130,20 @@ stages:
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+              # =========================
+              # HELM LINT
+              # =========================
+
+              - script: |
+
+                  echo "=================================="
+                  echo "Helm Lint Validation"
+                  echo "=================================="
+
+                  helm lint $(helmChartPath)
+
+                displayName: Helm Lint Validation
 
               # =========================
               # HELM DEPLOY
@@ -240,6 +254,20 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
               # =========================
+              # HELM LINT
+              # =========================
+
+              - script: |
+
+                  echo "=================================="
+                  echo "Helm Lint Validation"
+                  echo "=================================="
+
+                  helm lint $(helmChartPath)
+
+                displayName: Helm Lint Validation
+
+              # =========================
               # HELM DEPLOY
               # =========================
 
@@ -348,6 +376,20 @@ stages:
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
               # =========================
+              # HELM LINT
+              # =========================
+
+              - script: |
+
+                  echo "=================================="
+                  echo "Helm Lint Validation"
+                  echo "=================================="
+
+                  helm lint $(helmChartPath)
+
+                displayName: Helm Lint Validation
+
+              # =========================
               # HELM DEPLOY
               # =========================
 
@@ -454,6 +496,20 @@ stages:
                   secretName: $(imagePullSecret)
 
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
+
+              # =========================
+              # HELM LINT
+              # =========================
+
+              - script: |
+
+                  echo "=================================="
+                  echo "Helm Lint Validation"
+                  echo "=================================="
+
+                  helm lint $(helmChartPath)
+
+                displayName: Helm Lint Validation
 
               # =========================
               # HELM DEPLOY
