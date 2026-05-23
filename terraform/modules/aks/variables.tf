@@ -318,3 +318,12 @@ variable "user_assigned_identity_ids" {
 
   default = []
 }
+
+variable "only_critical_addons_enabled" {
+
+  description = "Allow only critical system addons on system node pool"
+
+  type = bool
+
+  default = false
+}

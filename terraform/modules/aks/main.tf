@@ -36,7 +36,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     vnet_subnet_id = var.subnet_id
 
-    only_critical_addons_enabled = true
+    temporary_name_for_rotation = "tempsys"
+
+    only_critical_addons_enabled = var.only_critical_addons_enabled
 
     node_labels = var.node_labels
   }

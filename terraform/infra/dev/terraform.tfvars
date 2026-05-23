@@ -46,6 +46,8 @@ kubernetes_version = "1.34.6"
 
 enable_node_autoscaling = true
 
+only_critical_addons_enabled = false
+
 system_node_count = 1
 
 #system_node_vm_size = "Standard_D2s_v5"

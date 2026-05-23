@@ -70,6 +70,15 @@ variable "enable_node_autoscaling" {
   type = bool
 }
 
+variable "only_critical_addons_enabled" {
+
+  description = "Allow only critical system addons on system node pool"
+
+  type = bool
+
+  default = false
+}
+
 variable "system_node_min_count" {
   type = number
 }
