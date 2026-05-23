@@ -57,10 +57,6 @@ variables:
 
 stages:
 
-  # =====================================
-  # BUILD + DEVSECOPS STAGE
-  # =====================================
-
   - stage: BuildAndSecurityScan
 
     displayName: Build Scan And Push
@@ -90,32 +86,6 @@ stages:
             displayName: Validate Docker Tooling
 
           # =====================================
-          # RESOLVE FINAL REGISTRY
-          # =====================================
-
-          - script: |
-
-              if [ "$(enableAcr)" = "true" ]; then
-
-                echo "Using ACR Registry"
-
-                echo "##vso[task.setvariable variable=finalImageRepository]$(acrRepository)"
-
-                echo "##vso[task.setvariable variable=finalContainerRegistryServiceConnection]$(acrServiceConnection)"
-
-              else
-
-                echo "Using Docker Hub Registry"
-
-                echo "##vso[task.setvariable variable=finalImageRepository]$(imageRepository)"
-
-                echo "##vso[task.setvariable variable=finalContainerRegistryServiceConnection]$(dockerRegistryServiceConnection)"
-
-              fi
-
-            displayName: Resolve Final Registry
-
-          # =====================================
           # BUILD INFORMATION
           # =====================================
 
@@ -125,7 +95,6 @@ stages:
               echo "Build Information"
               echo "=================================="
 
-              echo "Repository: $(finalImageRepository)"
               echo "Build Number: $(Build.BuildNumber)"
               echo "Source Branch: $(Build.SourceBranchName)"
               echo "ACR Enabled: $(enableAcr)"
@@ -169,23 +138,6 @@ stages:
               command: test
               projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
               arguments: '--configuration Release'
-
-          # =====================================
-          # DOCKER BUILD
-          # =====================================
-
-          - task: Docker@2
-
-            displayName: Docker Build
-
-            inputs:
-              command: build
-              repository: $(finalImageRepository)
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              buildContext: '$(Build.SourcesDirectory)'
-              tags: |
-                $(Build.BuildNumber)
-                latest
 
           # =====================================
           # INSTALL TRIVY
@@ -234,13 +186,53 @@ stages:
             displayName: Trivy Filesystem Scan
 
           # =====================================
-          # IMAGE SCAN
+          # DOCKER HUB BUILD AND PUSH
+          # =====================================
+
+          - task: Docker@2
+
+            displayName: Docker Hub Build And Push
+
+            condition: eq(variables['enableAcr'], 'false')
+
+            inputs:
+              command: buildAndPush
+              containerRegistry: 'Docker-SC'
+              repository: $(imageRepository)
+              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              buildContext: '$(Build.SourcesDirectory)'
+              tags: |
+                $(Build.BuildNumber)
+                latest
+
+          # =====================================
+          # ACR BUILD AND PUSH
+          # =====================================
+
+          - task: Docker@2
+
+            displayName: ACR Build And Push
+
+            condition: eq(variables['enableAcr'], 'true')
+
+            inputs:
+              command: buildAndPush
+              containerRegistry: 'ACR-SC'
+              repository: $(acrRepository)
+              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              buildContext: '$(Build.SourcesDirectory)'
+              tags: |
+                $(Build.BuildNumber)
+                latest
+
+          # =====================================
+          # TRIVY IMAGE SCAN - DOCKER HUB
           # =====================================
 
           - script: |
 
               echo "=================================="
-              echo "Trivy Docker Image Scan"
+              echo "Trivy Docker Hub Image Scan"
               echo "=================================="
 
               trivy image \
@@ -249,34 +241,30 @@ stages:
                 --ignorefile .trivyignore \
                 --exit-code 1 \
                 --severity CRITICAL \
-                $(finalImageRepository):$(Build.BuildNumber)
+                $(imageRepository):$(Build.BuildNumber)
 
-            displayName: Trivy Image Scan
+            displayName: Trivy Docker Hub Image Scan
 
-          # =====================================
-          # REGISTRY LOGIN
-          # =====================================
-
-          - task: Docker@2
-
-            displayName: Registry Login
-
-            inputs:
-              command: login
-              containerRegistry: $(finalContainerRegistryServiceConnection)
+            condition: eq(variables['enableAcr'], 'false')
 
           # =====================================
-          # DOCKER PUSH
+          # TRIVY IMAGE SCAN - ACR
           # =====================================
 
-          - task: Docker@2
+          - script: |
 
-            displayName: Docker Push
+              echo "=================================="
+              echo "Trivy ACR Image Scan"
+              echo "=================================="
 
-            inputs:
-              command: push
-              containerRegistry: $(finalContainerRegistryServiceConnection)
-              repository: $(finalImageRepository)
-              tags: |
-                $(Build.BuildNumber)
-                latest
+              trivy image \
+                --scanners vuln \
+                --ignore-unfixed \
+                --ignorefile .trivyignore \
+                --exit-code 1 \
+                --severity CRITICAL \
+                $(acrRepository):$(Build.BuildNumber)
+
+            displayName: Trivy ACR Image Scan
+
+            condition: eq(variables['enableAcr'], 'true')
