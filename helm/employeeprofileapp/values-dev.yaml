@@ -168,10 +168,28 @@ podAnnotations: {}
 configMapAnnotations: {}
 
 # =====================================
+# CONFIGMAP AUTO RELOAD
+# =====================================
+
+configMapAutoReload:
+  enabled: true
+
+# =====================================
+# NETWORK POLICY
+# =====================================
+
+networkPolicy:
+
+  enabled: true
+
+  ingressControllerNamespace: ingress-nginx
+
+# =====================================
 # OPTIONAL EXTRA CONFIGURATION
 # =====================================
 
-extraConfig: {}
+extraConfig:
+  TEST_VALUE: "v1"
 
 # =====================================
 # AFFINITY

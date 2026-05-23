@@ -9,7 +9,12 @@ metadata:
     app: {{ default .Chart.Name .Values.app.name }}
 
   annotations:
+
+    {{- if .Values.configMapAutoReload.enabled }}
+    checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    {{- else }}
     checksum/config: {{ .Values.app.name | sha256sum }}
+    {{- end }}
 
 spec:
 

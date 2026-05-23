@@ -1,0 +1,90 @@
+{{- if and .Values.networkPolicy .Values.networkPolicy.enabled }}
+
+apiVersion: networking.k8s.io/v1
+
+kind: NetworkPolicy
+
+metadata:
+  name: {{ default "employeeprofileapp" .Values.app.name }}-network-policy
+
+  labels:
+    app: {{ default .Chart.Name .Values.app.name }}
+
+spec:
+
+  podSelector:
+
+    matchLabels:
+      app: {{ default .Chart.Name .Values.app.name }}
+
+  policyTypes:
+
+    - Ingress
+    - Egress
+
+  ingress:
+
+    # =====================================
+    # ALLOW SAME APPLICATION TRAFFIC
+    # =====================================
+
+    - from:
+
+        - podSelector:
+
+            matchLabels:
+              app: {{ default .Chart.Name .Values.app.name }}
+
+    # =====================================
+    # ALLOW INGRESS CONTROLLER TRAFFIC
+    # =====================================
+
+    - from:
+
+        - namespaceSelector:
+
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressControllerNamespace }}
+
+  egress:
+
+    # =====================================
+    # ALLOW DNS
+    # =====================================
+
+    - to:
+
+        - namespaceSelector:
+
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+
+      ports:
+
+        - protocol: UDP
+          port: 53
+
+        - protocol: TCP
+          port: 53
+
+    # =====================================
+    # ALLOW HTTPS OUTBOUND
+    # =====================================
+
+    - ports:
+
+        - protocol: TCP
+          port: 443
+
+    # =====================================
+    # ALLOW SAME NAMESPACE TRAFFIC
+    # =====================================
+
+    - to:
+
+        - namespaceSelector:
+
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+
+{{- end }}
