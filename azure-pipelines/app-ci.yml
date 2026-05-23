@@ -186,6 +186,42 @@ stages:
             displayName: Trivy Filesystem Scan
 
           # =====================================
+          # LOCAL DOCKER BUILD FOR SECURITY SCAN
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Local Docker Build"
+              echo "=================================="
+
+              docker build \
+                -t employeeprofileapp-local:$(Build.BuildNumber) \
+                .
+
+            displayName: Local Docker Build
+
+          # =====================================
+          # TRIVY LOCAL IMAGE SCAN
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Trivy Local Image Scan"
+              echo "=================================="
+
+              trivy image \
+                --scanners vuln \
+                --ignore-unfixed \
+                --ignorefile .trivyignore \
+                --exit-code 1 \
+                --severity CRITICAL \
+                employeeprofileapp-local:$(Build.BuildNumber)
+
+            displayName: Trivy Local Image Scan
+
+          # =====================================
           # DOCKER HUB BUILD AND PUSH
           # =====================================
 
@@ -224,63 +260,3 @@ stages:
               tags: |
                 $(Build.BuildNumber)
                 latest
-
-          # =====================================
-          # TRIVY IMAGE SCAN - DOCKER HUB
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Trivy Docker Hub Image Scan"
-              echo "=================================="
-
-              trivy image \
-                --scanners vuln \
-                --ignore-unfixed \
-                --ignorefile .trivyignore \
-                --exit-code 1 \
-                --severity CRITICAL \
-                $(imageRepository):$(Build.BuildNumber)
-
-            displayName: Trivy Docker Hub Image Scan
-
-            condition: eq(variables['enableAcr'], 'false')
-
-                    # =====================================
-          # ACR LOGIN FOR TRIVY
-          # =====================================
-
-          - task: Docker@2
-
-            displayName: ACR Login For Trivy
-
-            condition: eq(variables['enableAcr'], 'true')
-
-            inputs:
-              command: login
-              containerRegistry: 'ACR-SC'
-
-          # =====================================
-          # TRIVY IMAGE SCAN - ACR
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Trivy ACR Image Scan"
-              echo "=================================="
-
-              docker pull $(acrRepository):$(Build.BuildNumber)
-
-              trivy image \
-                --scanners vuln \
-                --ignore-unfixed \
-                --ignorefile .trivyignore \
-                --exit-code 1 \
-                --severity CRITICAL \
-                $(acrRepository):$(Build.BuildNumber)
-
-            displayName: Trivy ACR Image Scan
-
-            condition: eq(variables['enableAcr'], 'true')
