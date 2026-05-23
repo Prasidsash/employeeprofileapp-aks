@@ -254,10 +254,7 @@ allowed_verbs = [
   "watch"
 ]
 
-service_account_annotations = {
-
-  "azure.workload.identity/client-id" = "REAL_MANAGED_IDENTITY_CLIENT_ID"
-}
+service_account_annotations = {}
 
 role_annotations = {}
 
@@ -266,6 +263,12 @@ role_binding_annotations = {}
 rbac_additional_labels = {}
 
 rbac_additional_annotations = {}
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+enable_workload_identity_resources = true
 
 # =====================================
 # SECRETS

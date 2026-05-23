@@ -19,6 +19,39 @@ resource "azurerm_resource_group" "main" {
 }
 
 # =====================================
+# WORKLOAD IDENTITY MODULE
+# =====================================
+
+module "workload_identity" {
+
+  source = "../../modules/workload_identity"
+
+  enable_workload_identity_resources = var.enable_workload_identity_resources
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
+
+  additional_tags = var.aks_additional_tags
+
+  depends_on = [
+    module.aks,
+    module.keyvault,
+    module.rbac
+  ]
+}
+
+# =====================================
 # NETWORK MODULE
 # =====================================
 

@@ -972,3 +972,16 @@ variable "user_assigned_identity_ids" {
 
   default = []
 }
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+variable "enable_workload_identity_resources" {
+
+  description = "Enable Workload Identity Resources"
+
+  type = bool
+
+  default = true
+}

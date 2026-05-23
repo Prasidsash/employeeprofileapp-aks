@@ -185,3 +185,21 @@ output "tls_enabled" {
 
   value = var.enable_tls
 }
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+output "workload_identity_client_id" {
+
+  description = "Workload Identity Client ID"
+
+  value = module.workload_identity.workload_identity_client_id
+}
+
+output "workload_identity_principal_id" {
+
+  description = "Workload Identity Principal ID"
+
+  value = module.workload_identity.workload_identity_principal_id
+}
