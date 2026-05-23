@@ -132,7 +132,6 @@ stages:
                   overrideValues: |
                     image.repository=$(imageRepository)
                     image.tag=$(resources.pipeline.ciPipeline.runName)
-                    serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
                     keyVault.tenantId=$(AZURE_TENANT_ID)
                     keyVault.keyVaultName=$(KEYVAULT_NAME)

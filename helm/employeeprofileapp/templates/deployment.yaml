@@ -44,9 +44,7 @@ spec:
       # SERVICE ACCOUNT
       # =====================================
 
-      {{- if .Values.serviceAccount.create }}
       serviceAccountName: {{ .Values.serviceAccount.name }}
-      {{- end }}
 
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
