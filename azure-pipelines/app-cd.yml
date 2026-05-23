@@ -17,15 +17,22 @@ pool:
 
 variables:
 
-  dockerRegistryServiceConnection: 'Docker-SC'
+  - group: employeeprofileapp-dev-vg
 
-  azureServiceConnection: 'AzureAKS-SCN'
+  - name: dockerRegistryServiceConnection
+    value: 'Docker-SC'
 
-  imageRepository: 'prasidsash/employeeprofileapp-aks'
+  - name: azureServiceConnection
+    value: 'AzureAKS-SCN'
 
-  imagePullSecret: 'dockerhub-secret'
+  - name: imageRepository
+    value: 'prasidsash/employeeprofileapp-aks'
 
-  helmChartPath: 'helm/employeeprofileapp'
+  - name: imagePullSecret
+    value: 'dockerhub-secret'
+
+  - name: helmChartPath
+    value: 'helm/employeeprofileapp'
 
 # =====================================
 # STAGES
