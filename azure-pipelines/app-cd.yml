@@ -129,12 +129,13 @@ stages:
 
                   valueFile: $(valuesFile)
 
-                  arguments: >
-                    --set image.repository=$(imageRepository)
-                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
-                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
-                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
-                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
+                  overrideValues: |
+                    image.repository=$(imageRepository)
+                    image.tag=$(resources.pipeline.ciPipeline.runName)
+                    serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    keyVault.tenantId=$(AZURE_TENANT_ID)
+                    keyVault.keyVaultName=$(KEYVAULT_NAME)
 
 # =====================================
 # QA DEPLOYMENT
