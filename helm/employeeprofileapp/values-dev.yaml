@@ -16,8 +16,13 @@ app:
 # =====================================
 
 image:
-  repository: prasidsash/employeeprofileapp-aks
-  tag: latest
+
+  # Runtime override expected from CI/CD
+  repository: ""
+
+  # Runtime override expected from CI/CD
+  tag: ""
+
   pullPolicy: Always
 
 # =====================================
@@ -69,6 +74,7 @@ service:
 # =====================================
 
 env:
+
   ASPNETCORE_ENVIRONMENT: dev
 
 # =====================================
@@ -93,10 +99,13 @@ keyVault:
 
   enabled: true
 
+  # Runtime override expected from CI/CD
   keyVaultName: ""
 
+  # Runtime override expected from CI/CD
   tenantId: ""
 
+  # Runtime override expected from CI/CD
   clientId: ""
 
   secretProviderClass: employeeprofileapp-spc
@@ -116,6 +125,7 @@ keyVault:
 # =====================================
 
 ingress:
+
   enabled: true
 
   className: nginx
@@ -129,6 +139,7 @@ ingress:
   annotations: {}
 
   tls:
+
     enabled: false
 
     secretName: ""
@@ -138,6 +149,7 @@ ingress:
 # =====================================
 
 hpa:
+
   enabled: true
 
   minReplicas: 1
@@ -151,17 +163,14 @@ hpa:
   stabilizationWindowSeconds: 300
 
 # =====================================
-# NAMESPACE
-# =====================================
-
-namespace: employeeprofileapp-dev
-
-# =====================================
 # IMAGE PULL SECRETS
 # =====================================
 
 imagePullSecrets:
-  - name: dockerhub-secret
+
+  enabled: false
+
+  name: ""
 
 # =====================================
 # POD ANNOTATIONS
@@ -180,6 +189,7 @@ configMapAnnotations: {}
 # =====================================
 
 configMapAutoReload:
+
   enabled: true
 
 # =====================================
@@ -197,6 +207,7 @@ networkPolicy:
 # =====================================
 
 extraConfig:
+
   TEST_VALUE: "v1"
 
 # =====================================
@@ -216,6 +227,7 @@ securityContext: {}
 # =====================================
 
 readinessProbe:
+
   enabled: true
 
   path: /
@@ -233,6 +245,7 @@ readinessProbe:
   failureThreshold: 3
 
 livenessProbe:
+
   enabled: true
 
   path: /

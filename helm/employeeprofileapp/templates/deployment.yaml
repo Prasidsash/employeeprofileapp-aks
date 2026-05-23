@@ -51,9 +51,13 @@ spec:
 
       serviceAccountName: {{ .Values.serviceAccount.name }}
 
-      {{- if .Values.imagePullSecrets }}
+      # =====================================
+      # OPTIONAL IMAGE PULL SECRETS
+      # =====================================
+
+      {{- if and .Values.imagePullSecrets.enabled .Values.imagePullSecrets.name }}
       imagePullSecrets:
-{{ toYaml .Values.imagePullSecrets | indent 8 }}
+        - name: {{ .Values.imagePullSecrets.name }}
       {{- end }}
 
       {{- if .Values.nodeSelector }}
