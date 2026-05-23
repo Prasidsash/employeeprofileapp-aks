@@ -254,13 +254,9 @@ allowed_verbs = [
   "watch"
 ]
 
-# =====================================
-# WORKLOAD IDENTITY ANNOTATION
-# =====================================
-
 service_account_annotations = {
 
-  "azure.workload.identity/client-id" = ""
+  "azure.workload.identity/client-id" = "REAL_MANAGED_IDENTITY_CLIENT_ID"
 }
 
 role_annotations = {}
