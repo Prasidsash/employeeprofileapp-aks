@@ -132,6 +132,9 @@ stages:
                   arguments: >
                     --set image.repository=$(imageRepository)
                     --set image.tag=$(resources.pipeline.ciPipeline.runName)
+                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
 
 # =====================================
 # QA DEPLOYMENT
@@ -234,6 +237,9 @@ stages:
                   arguments: >
                     --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildNumber)
+                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
 
 # =====================================
 # UAT DEPLOYMENT
@@ -336,6 +342,9 @@ stages:
                   arguments: >
                     --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildNumber)
+                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
 
 # =====================================
 # PROD DEPLOYMENT
@@ -438,3 +447,6 @@ stages:
                   arguments: >
                     --set image.repository=$(imageRepository)
                     --set image.tag=$(Build.BuildNumber)
+                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
+                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
