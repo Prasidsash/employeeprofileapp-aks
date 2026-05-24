@@ -45,6 +45,28 @@ locals {
     var.key_vault_name != null &&
     var.key_vault_name != ""
   ) ? var.key_vault_name : local.generated_key_vault_name
+
+  # =====================================
+  # OPTIONAL DEFAULT KEY VAULT SECRETS
+  # =====================================
+
+  default_key_vault_secrets = merge(
+
+    {
+      APP-INSIGHTS-CONNECTION-STRING = ""
+      STORAGE-ACCOUNT-NAME           = ""
+      STORAGE-CONTAINER-NAME         = ""
+      SQL-SERVER-NAME                = ""
+      SQL-DATABASE-NAME              = ""
+      SQL-USERNAME                   = ""
+      SQL-PASSWORD                   = ""
+      REDIS-CONNECTION-STRING        = ""
+      SERVICEBUS-CONNECTION-STRING   = ""
+      KEYVAULT-NAME                  = local.key_vault_name
+    },
+
+    var.default_key_vault_secrets
+  )
 }
 
 # =====================================
@@ -122,6 +144,25 @@ resource "azurerm_role_assignment" "kv_admin" {
   role_definition_name = var.keyvault_role_definition_name
 
   principal_id = var.keyvault_admin_object_id
+}
+
+# =====================================
+# OPTIONAL DEFAULT KEY VAULT SECRETS
+# =====================================
+
+resource "azurerm_key_vault_secret" "default_secrets" {
+
+  for_each = var.enable_default_key_vault_secrets ? nonsensitive(toset(keys(local.default_key_vault_secrets))) : []
+
+  name = each.value
+
+  value = local.default_key_vault_secrets[each.value]
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    azurerm_role_assignment.kv_admin
+  ]
 }
 
 # =====================================

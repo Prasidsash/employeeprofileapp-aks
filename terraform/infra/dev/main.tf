@@ -137,6 +137,10 @@ module "keyvault" {
 
   enable_network_acls = var.enable_network_acls
 
+  enable_default_key_vault_secrets = var.enable_default_key_vault_secrets
+
+  default_key_vault_secrets = var.default_key_vault_secrets
+
   additional_tags = var.keyvault_additional_tags
 
   depends_on = [

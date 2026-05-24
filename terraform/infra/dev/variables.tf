@@ -496,6 +496,30 @@ variable "keyvault_additional_tags" {
 }
 
 # =====================================
+# OPTIONAL DEFAULT KEY VAULT SECRETS
+# =====================================
+
+variable "enable_default_key_vault_secrets" {
+
+  description = "Enable Azure Key Vault default secret creation"
+
+  type = bool
+
+  default = false
+}
+
+variable "default_key_vault_secrets" {
+
+  description = "Azure Key Vault default secrets map"
+
+  type = map(string)
+
+  sensitive = true
+
+  default = {}
+}
+
+# =====================================
 # INGRESS
 # =====================================
 

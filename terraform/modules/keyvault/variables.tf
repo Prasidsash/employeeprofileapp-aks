@@ -113,3 +113,48 @@ variable "soft_delete_retention_days" {
 
   default = 7
 }
+
+# =====================================
+# OPTIONAL DEFAULT KEY VAULT SECRETS
+# =====================================
+
+variable "enable_default_key_vault_secrets" {
+
+  description = "Enable default Azure Key Vault secret creation"
+
+  type = bool
+
+  default = false
+}
+
+variable "default_key_vault_secrets" {
+
+  description = "Default Azure Key Vault secrets map"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
+# OPTIONAL BOOTSTRAP SECRETS
+# PRESERVED FOR BACKWARD COMPATIBILITY
+# =====================================
+
+variable "enable_bootstrap_secrets" {
+
+  description = "Enable optional bootstrap secret creation"
+
+  type = bool
+
+  default = false
+}
+
+variable "bootstrap_secrets" {
+
+  description = "Optional bootstrap secrets for Key Vault"
+
+  type = map(string)
+
+  default = {}
+}

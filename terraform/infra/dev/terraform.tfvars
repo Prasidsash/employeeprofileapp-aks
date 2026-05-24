@@ -311,6 +311,33 @@ keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
 keyvault_additional_tags = {}
 
 # =====================================
+# OPTIONAL DEFAULT KEY VAULT SECRETS
+# =====================================
+
+enable_default_key_vault_secrets = true
+
+default_key_vault_secrets = {
+
+  APP-INSIGHTS-CONNECTION-STRING = ""
+
+  STORAGE-ACCOUNT-NAME = ""
+
+  STORAGE-CONTAINER-NAME = ""
+
+  SQL-SERVER-NAME = ""
+
+  SQL-DATABASE-NAME = ""
+
+  SQL-USERNAME = ""
+
+  SQL-PASSWORD = ""
+
+  REDIS-CONNECTION-STRING = ""
+
+  SERVICEBUS-CONNECTION-STRING = ""
+}
+
+# =====================================
 # INGRESS CONTROLLER
 # =====================================
 
