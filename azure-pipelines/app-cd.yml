@@ -141,10 +141,12 @@ stages:
                   echo "Helm Lint Validation"
                   echo "=================================="
 
-                  helm lint $(helmChartPath)
+                  helm lint $(helmChartPath) \
+                    -f $(valuesFile) \
+                    --set image.repository=$(finalImageRepository) \
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
 
-                displayName: Helm Lint Validation
-
+  displayName: Helm Lint Validation
               # =========================
               # HELM DEPLOY
               # =========================

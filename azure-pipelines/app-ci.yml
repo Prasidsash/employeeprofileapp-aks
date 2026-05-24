@@ -10,7 +10,7 @@ trigger:
       - src/**
       - helm/**
       - Dockerfile
-      - azure-pipelines/app-ci.yml
+      - azure-pipelines/app-ci.yaml
 
     exclude:
       - terraform/**
@@ -148,11 +148,14 @@ stages:
 
               sudo apt-get update
 
-              sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+              sudo apt-get install wget gnupg lsb-release apt-transport-https -y
 
-              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | \
+              gpg --dearmor | \
+              sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
 
-              echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+              echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | \
+              sudo tee /etc/apt/sources.list.d/trivy.list
 
               sudo apt-get update
 
@@ -174,7 +177,7 @@ stages:
 
               command: build
 
-              containerRegistry: 'Docker-SC'
+              containerRegistry: $(dockerRegistryServiceConnection)
 
               repository: $(imageRepository)
 
@@ -200,7 +203,7 @@ stages:
 
               command: push
 
-              containerRegistry: 'Docker-SC'
+              containerRegistry: $(dockerRegistryServiceConnection)
 
               repository: $(imageRepository)
 
@@ -222,7 +225,7 @@ stages:
 
               command: build
 
-              containerRegistry: 'ACR-SC'
+              containerRegistry: $(acrServiceConnection)
 
               repository: $(acrRepository)
 
@@ -248,7 +251,7 @@ stages:
 
               command: push
 
-              containerRegistry: 'ACR-SC'
+              containerRegistry: $(acrServiceConnection)
 
               repository: $(acrRepository)
 

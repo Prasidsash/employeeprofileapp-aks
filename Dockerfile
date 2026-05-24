@@ -44,6 +44,23 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 WORKDIR /app
 
 # =====================================
+# INSTALL ICU LIBRARIES
+# Required for globalization support
+# =====================================
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libicu-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# =====================================
+# CREATE NON-ROOT USER
+# =====================================
+
+RUN groupadd --gid 10001 appgroup && \
+    useradd --uid 10001 --gid appgroup --create-home appuser
+
+# =====================================
 # CONTAINER ENVIRONMENT
 # =====================================
 
@@ -51,11 +68,27 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+
+ENV DOTNET_EnableDiagnostics=0
+
 # =====================================
 # COPY PUBLISHED OUTPUT
 # =====================================
 
 COPY --from=build /app/publish .
+
+# =====================================
+# SET FILE OWNERSHIP
+# =====================================
+
+RUN chown -R appuser:appgroup /app
+
+# =====================================
+# USE NON-ROOT USER
+# =====================================
+
+USER appuser
 
 # =====================================
 # EXPOSE APPLICATION PORT
