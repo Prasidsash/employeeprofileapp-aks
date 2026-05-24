@@ -147,6 +147,19 @@ resource "azurerm_role_assignment" "kv_admin" {
 }
 
 # =====================================
+# RBAC PROPAGATION WAIT
+# =====================================
+
+resource "time_sleep" "wait_for_kv_rbac" {
+
+  depends_on = [
+    azurerm_role_assignment.kv_admin
+  ]
+
+  create_duration = "90s"
+}
+
+# =====================================
 # OPTIONAL DEFAULT KEY VAULT SECRETS
 # =====================================
 
@@ -161,7 +174,7 @@ resource "azurerm_key_vault_secret" "default_secrets" {
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
-    azurerm_role_assignment.kv_admin
+    time_sleep.wait_for_kv_rbac
   ]
 }
 
@@ -180,6 +193,6 @@ resource "azurerm_key_vault_secret" "app_secret" {
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
-    azurerm_role_assignment.kv_admin
+    time_sleep.wait_for_kv_rbac
   ]
 }

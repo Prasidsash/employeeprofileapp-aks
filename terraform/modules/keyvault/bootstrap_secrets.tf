@@ -24,6 +24,6 @@ resource "azurerm_key_vault_secret" "bootstrap_secrets" {
   )
 
   depends_on = [
-    azurerm_role_assignment.kv_admin
+    time_sleep.wait_for_kv_rbac
   ]
 }
