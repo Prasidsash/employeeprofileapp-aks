@@ -1,5 +1,4 @@
 trigger: none
-
 pr: none
 
 resources:
@@ -16,46 +15,29 @@ pool:
 # =====================================
 
 variables:
-
   - group: employeeprofileapp-dev-vars
 
-  # =====================================
-  # DOCKER HUB CONFIGURATION
-  # =====================================
-
+  # Docker Hub
   - name: dockerRegistryServiceConnection
     value: 'Docker-SC'
-
   - name: imageRepository
     value: 'prasidsash/employeeprofileapp-aks'
-
   - name: imagePullSecret
     value: 'dockerhub-secret'
 
-  # =====================================
-  # OPTIONAL ACR SUPPORT
-  # =====================================
-
+  # Optional ACR
   - name: enableAcr
     value: 'true'
-
   - name: acrRepository
     value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
 
-  # =====================================
-  # AZURE CONFIGURATION
-  # =====================================
-
+  # Azure
   - name: azureServiceConnection
     value: 'AzureAKS-SCN'
-
   - name: helmChartPath
     value: 'helm/employeeprofileapp'
 
-  # =====================================
-  # FINAL IMAGE REPOSITORY
-  # =====================================
-
+  # Final Image Repo
   - name: finalImageRepository
     value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
 
@@ -65,78 +47,40 @@ variables:
 
 stages:
 
-# =====================================
-# DEV DEPLOYMENT
-# =====================================
-
+# DEV Deployment
 - stage: DEV
-
   displayName: DEV Deployment
-
   variables:
-
     aksResourceGroup: employeeprofileapp-dev-rg
-
     aksClusterName: employeeprofileapp-dev-aks
-
     namespace: employeeprofileapp-dev
-
     helmReleaseName: employeeprofileapp-dev
-
     valuesFile: helm/employeeprofileapp/values-dev.yaml
 
   jobs:
-
     - deployment: DeployDEV
-
       displayName: Deploy DEV
-
       environment: employeeprofileapp-dev
-
       strategy:
-
         runOnce:
-
           deploy:
-
             steps:
-
               - checkout: self
 
-              # =========================
-              # DOCKER HUB IMAGE PULL SECRET
-              # =========================
-
               - task: KubernetesManifest@1
-
                 displayName: Create DEV Image Pull Secret
-
                 condition: eq(variables['enableAcr'], 'false')
-
                 inputs:
-
                   action: createSecret
-
                   connectionType: azureResourceManager
-
                   azureSubscriptionConnection: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   secretName: $(imagePullSecret)
-
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-              # =========================
-              # HELM LINT
-              # =========================
-
               - script: |
-
                   echo "=================================="
                   echo "Helm Lint Validation"
                   echo "=================================="
@@ -145,40 +89,22 @@ stages:
                     -f $(valuesFile) \
                     --set image.repository=$(finalImageRepository) \
                     --set image.tag=$(resources.pipeline.ciPipeline.runName)
-
-  displayName: Helm Lint Validation
-              # =========================
-              # HELM DEPLOY
-              # =========================
+                displayName: Helm Lint Validation
 
               - task: HelmDeploy@0
-
                 displayName: Deploy DEV Helm Chart
-
                 inputs:
-
                   connectionType: Azure Resource Manager
-
                   azureSubscription: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   command: upgrade
-
                   chartType: FilePath
-
                   chartPath: $(helmChartPath)
-
                   releaseName: $(helmReleaseName)
-
                   install: true
-
                   valueFile: $(valuesFile)
-
                   arguments: >
                     --set image.repository=$(finalImageRepository)
                     --set image.tag=$(resources.pipeline.ciPipeline.runName)
@@ -187,120 +113,65 @@ stages:
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
                     --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
 
-# =====================================
-# QA DEPLOYMENT
-# =====================================
-
+# QA Deployment
 - stage: QA
-
   displayName: QA Deployment
-
   dependsOn: DEV
-
   variables:
-
     aksResourceGroup: employeeprofileapp-qa-rg
-
     aksClusterName: employeeprofileapp-qa-aks
-
     namespace: employeeprofileapp-qa
-
     helmReleaseName: employeeprofileapp-qa
-
     valuesFile: helm/employeeprofileapp/values-qa.yaml
 
   jobs:
-
     - deployment: DeployQA
-
       displayName: Deploy QA
-
       environment: employeeprofileapp-qa
-
       strategy:
-
         runOnce:
-
           deploy:
-
             steps:
-
               - checkout: self
 
-              # =========================
-              # DOCKER HUB IMAGE PULL SECRET
-              # =========================
-
               - task: KubernetesManifest@1
-
                 displayName: Create QA Image Pull Secret
-
                 condition: eq(variables['enableAcr'], 'false')
-
                 inputs:
-
                   action: createSecret
-
                   connectionType: azureResourceManager
-
                   azureSubscriptionConnection: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   secretName: $(imagePullSecret)
-
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-              # =========================
-              # HELM LINT
-              # =========================
-
               - script: |
-
                   echo "=================================="
                   echo "Helm Lint Validation"
                   echo "=================================="
 
-                  helm lint $(helmChartPath)
-
+                  helm lint $(helmChartPath) \
+                    -f $(valuesFile) \
+                    --set image.repository=$(finalImageRepository) \
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
                 displayName: Helm Lint Validation
 
-              # =========================
-              # HELM DEPLOY
-              # =========================
-
               - task: HelmDeploy@0
-
                 displayName: Deploy QA Helm Chart
-
                 inputs:
-
                   connectionType: Azure Resource Manager
-
                   azureSubscription: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   command: upgrade
-
                   chartType: FilePath
-
                   chartPath: $(helmChartPath)
-
                   releaseName: $(helmReleaseName)
-
                   install: true
-
                   valueFile: $(valuesFile)
-
                   arguments: >
                     --set image.repository=$(finalImageRepository)
                     --set image.tag=$(resources.pipeline.ciPipeline.runName)
@@ -309,120 +180,65 @@ stages:
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
                     --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
 
-# =====================================
-# UAT DEPLOYMENT
-# =====================================
-
+# UAT Deployment
 - stage: UAT
-
   displayName: UAT Deployment
-
   dependsOn: QA
-
   variables:
-
     aksResourceGroup: employeeprofileapp-uat-rg
-
     aksClusterName: employeeprofileapp-uat-aks
-
     namespace: employeeprofileapp-uat
-
     helmReleaseName: employeeprofileapp-uat
-
     valuesFile: helm/employeeprofileapp/values-uat.yaml
 
   jobs:
-
     - deployment: DeployUAT
-
       displayName: Deploy UAT
-
       environment: employeeprofileapp-uat
-
       strategy:
-
         runOnce:
-
           deploy:
-
             steps:
-
               - checkout: self
 
-              # =========================
-              # DOCKER HUB IMAGE PULL SECRET
-              # =========================
-
               - task: KubernetesManifest@1
-
                 displayName: Create UAT Image Pull Secret
-
                 condition: eq(variables['enableAcr'], 'false')
-
                 inputs:
-
                   action: createSecret
-
                   connectionType: azureResourceManager
-
                   azureSubscriptionConnection: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   secretName: $(imagePullSecret)
-
                   dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
-              # =========================
-              # HELM LINT
-              # =========================
-
               - script: |
-
                   echo "=================================="
                   echo "Helm Lint Validation"
                   echo "=================================="
 
-                  helm lint $(helmChartPath)
-
+                  helm lint $(helmChartPath) \
+                    -f $(valuesFile) \
+                    --set image.repository=$(finalImageRepository) \
+                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
                 displayName: Helm Lint Validation
 
-              # =========================
-              # HELM DEPLOY
-              # =========================
-
               - task: HelmDeploy@0
-
                 displayName: Deploy UAT Helm Chart
-
                 inputs:
-
                   connectionType: Azure Resource Manager
-
                   azureSubscription: $(azureServiceConnection)
-
                   azureResourceGroup: $(aksResourceGroup)
-
                   kubernetesCluster: $(aksClusterName)
-
                   namespace: $(namespace)
-
                   command: upgrade
-
                   chartType: FilePath
-
                   chartPath: $(helmChartPath)
-
                   releaseName: $(helmReleaseName)
-
                   install: true
-
                   valueFile: $(valuesFile)
-
                   arguments: >
                     --set image.repository=$(finalImageRepository)
                     --set image.tag=$(resources.pipeline.ciPipeline.runName)
@@ -431,124 +247,21 @@ stages:
                     --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
                     --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
 
-# =====================================
-# PROD DEPLOYMENT
-# =====================================
-
+# PROD Deployment
 - stage: PROD
-
   displayName: PROD Deployment
-
   dependsOn: UAT
-
   variables:
-
     aksResourceGroup: employeeprofileapp-prod-rg
-
     aksClusterName: employeeprofileapp-prod-aks
-
     namespace: employeeprofileapp-prod
-
     helmReleaseName: employeeprofileapp-prod
-
     valuesFile: helm/employeeprofileapp/values-prod.yaml
 
   jobs:
-
     - deployment: DeployPROD
-
       displayName: Deploy PROD
-
       environment: employeeprofileapp-prod
-
       strategy:
-
         runOnce:
-
           deploy:
-
-            steps:
-
-              - checkout: self
-
-              # =========================
-              # DOCKER HUB IMAGE PULL SECRET
-              # =========================
-
-              - task: KubernetesManifest@1
-
-                displayName: Create PROD Image Pull Secret
-
-                condition: eq(variables['enableAcr'], 'false')
-
-                inputs:
-
-                  action: createSecret
-
-                  connectionType: azureResourceManager
-
-                  azureSubscriptionConnection: $(azureServiceConnection)
-
-                  azureResourceGroup: $(aksResourceGroup)
-
-                  kubernetesCluster: $(aksClusterName)
-
-                  namespace: $(namespace)
-
-                  secretName: $(imagePullSecret)
-
-                  dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-
-              # =========================
-              # HELM LINT
-              # =========================
-
-              - script: |
-
-                  echo "=================================="
-                  echo "Helm Lint Validation"
-                  echo "=================================="
-
-                  helm lint $(helmChartPath)
-
-                displayName: Helm Lint Validation
-
-              # =========================
-              # HELM DEPLOY
-              # =========================
-
-              - task: HelmDeploy@0
-
-                displayName: Deploy PROD Helm Chart
-
-                inputs:
-
-                  connectionType: Azure Resource Manager
-
-                  azureSubscription: $(azureServiceConnection)
-
-                  azureResourceGroup: $(aksResourceGroup)
-
-                  kubernetesCluster: $(aksClusterName)
-
-                  namespace: $(namespace)
-
-                  command: upgrade
-
-                  chartType: FilePath
-
-                  chartPath: $(helmChartPath)
-
-                  releaseName: $(helmReleaseName)
-
-                  install: true
-
-                  valueFile: $(valuesFile)
-
-                  arguments: >
-                    --set image.repository=$(finalImageRepository)
-                    --set image.tag=$(resources.pipeline.ciPipeline.runName)
-                    --set-string serviceAccount.annotations.azure\.workload\.identity/client-id=$(WORKLOAD_IDENTITY_CLIENT_ID)
-                    --set-string keyVault.clientId=$(WORKLOAD_IDENTITY_CLIENT_ID)
-                    --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
-                    --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
