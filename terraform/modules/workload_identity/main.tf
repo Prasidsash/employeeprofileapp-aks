@@ -42,7 +42,7 @@ resource "azurerm_federated_identity_credential" "workload_identity" {
 
   issuer = var.oidc_issuer_url
 
-  parent_id = azurerm_user_assigned_identity.workload_identity[0].id
+  user_assigned_identity_id = azurerm_user_assigned_identity.workload_identity[0].id
 
   subject = "system:serviceaccount:${var.namespace_name}:${var.service_account_name}"
 }
