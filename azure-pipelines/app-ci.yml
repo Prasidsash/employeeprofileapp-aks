@@ -42,9 +42,6 @@ variables:
   # OPTIONAL ACR SUPPORT
   # =====================================
 
-  - name: enableAcr
-    value: 'true'
-
   - name: acrServiceConnection
     value: 'ACR-SC'
 
@@ -161,65 +158,7 @@ stages:
 
               sudo apt-get install trivy -y
 
-              trivy --version
-
             displayName: Install Trivy
-
-          # =====================================
-          # FILE SYSTEM SCAN
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Trivy Filesystem Scan"
-              echo "=================================="
-
-              trivy fs \
-                --scanners vuln \
-                --ignore-unfixed \
-                --ignorefile .trivyignore \
-                --exit-code 0 \
-                --severity CRITICAL \
-                .
-
-            displayName: Trivy Filesystem Scan
-
-          # =====================================
-          # LOCAL DOCKER BUILD FOR SECURITY SCAN
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Local Docker Build"
-              echo "=================================="
-
-              docker build \
-                -t employeeprofileapp-local:$(Build.BuildNumber) \
-                .
-
-            displayName: Local Docker Build
-
-          # =====================================
-          # TRIVY LOCAL IMAGE SCAN
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Trivy Local Image Scan"
-              echo "=================================="
-
-              trivy image \
-                --scanners vuln \
-                --ignore-unfixed \
-                --ignorefile .trivyignore \
-                --exit-code 1 \
-                --severity CRITICAL \
-                employeeprofileapp-local:$(Build.BuildNumber)
-
-            displayName: Trivy Local Image Scan
 
           # =====================================
           # DOCKER HUB BUILD
@@ -229,7 +168,7 @@ stages:
 
             displayName: Docker Hub Build
 
-            condition: eq(variables['enableAcr'], 'false')
+            condition: eq(lower(variables['enableAcr']), 'false')
 
             inputs:
 
@@ -255,7 +194,7 @@ stages:
 
             displayName: Docker Hub Push
 
-            condition: eq(variables['enableAcr'], 'false')
+            condition: eq(lower(variables['enableAcr']), 'false')
 
             inputs:
 
@@ -277,7 +216,7 @@ stages:
 
             displayName: ACR Build
 
-            condition: eq(variables['enableAcr'], 'true')
+            condition: eq(lower(variables['enableAcr']), 'true')
 
             inputs:
 
@@ -303,7 +242,7 @@ stages:
 
             displayName: ACR Push
 
-            condition: eq(variables['enableAcr'], 'true')
+            condition: eq(lower(variables['enableAcr']), 'true')
 
             inputs:
 
