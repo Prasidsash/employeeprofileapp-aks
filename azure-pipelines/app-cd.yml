@@ -19,27 +19,27 @@ variables:
   - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # DOCKER HUB CONFIGURATION
+  # ACR CONFIGURATION
   # =====================================
 
   - name: dockerRegistryServiceConnection
-    value: "Docker-SC"
+    value: "ACR-SC"
+
+  - name: containerRegistry
+    value: "empprofacr2026.azurecr.io"
 
   - name: imageRepository
-    value: "prasidsash/employeeprofileapp-aks"
-
-  - name: imagePullSecret
-    value: "dockerhub-secret"
+    value: "employeeprofileapp-aks"
 
   # =====================================
-  # OPTIONAL ACR SUPPORT
+  # ACR SUPPORT
   # =====================================
 
   - name: enableAcr
     value: "true"
 
   - name: acrRepository
-    value: "empprofacr2026.azurecr.io/employeeprofileapp-aks"
+    value: "employeeprofileapp-aks"
 
   # =====================================
   # AZURE CONFIGURATION
@@ -57,7 +57,6 @@ variables:
 
   - name: finalImageRepository
     value: "empprofacr2026.azurecr.io/employeeprofileapp-aks"
-
 # =====================================
 # STAGES
 # =====================================
