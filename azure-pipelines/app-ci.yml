@@ -38,15 +38,15 @@ variables:
   - name: imageRepository
     value: 'prasidsash/employeeprofileapp-aks'
 
-  # =====================================
-  # OPTIONAL ACR SUPPORT
-  # =====================================
+# =====================================
+# ACR CONFIGURATION
+# =====================================
 
   - name: acrServiceConnection
     value: 'ACR-SC'
 
   - name: acrRepository
-    value: 'empprofacr2026.azurecr.io/employeeprofileapp-aks'
+    value: 'employeeprofileapp-aks'
 
 # =====================================
 # STAGES
