@@ -222,41 +222,97 @@ stages:
             displayName: Trivy Local Image Scan
 
           # =====================================
-          # DOCKER HUB BUILD AND PUSH
-          # =====================================
+# DOCKER HUB BUILD
+# =====================================
 
-          - task: Docker@2
+- task: Docker@2
 
-            displayName: Docker Hub Build And Push
+  displayName: Docker Hub Build
 
-            condition: eq(variables['enableAcr'], 'false')
+  condition: eq(variables['enableAcr'], 'false')
 
-            inputs:
-              command: buildAndPush
-              containerRegistry: 'Docker-SC'
-              repository: $(imageRepository)
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              buildContext: '$(Build.SourcesDirectory)'
-              tags: |
-                $(Build.BuildNumber)
-                latest
+  inputs:
 
-          # =====================================
-          # ACR BUILD AND PUSH
-          # =====================================
+    command: build
 
-          - task: Docker@2
+    containerRegistry: 'Docker-SC'
 
-            displayName: ACR Build And Push
+    repository: $(imageRepository)
 
-            condition: eq(variables['enableAcr'], 'true')
+    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
 
-            inputs:
-              command: buildAndPush
-              containerRegistry: 'ACR-SC'
-              repository: $(acrRepository)
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-              buildContext: '$(Build.SourcesDirectory)'
-              tags: |
-                $(Build.BuildNumber)
-                latest
+    buildContext: '$(Build.SourcesDirectory)'
+
+    tags: |
+      $(Build.BuildNumber)
+      latest
+
+# =====================================
+# DOCKER HUB PUSH
+# =====================================
+
+- task: Docker@2
+
+  displayName: Docker Hub Push
+
+  condition: eq(variables['enableAcr'], 'false')
+
+  inputs:
+
+    command: push
+
+    containerRegistry: 'Docker-SC'
+
+    repository: $(imageRepository)
+
+    tags: |
+      $(Build.BuildNumber)
+      latest
+
+# =====================================
+# ACR BUILD
+# =====================================
+
+- task: Docker@2
+
+  displayName: ACR Build
+
+  condition: eq(variables['enableAcr'], 'true')
+
+  inputs:
+
+    command: build
+
+    containerRegistry: 'ACR-SC'
+
+    repository: $(acrRepository)
+
+    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+
+    buildContext: '$(Build.SourcesDirectory)'
+
+    tags: |
+      $(Build.BuildNumber)
+      latest
+
+# =====================================
+# ACR PUSH
+# =====================================
+
+- task: Docker@2
+
+  displayName: ACR Push
+
+  condition: eq(variables['enableAcr'], 'true')
+
+  inputs:
+
+    command: push
+
+    containerRegistry: 'ACR-SC'
+
+    repository: $(acrRepository)
+
+    tags: |
+      $(Build.BuildNumber)
+      latest
