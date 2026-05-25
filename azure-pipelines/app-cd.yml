@@ -81,28 +81,30 @@ stages:
                       --set image.tag=$(resources.pipeline.ciPipeline.runName)
                   displayName: Helm Lint Validation
 
+               
                 - task: AzureCLI@2
-                  displayName: Get DEV Workload Identity Client ID
+                  displayName: Load Terraform Outputs
                   inputs:
                     azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      echo "=================================="
-                      echo "Terraform Init"
-                      echo "=================================="
 
                       cd terraform/infra/dev
-                      terraform init -input=false
 
-                      echo "=================================="
-                      echo "Get Workload Identity Client ID"
-                      echo "=================================="
+                      terraform init -input=false
 
                       CLIENT_ID=$(terraform output -raw workload_identity_client_id)
 
-                      echo "Client ID Retrieved Successfully"
+                      TENANT_ID=$(terraform output -raw tenant_id)
+
+                      KEYVAULT_NAME=$(terraform output -raw key_vault_name)
+
                       echo "##vso[task.setvariable variable=WORKLOAD_IDENTITY_CLIENT_ID]$CLIENT_ID"
+
+                      echo "##vso[task.setvariable variable=AZURE_TENANT_ID]$TENANT_ID"
+
+                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]$KEYVAULT_NAME"
 
                 - task: HelmDeploy@0
                   displayName: Deploy DEV Helm Chart

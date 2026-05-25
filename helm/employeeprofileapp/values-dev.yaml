@@ -108,9 +108,28 @@ keyVault:
   # Runtime override expected from CI/CD
   clientId: ""
 
+  # =====================================
+  # SECRET PROVIDER CLASS
+  # =====================================
+
   secretProviderClass: employeeprofileapp-spc
 
+  # =====================================
+  # KUBERNETES SECRET SYNC
+  # =====================================
+
+  k8sSecretName: employeeprofileapp-kv-secret
+
+  # =====================================
+  # CSI DRIVER MOUNT PATH
+  # =====================================
+
   mountPath: "/mnt/secrets-store"
+
+  # =====================================
+  # KEY VAULT SECRETS
+  # Must EXACTLY match Terraform secret names
+  # =====================================
 
   secrets:
 

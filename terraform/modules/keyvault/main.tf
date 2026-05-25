@@ -156,7 +156,7 @@ resource "time_sleep" "wait_for_kv_rbac" {
     azurerm_role_assignment.kv_admin
   ]
 
-  create_duration = "90s"
+  create_duration = "180s"
 }
 
 # =====================================

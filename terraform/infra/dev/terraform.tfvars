@@ -328,9 +328,9 @@ default_key_vault_secrets = {
 
   SQL-DATABASE-NAME = ""
 
-  SQL-USERNAME = ""
+  db-username = ""
 
-  SQL-PASSWORD = ""
+  db-password = ""
 
   REDIS-CONNECTION-STRING = ""
 

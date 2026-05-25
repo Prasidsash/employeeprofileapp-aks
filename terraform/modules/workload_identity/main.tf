@@ -61,3 +61,19 @@ resource "azurerm_role_assignment" "keyvault_secrets_user" {
 
   principal_id = azurerm_user_assigned_identity.workload_identity[0].principal_id
 }
+
+# =====================================
+# WORKLOAD IDENTITY PROPAGATION WAIT
+# =====================================
+
+resource "time_sleep" "wait_for_workload_identity" {
+
+  count = var.enable_workload_identity_resources ? 1 : 0
+
+  depends_on = [
+    azurerm_federated_identity_credential.workload_identity,
+    azurerm_role_assignment.keyvault_secrets_user
+  ]
+
+  create_duration = "180s"
+}

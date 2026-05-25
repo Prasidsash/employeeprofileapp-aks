@@ -56,3 +56,10 @@ output "key_vault_resource_group_name" {
 
   value = azurerm_key_vault.kv.resource_group_name
 }
+
+output "tenant_id" {
+
+  description = "Azure Tenant ID"
+
+  value = azurerm_key_vault.kv.tenant_id
+}
