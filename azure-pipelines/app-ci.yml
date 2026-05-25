@@ -1,7 +1,7 @@
 # =====================================
 # Azure DevOps CI Pipeline
 # File: azure-pipelines/app-ci.yaml
-# Version: v1.0-final
+# Version: v2.0-final
 # =====================================
 
 name: $(Date:yyyyMMdd).$(Rev:r)
@@ -11,6 +11,7 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 # =====================================
 
 trigger:
+
   branches:
     include:
       - main
@@ -62,6 +63,9 @@ variables:
 
   - name: acrServiceConnection
     value: 'ACR-SC'
+
+  - name: acrLoginServer
+    value: 'empprofacr2027.azurecr.io'
 
   - name: acrRepository
     value: 'employeeprofileapp-aks'
@@ -125,6 +129,7 @@ stages:
               echo "=================================="
 
               echo "Build Number: $(Build.BuildNumber)"
+              echo "Build Id: $(Build.BuildId)"
               echo "Source Branch: $(Build.SourceBranchName)"
               echo "ACR Enabled: $(enableAcr)"
 
@@ -222,7 +227,7 @@ stages:
                 latest
 
           # =====================================
-          # ACR LOGIN VALIDATION
+          # ACR LOGIN
           # =====================================
 
           - task: Docker@2
@@ -264,7 +269,7 @@ stages:
                 latest
 
           # =====================================
-          # IMAGE SECURITY SCAN
+          # TRIVY IMAGE SECURITY SCAN
           # =====================================
 
           - script: |
@@ -273,25 +278,18 @@ stages:
               echo "Trivy Security Scan"
               echo "=================================="
 
-              if [ "$(enableAcr)" = "true" ]; then
-
-                IMAGE_NAME="$(acrRepository):$(Build.BuildNumber)"
-
-              else
-
-                IMAGE_NAME="$(imageRepository):$(Build.BuildNumber)"
-
-              fi
-
-              echo "Scanning Image: ${IMAGE_NAME}"
+              echo "Scanning Image:"
+              echo "$(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)"
 
               trivy image \
                 --severity HIGH,CRITICAL \
                 --exit-code 0 \
-                --no-progress \
-                ${IMAGE_NAME}
+                --timeout 10m \
+                $(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)
 
             displayName: Trivy Image Scan
+
+            condition: eq(lower(variables['enableAcr']), 'true')
 
           # =====================================
           # PIPELINE COMPLETION
