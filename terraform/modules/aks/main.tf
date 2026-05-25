@@ -16,9 +16,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   sku_tier = "Standard"
 
-  oidc_issuer_enabled = var.enable_oidc_issuer
+  # =====================================
+  # ENTERPRISE IDENTITY MODEL
+  # =====================================
 
-  workload_identity_enabled = var.enable_workload_identity
+  oidc_issuer_enabled = false
+
+  workload_identity_enabled = false
 
   # =====================================
   # DEFAULT SYSTEM NODE POOL
@@ -45,36 +49,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
     only_critical_addons_enabled = var.only_critical_addons_enabled
 
     node_labels = var.node_labels
+
+    node_taints = var.node_taints
   }
 
   # =====================================
   # SYSTEM ASSIGNED IDENTITY
   # =====================================
 
-  dynamic "identity" {
+  identity {
 
-    for_each = var.enable_user_assigned_identity ? [] : [1]
-
-    content {
-
-      type = "SystemAssigned"
-    }
-  }
-
-  # =====================================
-  # USER ASSIGNED IDENTITY
-  # =====================================
-
-  dynamic "identity" {
-
-    for_each = var.enable_user_assigned_identity ? [1] : []
-
-    content {
-
-      type = "UserAssigned"
-
-      identity_ids = var.user_assigned_identity_ids
-    }
+    type = "SystemAssigned"
   }
 
   # =====================================
@@ -105,22 +90,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     content {
 
       log_analytics_workspace_id = var.log_analytics_workspace_id
-    }
-  }
-
-  # =====================================
-  # AZURE MONITOR METRICS
-  # =====================================
-
-  dynamic "monitor_metrics" {
-
-    for_each = var.azure_monitor_workspace_id != null ? [1] : []
-
-    content {
-
-      annotations_allowed = null
-
-      labels_allowed = null
     }
   }
 
@@ -239,23 +208,31 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 }
 
 # =====================================
-# OPTIONAL ACR PULL ROLE ASSIGNMENT
+# ACR PULL ROLE ASSIGNMENT
 # =====================================
 
-# NOTE:
-# Disabled because Azure DevOps SPN does not have:
-# Microsoft.Authorization/roleAssignments/write
-#
-# AcrPull role assignment should be handled
-# manually or by cloud/security admin team.
+resource "azurerm_role_assignment" "aks_acr_pull" {
 
-# resource "azurerm_role_assignment" "aks_acr_pull" {
-#
-#   count = var.enable_acr_pull_role_assignment ? 1 : 0
-#
-#   scope = var.acr_id
-#
-#   role_definition_name = "AcrPull"
-#
-#   principal_id = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-# }
+  count = var.enable_acr_pull_role_assignment ? 1 : 0
+
+  scope = var.acr_id
+
+  role_definition_name = "AcrPull"
+
+  principal_id = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+
+  skip_service_principal_aad_check = true
+}
+
+# =====================================
+# RBAC PROPAGATION WAIT
+# =====================================
+
+resource "time_sleep" "wait_for_acr_rbac" {
+
+  depends_on = [
+    azurerm_role_assignment.aks_acr_pull
+  ]
+
+  create_duration = "120s"
+}

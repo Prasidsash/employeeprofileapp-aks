@@ -19,39 +19,6 @@ resource "azurerm_resource_group" "main" {
 }
 
 # =====================================
-# WORKLOAD IDENTITY MODULE
-# =====================================
-
-module "workload_identity" {
-
-  source = "../../modules/workload_identity"
-
-  enable_workload_identity_resources = var.enable_workload_identity_resources
-
-  resource_group_name = azurerm_resource_group.main.name
-
-  location = azurerm_resource_group.main.location
-
-  environment = var.environment
-
-  namespace_name = var.namespace_name
-
-  service_account_name = var.service_account_name
-
-  oidc_issuer_url = module.aks.oidc_issuer_url
-
-  key_vault_id = module.keyvault.key_vault_id
-
-  additional_tags = var.aks_additional_tags
-
-  depends_on = [
-    module.aks,
-    module.keyvault,
-    module.rbac
-  ]
-}
-
-# =====================================
 # NETWORK MODULE
 # =====================================
 
@@ -76,7 +43,6 @@ module "network" {
 
 # =====================================
 # MONITORING MODULE
-# DO NOT MODIFY OUTPUT BEHAVIOR
 # =====================================
 
 module "monitoring" {
@@ -103,49 +69,7 @@ module "monitoring" {
 
   aks_cluster_id = null
 
-  # =====================================
-  # OPTIONAL TAGS
-  # =====================================
-
   additional_tags = var.monitoring_additional_tags
-}
-
-# =====================================
-# KEY VAULT MODULE
-# =====================================
-
-module "keyvault" {
-
-  source = "../../modules/keyvault"
-
-  resource_group_name = azurerm_resource_group.main.name
-
-  location = azurerm_resource_group.main.location
-
-  environment = var.environment
-
-  # =====================================
-  # Stable Key Vault RBAC Principal
-  # Prevents RBAC Replacement Drift
-  # =====================================
-
-  keyvault_admin_object_id = var.keyvault_admin_object_id
-
-  # =====================================
-  # OPTIONAL FEATURES
-  # =====================================
-
-  enable_network_acls = var.enable_network_acls
-
-  enable_default_key_vault_secrets = var.enable_default_key_vault_secrets
-
-  default_key_vault_secrets = var.default_key_vault_secrets
-
-  additional_tags = var.keyvault_additional_tags
-
-  depends_on = [
-    azurerm_resource_group.main
-  ]
 }
 
 # =====================================
@@ -218,7 +142,7 @@ module "aks" {
   spot_node_taints = var.spot_node_taints
 
   # =====================================
-  # AKS NETWORKING
+  # NETWORKING
   # =====================================
 
   subnet_id = module.network.subnet_id
@@ -248,15 +172,7 @@ module "aks" {
   environment = var.environment
 
   # =====================================
-  # OPTIONAL FUTURE AKS FEATURES
-  # =====================================
-
-  enable_workload_identity = var.enable_workload_identity
-
-  enable_oidc_issuer = var.enable_oidc_issuer
-
-  # =====================================
-  # OPTIONAL KEY VAULT CSI DRIVER
+  # KEY VAULT CSI DRIVER
   # =====================================
 
   enable_key_vault_secrets_provider = var.enable_key_vault_secrets_provider
@@ -264,20 +180,24 @@ module "aks" {
   secret_rotation_enabled = var.secret_rotation_enabled
 
   # =====================================
-  # OPTIONAL USER ASSIGNED IDENTITY
+  # IMAGE CLEANER
   # =====================================
-
-  enable_user_assigned_identity = var.enable_user_assigned_identity
-
-  user_assigned_identity_ids = var.user_assigned_identity_ids
 
   enable_image_cleaner = var.enable_image_cleaner
 
   image_cleaner_interval_hours = var.image_cleaner_interval_hours
 
+  # =====================================
+  # NODE LABELS / TAINTS
+  # =====================================
+
   node_labels = var.node_labels
 
   node_taints = var.node_taints
+
+  # =====================================
+  # API SERVER ACCESS PROFILE
+  # =====================================
 
   enable_api_server_access_profile = var.enable_api_server_access_profile
 
@@ -286,10 +206,10 @@ module "aks" {
   additional_tags = var.aks_additional_tags
 
   # =====================================
-  # ACR
+  # ACR AUTOMATION
   # =====================================
 
-  enable_acr_pull_role_assignment = var.enable_acr
+  enable_acr_pull_role_assignment = true
 
   acr_id = try(module.acr[0].acr_id, null)
 
@@ -300,14 +220,12 @@ module "aks" {
 }
 
 # =====================================
-# AKS BACKUP MODULE
+# KEY VAULT MODULE
 # =====================================
 
-module "aks_backup" {
+module "keyvault" {
 
-  count = var.enable_aks_backup ? 1 : 0
-
-  source = "../../modules/aks_backup"
+  source = "../../modules/keyvault"
 
   resource_group_name = azurerm_resource_group.main.name
 
@@ -315,25 +233,37 @@ module "aks_backup" {
 
   environment = var.environment
 
-  aks_cluster_id = module.aks.cluster_id
+  # =====================================
+  # KEY VAULT ADMIN RBAC
+  # =====================================
 
-  aks_cluster_name = module.aks.cluster_name
+  keyvault_admin_object_id = var.keyvault_admin_object_id
 
-  backup_vault_name = var.backup_vault_name
+  # =====================================
+  # AKS CSI RBAC
+  # =====================================
 
-  backup_storage_account_name = var.backup_storage_account_name
+  enable_aks_kv_rbac = true
 
-  backup_container_name = var.backup_container_name
+  aks_kubelet_object_id = module.aks.aks_kubelet_object_id
 
-  backup_policy_name = var.backup_policy_name
+  # =====================================
+  # DEFAULT SECRETS
+  # =====================================
 
-  backup_schedule_repeating_time_intervals = var.backup_schedule_repeating_time_intervals
+  enable_default_key_vault_secrets = true
 
-  backup_retention_duration_count = var.backup_retention_duration_count
+  db_username = var.db_username
 
-  backup_retention_duration_type = var.backup_retention_duration_type
+  db_password = var.db_password
 
-  additional_tags = var.backup_additional_tags
+  # =====================================
+  # OPTIONAL FEATURES
+  # =====================================
+
+  enable_network_acls = var.enable_network_acls
+
+  additional_tags = var.keyvault_additional_tags
 
   depends_on = [
     module.aks
@@ -406,38 +336,6 @@ module "rbac" {
 }
 
 # =====================================
-# SECRET MODULE
-# =====================================
-
-module "secret" {
-
-  count = var.enable_secret ? 1 : 0
-
-  source = "../../modules/employee_secret"
-
-  namespace_name = var.namespace_name
-
-  secret_name = var.secret_name
-
-  secret_data = var.secret_data
-
-  secret_annotations = var.secret_annotations
-
-  additional_labels = var.secret_additional_labels
-
-  additional_annotations = var.secret_additional_annotations
-
-  secret_type = var.secret_type
-
-  secret_immutable = var.secret_immutable
-
-  depends_on = [
-    module.namespace,
-    time_sleep.wait_for_aks
-  ]
-}
-
-# =====================================
 # INGRESS NGINX CONTROLLER
 # =====================================
 
@@ -471,11 +369,6 @@ module "cert_manager" {
   count = var.enable_cert_manager ? 1 : 0
 
   source = "../../modules/cert_manager"
-
-  # =====================================
-  # EXPLICIT PROVIDER MAPPING
-  # Prevents localhost:80 kubectl fallback
-  # =====================================
 
   providers = {
 
@@ -523,10 +416,6 @@ module "ingress" {
   enable_tls = var.enable_tls
 
   tls_secret_name = var.tls_secret_name
-
-  # =====================================
-  # Optional Future Ingress Features
-  # =====================================
 
   ingress_class_name = var.ingress_class_name
 
@@ -579,7 +468,7 @@ module "governance" {
   limit_range_annotations = {}
 
   # =====================================
-  # OPTIONAL POD DISRUPTION BUDGET
+  # POD DISRUPTION BUDGET
   # =====================================
 
   enable_pod_disruption_budget = var.enable_pod_disruption_budget

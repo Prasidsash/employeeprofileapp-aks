@@ -185,3 +185,28 @@ output "user_assigned_identity_ids" {
     []
   )
 }
+
+# =====================================
+# ENTERPRISE PIPELINE OUTPUTS
+# =====================================
+
+output "aks_kubelet_client_id" {
+
+  description = "AKS Kubelet Identity Client ID"
+
+  value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].client_id
+}
+
+output "aks_kubelet_object_id" {
+
+  description = "AKS Kubelet Identity Object ID"
+
+  value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+}
+
+output "tenant_id" {
+
+  description = "Azure Tenant ID"
+
+  value = azurerm_kubernetes_cluster.aks.identity[0].tenant_id
+}

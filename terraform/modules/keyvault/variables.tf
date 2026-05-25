@@ -4,7 +4,7 @@
 
 variable "resource_group_name" {
 
-  description = "Resource Group Name"
+  description = "Azure Resource Group Name"
 
   type = string
 }
@@ -18,20 +18,18 @@ variable "location" {
 
 variable "environment" {
 
-  description = "Environment name"
+  description = "Environment Name"
 
   type = string
 }
 
 # =====================================
-# OPTIONAL FUTURE OVERRIDE
-# Existing implementation currently
-# uses generated local value
+# OPTIONAL CUSTOM KEY VAULT NAME
 # =====================================
 
 variable "key_vault_name" {
 
-  description = "Optional custom Key Vault name override"
+  description = "Optional custom Azure Key Vault name override"
 
   type = string
 
@@ -39,36 +37,45 @@ variable "key_vault_name" {
 }
 
 # =====================================
-# KEY VAULT RBAC
+# KEY VAULT ADMIN RBAC
 # =====================================
 
 variable "keyvault_admin_object_id" {
 
-  description = "Stable Object ID for Key Vault Administrator role assignment"
+  description = "Azure AD Object ID for Key Vault Administrator RBAC assignment"
 
   type = string
 }
 
 # =====================================
-# OPTIONAL ROLE OVERRIDE
+# AKS CSI DRIVER RBAC
 # =====================================
 
-variable "keyvault_role_definition_name" {
+variable "enable_aks_kv_rbac" {
 
-  description = "Optional Key Vault RBAC role definition"
+  description = "Enable AKS managed identity access to Azure Key Vault"
+
+  type = bool
+
+  default = true
+}
+
+variable "aks_kubelet_object_id" {
+
+  description = "AKS kubelet managed identity object ID"
 
   type = string
 
-  default = "Key Vault Administrator"
+  default = null
 }
 
 # =====================================
-# OPTIONAL NETWORK ACL SUPPORT
+# OPTIONAL NETWORK ACLS
 # =====================================
 
 variable "enable_network_acls" {
 
-  description = "Enable Key Vault network ACL block"
+  description = "Enable Azure Key Vault network ACLs"
 
   type = bool
 
@@ -81,7 +88,7 @@ variable "enable_network_acls" {
 
 variable "additional_tags" {
 
-  description = "Additional Key Vault tags"
+  description = "Additional Azure resource tags"
 
   type = map(string)
 
@@ -89,12 +96,12 @@ variable "additional_tags" {
 }
 
 # =====================================
-# OPTIONAL PURGE PROTECTION
+# PURGE PROTECTION
 # =====================================
 
 variable "enable_purge_protection" {
 
-  description = "Enable Key Vault purge protection"
+  description = "Enable Azure Key Vault purge protection"
 
   type = bool
 
@@ -102,12 +109,12 @@ variable "enable_purge_protection" {
 }
 
 # =====================================
-# OPTIONAL SOFT DELETE RETENTION
+# SOFT DELETE RETENTION
 # =====================================
 
 variable "soft_delete_retention_days" {
 
-  description = "Key Vault soft delete retention days"
+  description = "Azure Key Vault soft delete retention days"
 
   type = number
 
@@ -115,46 +122,36 @@ variable "soft_delete_retention_days" {
 }
 
 # =====================================
-# OPTIONAL DEFAULT KEY VAULT SECRETS
+# DEFAULT KEY VAULT SECRETS
 # =====================================
 
 variable "enable_default_key_vault_secrets" {
 
-  description = "Enable default Azure Key Vault secret creation"
+  description = "Enable automatic default Azure Key Vault secret creation"
 
   type = bool
 
-  default = false
-}
-
-variable "default_key_vault_secrets" {
-
-  description = "Default Azure Key Vault secrets map"
-
-  type = map(string)
-
-  default = {}
+  default = true
 }
 
 # =====================================
-# OPTIONAL BOOTSTRAP SECRETS
-# PRESERVED FOR BACKWARD COMPATIBILITY
+# DATABASE SECRETS
 # =====================================
 
-variable "enable_bootstrap_secrets" {
+variable "db_username" {
 
-  description = "Enable optional bootstrap secret creation"
+  description = "Database username secret"
 
-  type = bool
+  type = string
 
-  default = false
+  sensitive = true
 }
 
-variable "bootstrap_secrets" {
+variable "db_password" {
 
-  description = "Optional bootstrap secrets for Key Vault"
+  description = "Database password secret"
 
-  type = map(string)
+  type = string
 
-  default = {}
+  sensitive = true
 }

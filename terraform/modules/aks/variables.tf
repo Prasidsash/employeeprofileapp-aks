@@ -3,18 +3,30 @@
 # =====================================
 
 variable "resource_group_name" {
+
+  description = "Azure Resource Group name"
+
   type = string
 }
 
 variable "location" {
+
+  description = "Azure region"
+
   type = string
 }
 
 variable "cluster_name" {
+
+  description = "AKS cluster name"
+
   type = string
 }
 
 variable "environment" {
+
+  description = "Environment name"
+
   type = string
 }
 
@@ -23,6 +35,9 @@ variable "environment" {
 # =====================================
 
 variable "kubernetes_version" {
+
+  description = "AKS Kubernetes version"
+
   type = string
 }
 
@@ -31,23 +46,47 @@ variable "kubernetes_version" {
 # =====================================
 
 variable "system_node_count" {
+
+  description = "System node count"
+
   type = number
 }
 
 variable "system_node_vm_size" {
+
+  description = "System node VM size"
+
   type = string
 }
 
 variable "enable_node_autoscaling" {
+
+  description = "Enable AKS node autoscaling"
+
   type = bool
 }
 
 variable "system_node_min_count" {
+
+  description = "Minimum system node count"
+
   type = number
 }
 
 variable "system_node_max_count" {
+
+  description = "Maximum system node count"
+
   type = number
+}
+
+variable "only_critical_addons_enabled" {
+
+  description = "Allow only critical addons on system node pool"
+
+  type = bool
+
+  default = false
 }
 
 # =====================================
@@ -55,14 +94,23 @@ variable "system_node_max_count" {
 # =====================================
 
 variable "subnet_id" {
+
+  description = "AKS subnet ID"
+
   type = string
 }
 
 variable "service_cidr" {
+
+  description = "AKS service CIDR"
+
   type = string
 }
 
 variable "dns_service_ip" {
+
+  description = "AKS DNS service IP"
+
   type = string
 }
 
@@ -72,11 +120,11 @@ variable "dns_service_ip" {
 
 variable "enable_monitoring" {
 
-  description = "Enable Azure Monitor / OMS Agent"
+  description = "Enable Azure Monitor"
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "log_analytics_workspace_id" {
@@ -98,29 +146,7 @@ variable "azure_monitor_workspace_id" {
 }
 
 # =====================================
-# OPTIONAL WORKLOAD IDENTITY
-# =====================================
-
-variable "enable_workload_identity" {
-
-  description = "Enable AKS Workload Identity"
-
-  type = bool
-
-  default = false
-}
-
-variable "enable_oidc_issuer" {
-
-  description = "Enable AKS OIDC Issuer"
-
-  type = bool
-
-  default = false
-}
-
-# =====================================
-# OPTIONAL KEY VAULT CSI DRIVER
+# KEY VAULT CSI DRIVER
 # =====================================
 
 variable "enable_key_vault_secrets_provider" {
@@ -129,12 +155,12 @@ variable "enable_key_vault_secrets_provider" {
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "secret_rotation_enabled" {
 
-  description = "Enable Azure Key Vault secret rotation"
+  description = "Enable Key Vault secret rotation"
 
   type = bool
 
@@ -142,12 +168,12 @@ variable "secret_rotation_enabled" {
 }
 
 # =====================================
-# OPTIONAL IMAGE CLEANER
+# IMAGE CLEANER
 # =====================================
 
 variable "enable_image_cleaner" {
 
-  description = "Enable AKS Image Cleaner"
+  description = "Enable AKS image cleaner"
 
   type = bool
 
@@ -156,7 +182,7 @@ variable "enable_image_cleaner" {
 
 variable "image_cleaner_interval_hours" {
 
-  description = "AKS Image Cleaner Interval"
+  description = "AKS image cleaner interval"
 
   type = number
 
@@ -169,7 +195,7 @@ variable "image_cleaner_interval_hours" {
 
 variable "node_labels" {
 
-  description = "Optional AKS node labels"
+  description = "AKS node labels"
 
   type = map(string)
 
@@ -178,7 +204,7 @@ variable "node_labels" {
 
 variable "node_taints" {
 
-  description = "Optional AKS node taints"
+  description = "AKS node taints"
 
   type = list(string)
 
@@ -226,7 +252,7 @@ variable "additional_tags" {
 
 variable "enable_spot_node_pool" {
 
-  description = "Enable AKS Spot node pool"
+  description = "Enable AKS spot node pool"
 
   type = bool
 
@@ -235,7 +261,7 @@ variable "enable_spot_node_pool" {
 
 variable "spot_node_pool_name" {
 
-  description = "AKS Spot node pool name"
+  description = "Spot node pool name"
 
   type = string
 
@@ -244,7 +270,7 @@ variable "spot_node_pool_name" {
 
 variable "spot_node_vm_size" {
 
-  description = "AKS Spot node VM size"
+  description = "Spot node VM size"
 
   type = string
 
@@ -253,7 +279,7 @@ variable "spot_node_vm_size" {
 
 variable "spot_max_price" {
 
-  description = "Maximum Spot node price"
+  description = "Maximum spot node price"
 
   type = number
 
@@ -262,7 +288,7 @@ variable "spot_max_price" {
 
 variable "spot_node_min_count" {
 
-  description = "Minimum Spot node count"
+  description = "Minimum spot node count"
 
   type = number
 
@@ -271,7 +297,7 @@ variable "spot_node_min_count" {
 
 variable "spot_node_max_count" {
 
-  description = "Maximum Spot node count"
+  description = "Maximum spot node count"
 
   type = number
 
@@ -297,48 +323,16 @@ variable "spot_node_taints" {
 }
 
 # =====================================
-# OPTIONAL USER-ASSIGNED MANAGED IDENTITY
-# FOR FUTURE WORKLOAD IDENTITY EXPANSION
-# =====================================
-
-variable "enable_user_assigned_identity" {
-
-  description = "Enable User Assigned Managed Identity"
-
-  type = bool
-
-  default = false
-}
-
-variable "user_assigned_identity_ids" {
-
-  description = "User Assigned Managed Identity IDs"
-
-  type = list(string)
-
-  default = []
-}
-
-variable "only_critical_addons_enabled" {
-
-  description = "Allow only critical system addons on system node pool"
-
-  type = bool
-
-  default = false
-}
-
-# =====================================
-# OPTIONAL ACR INTEGRATION
+# ACR INTEGRATION
 # =====================================
 
 variable "enable_acr_pull_role_assignment" {
 
-  description = "Enable AcrPull role assignment for AKS kubelet identity"
+  description = "Enable AcrPull role assignment"
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "acr_id" {

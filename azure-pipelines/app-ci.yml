@@ -1,7 +1,7 @@
 # =====================================
 # Azure DevOps CI Pipeline
 # File: azure-pipelines/app-ci.yaml
-# Version: v2.0-final
+# Version: v3.0-enterprise-final
 # =====================================
 
 name: $(Date:yyyyMMdd).$(Rev:r)
@@ -13,19 +13,29 @@ name: $(Date:yyyyMMdd).$(Rev:r)
 trigger:
 
   branches:
+
     include:
+
       - main
 
   paths:
+
     include:
+
       - src/**
+
       - helm/**
+
       - Dockerfile
+
       - azure-pipelines/app-ci.yaml
 
     exclude:
+
       - terraform/**
+
       - azure-pipelines/infra-pipeline.yml
+
       - README.md
 
 # =====================================
@@ -33,6 +43,7 @@ trigger:
 # =====================================
 
 pool:
+
   vmImage: ubuntu-latest
 
 # =====================================
@@ -48,16 +59,6 @@ variables:
   - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # DOCKER HUB CONFIGURATION
-  # =====================================
-
-  - name: dockerRegistryServiceConnection
-    value: 'Docker-SC'
-
-  - name: imageRepository
-    value: 'prasidsash/employeeprofileapp-aks'
-
-  # =====================================
   # ACR CONFIGURATION
   # =====================================
 
@@ -71,7 +72,14 @@ variables:
     value: 'employeeprofileapp-aks'
 
   # =====================================
-  # DOCKER FILE CONFIGURATION
+  # IMAGE NAME
+  # =====================================
+
+  - name: imageName
+    value: '$(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)'
+
+  # =====================================
+  # DOCKER CONFIGURATION
   # =====================================
 
   - name: dockerfilePath
@@ -86,9 +94,126 @@ variables:
 
 stages:
 
-  - stage: BuildAndSecurityScan
+  # =====================================
+  # VALIDATION STAGE
+  # =====================================
+
+  - stage: Validate
+
+    displayName: Validate Source
+
+    jobs:
+
+      - job: Validation
+
+        displayName: Validation Checks
+
+        steps:
+
+          - checkout: self
+
+          # =====================================
+          # DOCKER VALIDATION
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Docker Validation"
+              echo "=================================="
+
+              docker --version
+
+            displayName: Validate Docker
+
+          # =====================================
+          # HELM VALIDATION
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Helm Validation"
+              echo "=================================="
+
+              helm lint helm/employeeprofileapp
+
+            displayName: Helm Lint
+
+          # =====================================
+          # KUBERNETES TEMPLATE VALIDATION
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Helm Template Validation"
+              echo "=================================="
+
+              helm template employeeprofileapp \
+                helm/employeeprofileapp \
+                --values helm/employeeprofileapp/values-dev.yaml \
+                > rendered-manifest.yaml
+
+              cat rendered-manifest.yaml
+
+            displayName: Helm Template Validation
+
+          # =====================================
+          # DOTNET RESTORE
+          # =====================================
+
+          - task: DotNetCoreCLI@2
+
+            displayName: Dotnet Restore
+
+            inputs:
+
+              command: restore
+
+              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+
+          # =====================================
+          # DOTNET BUILD
+          # =====================================
+
+          - task: DotNetCoreCLI@2
+
+            displayName: Dotnet Build
+
+            inputs:
+
+              command: build
+
+              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+
+              arguments: '--configuration Release'
+
+          # =====================================
+          # DOTNET TEST
+          # =====================================
+
+          - task: DotNetCoreCLI@2
+
+            displayName: Dotnet Test
+
+            inputs:
+
+              command: test
+
+              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+
+              arguments: '--configuration Release'
+
+  # =====================================
+  # BUILD AND SECURITY STAGE
+  # =====================================
+
+  - stage: BuildAndScan
 
     displayName: Build Scan And Push
+
+    dependsOn: Validate
 
     jobs:
 
@@ -98,80 +223,7 @@ stages:
 
         steps:
 
-          # =====================================
-          # CHECKOUT
-          # =====================================
-
           - checkout: self
-
-          # =====================================
-          # TOOLING VALIDATION
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Docker Version"
-              echo "=================================="
-
-              docker --version
-
-            displayName: Validate Docker Tooling
-
-          # =====================================
-          # BUILD INFORMATION
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Build Information"
-              echo "=================================="
-
-              echo "Build Number: $(Build.BuildNumber)"
-              echo "Build Id: $(Build.BuildId)"
-              echo "Source Branch: $(Build.SourceBranchName)"
-              echo "ACR Enabled: $(enableAcr)"
-
-            displayName: Build Metadata
-
-          # =====================================
-          # .NET RESTORE
-          # =====================================
-
-          - task: DotNetCoreCLI@2
-
-            displayName: Dotnet Restore
-
-            inputs:
-              command: restore
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
-
-          # =====================================
-          # .NET BUILD
-          # =====================================
-
-          - task: DotNetCoreCLI@2
-
-            displayName: Dotnet Build
-
-            inputs:
-              command: build
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
-              arguments: '--configuration Release'
-
-          # =====================================
-          # .NET TEST
-          # =====================================
-
-          - task: DotNetCoreCLI@2
-
-            displayName: Dotnet Test
-
-            inputs:
-              command: test
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
-              arguments: '--configuration Release'
 
           # =====================================
           # INSTALL TRIVY
@@ -201,40 +253,12 @@ stages:
             displayName: Install Trivy
 
           # =====================================
-          # DOCKER HUB BUILD AND PUSH
-          # =====================================
-
-          - task: Docker@2
-
-            displayName: Docker Hub Build And Push
-
-            condition: eq(lower(variables['enableAcr']), 'false')
-
-            inputs:
-
-              command: buildAndPush
-
-              containerRegistry: $(dockerRegistryServiceConnection)
-
-              repository: $(imageRepository)
-
-              dockerfile: $(dockerfilePath)
-
-              buildContext: $(buildContext)
-
-              tags: |
-                $(Build.BuildNumber)
-                latest
-
-          # =====================================
           # ACR LOGIN
           # =====================================
 
           - task: Docker@2
 
             displayName: ACR Login
-
-            condition: eq(lower(variables['enableAcr']), 'true')
 
             inputs:
 
@@ -243,33 +267,40 @@ stages:
               containerRegistry: $(acrServiceConnection)
 
           # =====================================
-          # ACR BUILD AND PUSH
+          # DOCKER BUILD
           # =====================================
 
-          - task: Docker@2
+          - script: |
 
-            displayName: ACR Build And Push
+              echo "=================================="
+              echo "Docker Build"
+              echo "=================================="
 
-            condition: eq(lower(variables['enableAcr']), 'true')
+              docker build \
+                -t $(imageName) \
+                -f $(dockerfilePath) \
+                $(buildContext)
 
-            inputs:
-
-              command: buildAndPush
-
-              containerRegistry: $(acrServiceConnection)
-
-              repository: $(acrRepository)
-
-              dockerfile: $(dockerfilePath)
-
-              buildContext: $(buildContext)
-
-              tags: |
-                $(Build.BuildNumber)
-                latest
+            displayName: Docker Build
 
           # =====================================
-          # TRIVY IMAGE SECURITY SCAN
+          # VERIFY IMAGE EXISTS
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Verify Docker Image"
+              echo "=================================="
+
+              docker images
+
+              docker inspect $(imageName)
+
+            displayName: Verify Docker Image
+
+          # =====================================
+          # TRIVY LOCAL IMAGE SCAN
           # =====================================
 
           - script: |
@@ -278,18 +309,52 @@ stages:
               echo "Trivy Security Scan"
               echo "=================================="
 
-              echo "Scanning Image:"
-              echo "$(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)"
+              echo "Scanning Local Image:"
+              echo "$(imageName)"
 
               trivy image \
                 --severity HIGH,CRITICAL \
                 --exit-code 0 \
                 --timeout 10m \
-                $(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)
+                $(imageName)
 
             displayName: Trivy Image Scan
 
-            condition: eq(lower(variables['enableAcr']), 'true')
+          # =====================================
+          # PUSH IMAGE TO ACR
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Push Image To ACR"
+              echo "=================================="
+
+              docker push $(imageName)
+
+              docker tag $(imageName) \
+                $(acrLoginServer)/$(acrRepository):latest
+
+              docker push \
+                $(acrLoginServer)/$(acrRepository):latest
+
+            displayName: Push Image To ACR
+
+          # =====================================
+          # VERIFY ACR PUSH
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Verify ACR Push"
+              echo "=================================="
+
+              az acr repository show-tags \
+                --name empprofacr2027 \
+                --repository $(acrRepository)
+
+            displayName: Verify ACR Push
 
           # =====================================
           # PIPELINE COMPLETION
@@ -301,7 +366,7 @@ stages:
               echo "Pipeline Completed Successfully"
               echo "=================================="
 
-              echo "Build Number: $(Build.BuildNumber)"
-              echo "Branch: $(Build.SourceBranchName)"
+              echo "Image:"
+              echo "$(imageName)"
 
             displayName: Pipeline Completion

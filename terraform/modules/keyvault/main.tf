@@ -1,11 +1,11 @@
 # =====================================
-# Current Azure Client Info
+# CURRENT AZURE CLIENT INFO
 # =====================================
 
 data "azurerm_client_config" "current" {}
 
 # =====================================
-# Local Values
+# LOCAL VALUES
 # =====================================
 
 locals {
@@ -15,9 +15,13 @@ locals {
   # =====================================
 
   key_vault_base_name = lower(
+
     replace(
+
       replace(var.resource_group_name, "-rg", ""),
+
       "_",
+
       "-"
     )
   )
@@ -29,8 +33,11 @@ locals {
   generated_key_vault_name = trim(
 
     substr(
+
       "${local.key_vault_base_name}kv",
+
       0,
+
       24
     ),
 
@@ -42,35 +49,29 @@ locals {
   # =====================================
 
   key_vault_name = (
+
     var.key_vault_name != null &&
+
     var.key_vault_name != ""
+
   ) ? var.key_vault_name : local.generated_key_vault_name
 
   # =====================================
-  # OPTIONAL DEFAULT KEY VAULT SECRETS
+  # ENTERPRISE DEFAULT SECRETS
   # =====================================
 
-  default_key_vault_secrets = merge(
+  default_key_vault_secrets = {
 
-    {
-      APP-INSIGHTS-CONNECTION-STRING = ""
-      STORAGE-ACCOUNT-NAME           = ""
-      STORAGE-CONTAINER-NAME         = ""
-      SQL-SERVER-NAME                = ""
-      SQL-DATABASE-NAME              = ""
-      SQL-USERNAME                   = ""
-      SQL-PASSWORD                   = ""
-      REDIS-CONNECTION-STRING        = ""
-      SERVICEBUS-CONNECTION-STRING   = ""
-      KEYVAULT-NAME                  = local.key_vault_name
-    },
+    db-username = var.db_username
 
-    var.default_key_vault_secrets
-  )
+    db-password = var.db_password
+
+    keyvault-name = local.key_vault_name
+  }
 }
 
 # =====================================
-# KEY VAULT
+# AZURE KEY VAULT
 # =====================================
 
 resource "azurerm_key_vault" "kv" {
@@ -86,7 +87,7 @@ resource "azurerm_key_vault" "kv" {
   sku_name = "standard"
 
   # =====================================
-  # LAB-SAFE SETTINGS
+  # LAB / NON-PROD SETTINGS
   # =====================================
 
   soft_delete_retention_days = var.soft_delete_retention_days
@@ -100,7 +101,7 @@ resource "azurerm_key_vault" "kv" {
   rbac_authorization_enabled = true
 
   # =====================================
-  # OPTIONAL NETWORK ACL PLACEHOLDER
+  # OPTIONAL NETWORK ACLS
   # =====================================
 
   dynamic "network_acls" {
@@ -127,6 +128,8 @@ resource "azurerm_key_vault" "kv" {
       project = "employeeprofileapp"
 
       managed_by = "terraform"
+
+      module = "keyvault"
     },
 
     var.additional_tags
@@ -134,71 +137,75 @@ resource "azurerm_key_vault" "kv" {
 }
 
 # =====================================
-# RBAC FOR KEY VAULT
+# KEY VAULT ADMIN RBAC
 # =====================================
 
-# NOTE:
-# Disabled because Azure DevOps SPN does not have:
-# Microsoft.Authorization/roleAssignments/write
-#
-# Key Vault RBAC assignments should be handled
-# manually or by cloud/security admin team.
+resource "azurerm_role_assignment" "kv_admin" {
 
-# resource "azurerm_role_assignment" "kv_admin" {
-#
-#   scope = azurerm_key_vault.kv.id
-#
-#   role_definition_name = var.keyvault_role_definition_name
-#
-#   principal_id = var.keyvault_admin_object_id
-# }
+  scope = azurerm_key_vault.kv.id
+
+  role_definition_name = "Key Vault Administrator"
+
+  principal_id = var.keyvault_admin_object_id
+
+  skip_service_principal_aad_check = true
+}
+
+# =====================================
+# AKS CSI SECRET ACCESS RBAC
+# =====================================
+
+resource "azurerm_role_assignment" "aks_kv_secrets_user" {
+
+  count = var.enable_aks_kv_rbac ? 1 : 0
+
+  scope = azurerm_key_vault.kv.id
+
+  role_definition_name = "Key Vault Secrets User"
+
+  principal_id = var.aks_kubelet_object_id
+
+  skip_service_principal_aad_check = true
+}
 
 # =====================================
 # RBAC PROPAGATION WAIT
 # =====================================
 
-# resource "time_sleep" "wait_for_kv_rbac" {
-#
-#   depends_on = [
-#     azurerm_role_assignment.kv_admin
-#   ]
-#
-#   create_duration = "180s"
-# }
+resource "time_sleep" "wait_for_kv_rbac" {
+
+  depends_on = [
+
+    azurerm_role_assignment.kv_admin,
+
+    azurerm_role_assignment.aks_kv_secrets_user
+  ]
+
+  create_duration = "180s"
+}
 
 # =====================================
-# OPTIONAL DEFAULT KEY VAULT SECRETS
+# DEFAULT KEY VAULT SECRETS
 # =====================================
 
-# NOTE:
-# Disabled because Azure DevOps SPN does not have:
-# Key Vault Secrets Officer/Admin permissions.
-#
-# Secrets should be managed manually
-# or by a dedicated secure secrets pipeline.
+resource "azurerm_key_vault_secret" "default_secrets" {
 
-# resource "azurerm_key_vault_secret" "default_secrets" {
-#
-#   for_each = var.enable_default_key_vault_secrets ? nonsensitive(toset(keys(local.default_key_vault_secrets))) : []
-#
-#   name = each.value
-#
-#   value = local.default_key_vault_secrets[each.value]
-#
-#   key_vault_id = azurerm_key_vault.kv.id
-# }
+  for_each = var.enable_default_key_vault_secrets ? local.default_key_vault_secrets : {}
 
-# =====================================
-# OPTIONAL SAMPLE SECRET
-# =====================================
+  name = each.key
 
-# resource "azurerm_key_vault_secret" "app_secret" {
-#
-#   count = 0
-#
-#   name = "employee-db-connection"
-#
-#   value = "sample-secret-value"
-#
-#   key_vault_id = azurerm_key_vault.kv.id
-# }
+  value = each.value
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+
+  lifecycle {
+
+    ignore_changes = [
+      value
+    ]
+  }
+}

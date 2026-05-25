@@ -9,6 +9,7 @@ replicaCount: 1
 # =====================================
 
 app:
+
   name: employeeprofileapp-dev
 
 # =====================================
@@ -17,11 +18,13 @@ app:
 
 image:
 
-  # Runtime override expected from CI/CD
-  repository: ""
+  # Runtime override from Azure DevOps CD pipeline
 
-  # Runtime override expected from CI/CD
-  tag: ""
+  repository: "empprofacr2027.azurecr.io/employeeprofileapp-aks"
+
+  # Runtime override from pipeline release/version
+
+  tag: "latest"
 
   pullPolicy: Always
 
@@ -31,7 +34,7 @@ image:
 
 acr:
 
-  enabled: false
+  enabled: true
 
 # =====================================
 # SERVICE ACCOUNT
@@ -39,13 +42,11 @@ acr:
 
 serviceAccount:
 
-  create: false
+  create: true
 
   name: employee-sa
 
-  annotations:
-
-    azure.workload.identity/client-id: ""
+  annotations: {}
 
 # =====================================
 # SERVICE
@@ -84,11 +85,15 @@ env:
 resources:
 
   requests:
+
     cpu: "100m"
+
     memory: "128Mi"
 
   limits:
+
     cpu: "250m"
+
     memory: "256Mi"
 
 # =====================================
@@ -99,14 +104,26 @@ keyVault:
 
   enabled: true
 
-  # Runtime override expected from CI/CD
-  keyVaultName: ""
+  # =====================================
+  # AZURE KEY VAULT NAME
+  # =====================================
 
-  # Runtime override expected from CI/CD
-  tenantId: ""
+  keyVaultName: "employeeprofileapp-devkv"
 
-  # Runtime override expected from CI/CD
-  clientId: ""
+  # =====================================
+  # AZURE TENANT ID
+  # =====================================
+
+  tenantId: "242264b2-609f-4466-8afa-9c028b4003d2"
+
+  # =====================================
+  # AKS KUBELET MANAGED IDENTITY
+  # IMPORTANT:
+  # Must match:
+  # az aks show --query identityProfile.kubeletidentity.clientId
+  # =====================================
+
+  userAssignedIdentityID: "fd790a52-e4a9-4b32-8db7-5b36bd91e6fb"
 
   # =====================================
   # SECRET PROVIDER CLASS
@@ -128,7 +145,8 @@ keyVault:
 
   # =====================================
   # KEY VAULT SECRETS
-  # Must EXACTLY match Terraform secret names
+  # MUST EXACTLY MATCH:
+  # Terraform secret names
   # =====================================
 
   secrets:
@@ -149,7 +167,7 @@ ingress:
 
   className: nginx
 
-  host: ""
+  host: "employeeprofileapp-dev.example.com"
 
   path: /
 
@@ -242,7 +260,7 @@ affinity: {}
 securityContext: {}
 
 # =====================================
-# PROBES
+# READINESS PROBE
 # =====================================
 
 readinessProbe:
@@ -262,6 +280,10 @@ readinessProbe:
   successThreshold: 1
 
   failureThreshold: 3
+
+# =====================================
+# LIVENESS PROBE
+# =====================================
 
 livenessProbe:
 

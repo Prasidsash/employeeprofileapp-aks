@@ -3,32 +3,45 @@ apiVersion: apps/v1
 kind: Deployment
 
 metadata:
+
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
   labels:
+
     app: {{ default .Chart.Name .Values.app.name }}
 
   annotations:
 
     {{- if .Values.configMapAutoReload.enabled }}
+
     checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+
     {{- else }}
+
     checksum/config: {{ .Values.app.name | sha256sum }}
+
     {{- end }}
 
 spec:
 
   replicas: {{ .Values.replicaCount }}
 
+  revisionHistoryLimit: 5
+
   strategy:
+
     type: RollingUpdate
 
     rollingUpdate:
+
       maxUnavailable: 1
+
       maxSurge: 1
 
   selector:
+
     matchLabels:
+
       app: {{ default .Chart.Name .Values.app.name }}
 
   template:
@@ -36,11 +49,15 @@ spec:
     metadata:
 
       labels:
+
         app: {{ default .Chart.Name .Values.app.name }}
 
       {{- if .Values.podAnnotations }}
+
       annotations:
+
 {{ toYaml .Values.podAnnotations | indent 8 }}
+
       {{- end }}
 
     spec:
@@ -51,29 +68,89 @@ spec:
 
       serviceAccountName: {{ .Values.serviceAccount.name }}
 
+      terminationGracePeriodSeconds: 30
+
       # =====================================
       # OPTIONAL IMAGE PULL SECRETS
       # =====================================
 
       {{- if and (.Values.imagePullSecrets) (.Values.imagePullSecrets.enabled) (.Values.imagePullSecrets.name) }}
+
       imagePullSecrets:
+
         - name: {{ .Values.imagePullSecrets.name }}
+
       {{- end }}
+
+      # =====================================
+      # NODE SELECTOR
+      # =====================================
 
       {{- if .Values.nodeSelector }}
+
       nodeSelector:
+
 {{ toYaml .Values.nodeSelector | indent 8 }}
+
       {{- end }}
+
+      # =====================================
+      # TOLERATIONS
+      # =====================================
 
       {{- if .Values.tolerations }}
+
       tolerations:
+
 {{ toYaml .Values.tolerations | indent 8 }}
+
       {{- end }}
 
-      {{- if .Values.affinity }}
+      # =====================================
+      # AFFINITY
+      # =====================================
+
       affinity:
-{{ toYaml .Values.affinity | indent 8 }}
-      {{- end }}
+
+        podAntiAffinity:
+
+          preferredDuringSchedulingIgnoredDuringExecution:
+
+            - weight: 100
+
+              podAffinityTerm:
+
+                topologyKey: kubernetes.io/hostname
+
+                labelSelector:
+
+                  matchExpressions:
+
+                    - key: app
+
+                      operator: In
+
+                      values:
+
+                        - {{ default .Chart.Name .Values.app.name }}
+
+      # =====================================
+      # TOPOLOGY SPREAD
+      # =====================================
+
+      topologySpreadConstraints:
+
+        - maxSkew: 1
+
+          topologyKey: topology.kubernetes.io/zone
+
+          whenUnsatisfiable: ScheduleAnyway
+
+          labelSelector:
+
+            matchLabels:
+
+              app: {{ default .Chart.Name .Values.app.name }}
 
       containers:
 
@@ -83,20 +160,49 @@ spec:
 
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
-          {{- if .Values.securityContext }}
+          # =====================================
+          # CONTAINER SECURITY CONTEXT
+          # =====================================
+
           securityContext:
-{{ toYaml .Values.securityContext | indent 12 }}
-          {{- end }}
+
+            allowPrivilegeEscalation: false
+
+            runAsNonRoot: true
+
+            capabilities:
+
+              drop:
+
+                - ALL
 
           ports:
 
             - containerPort: {{ .Values.service.targetPort }}
 
-          {{- if .Values.env }}
+          # =====================================
+          # ENVIRONMENT VARIABLES
+          # =====================================
+
           env:
 
             - name: ASPNETCORE_ENVIRONMENT
+
               value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
+
+          # =====================================
+          # KEY VAULT SECRET SYNC
+          # =====================================
+
+          {{- if .Values.keyVault.enabled }}
+
+          envFrom:
+
+            - secretRef:
+
+                name: {{ .Values.keyVault.k8sSecretName }}
+
+                optional: false
 
           {{- end }}
 
@@ -116,11 +222,34 @@ spec:
 
           {{- end }}
 
+          # =====================================
+          # STARTUP PROBE
+          # =====================================
+
+          startupProbe:
+
+            httpGet:
+
+              path: /
+
+              port: {{ .Values.service.targetPort }}
+
+            failureThreshold: 30
+
+            periodSeconds: 10
+
+          # =====================================
+          # READINESS PROBE
+          # =====================================
+
           {{- if and .Values.readinessProbe .Values.readinessProbe.enabled }}
+
           readinessProbe:
 
             httpGet:
+
               path: {{ .Values.readinessProbe.path }}
+
               port: {{ .Values.readinessProbe.port }}
 
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
@@ -135,11 +264,18 @@ spec:
 
           {{- end }}
 
+          # =====================================
+          # LIVENESS PROBE
+          # =====================================
+
           {{- if and .Values.livenessProbe .Values.livenessProbe.enabled }}
+
           livenessProbe:
 
             httpGet:
+
               path: {{ .Values.livenessProbe.path }}
+
               port: {{ .Values.livenessProbe.port }}
 
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
@@ -152,14 +288,22 @@ spec:
 
           {{- end }}
 
+          # =====================================
+          # RESOURCES
+          # =====================================
+
           resources:
 
             requests:
+
               cpu: {{ .Values.resources.requests.cpu }}
+
               memory: {{ .Values.resources.requests.memory }}
 
             limits:
+
               cpu: {{ .Values.resources.limits.cpu }}
+
               memory: {{ .Values.resources.limits.memory }}
 
       # =====================================

@@ -3,14 +3,23 @@
 # =====================================
 
 variable "environment" {
+
+  description = "Environment name"
+
   type = string
 }
 
 variable "resource_group_name" {
+
+  description = "Azure Resource Group name"
+
   type = string
 }
 
 variable "location" {
+
+  description = "Azure region"
+
   type = string
 }
 
@@ -19,18 +28,30 @@ variable "location" {
 # =====================================
 
 variable "vnet_name" {
+
+  description = "Virtual Network name"
+
   type = string
 }
 
 variable "vnet_address_space" {
+
+  description = "Virtual Network address space"
+
   type = list(string)
 }
 
 variable "aks_subnet_name" {
+
+  description = "AKS subnet name"
+
   type = string
 }
 
 variable "aks_subnet_prefixes" {
+
+  description = "AKS subnet prefixes"
+
   type = list(string)
 }
 
@@ -39,26 +60,44 @@ variable "aks_subnet_prefixes" {
 # =====================================
 
 variable "cluster_name" {
+
+  description = "AKS cluster name"
+
   type = string
 }
 
 variable "kubernetes_version" {
+
+  description = "AKS Kubernetes version"
+
   type = string
 }
 
 variable "system_node_count" {
+
+  description = "System node count"
+
   type = number
 }
 
 variable "system_node_vm_size" {
+
+  description = "System node VM size"
+
   type = string
 }
 
 variable "service_cidr" {
+
+  description = "AKS service CIDR"
+
   type = string
 }
 
 variable "dns_service_ip" {
+
+  description = "AKS DNS service IP"
+
   type = string
 }
 
@@ -67,12 +106,15 @@ variable "dns_service_ip" {
 # =====================================
 
 variable "enable_node_autoscaling" {
+
+  description = "Enable AKS node autoscaling"
+
   type = bool
 }
 
 variable "only_critical_addons_enabled" {
 
-  description = "Allow only critical system addons on system node pool"
+  description = "Allow only critical addons on system node pool"
 
   type = bool
 
@@ -80,37 +122,21 @@ variable "only_critical_addons_enabled" {
 }
 
 variable "system_node_min_count" {
+
+  description = "Minimum system node count"
+
   type = number
 }
 
 variable "system_node_max_count" {
+
+  description = "Maximum system node count"
+
   type = number
 }
 
 # =====================================
-# OPTIONAL FUTURE AKS FEATURES
-# =====================================
-
-variable "enable_workload_identity" {
-
-  description = "Enable AKS Workload Identity"
-
-  type = bool
-
-  default = false
-}
-
-variable "enable_oidc_issuer" {
-
-  description = "Enable AKS OIDC Issuer"
-
-  type = bool
-
-  default = false
-}
-
-# =====================================
-# OPTIONAL KEY VAULT CSI DRIVER
+# KEY VAULT CSI DRIVER
 # =====================================
 
 variable "enable_key_vault_secrets_provider" {
@@ -119,21 +145,25 @@ variable "enable_key_vault_secrets_provider" {
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "secret_rotation_enabled" {
 
-  description = "Enable Azure Key Vault Secret Rotation"
+  description = "Enable Azure Key Vault secret rotation"
 
   type = bool
 
   default = true
 }
 
+# =====================================
+# AKS IMAGE CLEANER
+# =====================================
+
 variable "enable_image_cleaner" {
 
-  description = "Enable AKS Image Cleaner"
+  description = "Enable AKS image cleaner"
 
   type = bool
 
@@ -142,16 +172,20 @@ variable "enable_image_cleaner" {
 
 variable "image_cleaner_interval_hours" {
 
-  description = "AKS Image Cleaner Interval"
+  description = "AKS image cleaner interval"
 
   type = number
 
   default = 48
 }
 
+# =====================================
+# NODE LABELS / TAINTS
+# =====================================
+
 variable "node_labels" {
 
-  description = "Optional AKS node labels"
+  description = "AKS node labels"
 
   type = map(string)
 
@@ -160,12 +194,16 @@ variable "node_labels" {
 
 variable "node_taints" {
 
-  description = "Optional AKS node taints"
+  description = "AKS node taints"
 
   type = list(string)
 
   default = []
 }
+
+# =====================================
+# API SERVER ACCESS PROFILE
+# =====================================
 
 variable "enable_api_server_access_profile" {
 
@@ -200,56 +238,56 @@ variable "aks_additional_tags" {
 
 variable "backup_vault_name" {
 
-  description = "AKS Backup Vault Name"
+  description = "Backup vault name"
 
   type = string
 }
 
 variable "backup_storage_account_name" {
 
-  description = "AKS Backup Storage Account Name"
+  description = "Backup storage account name"
 
   type = string
 }
 
 variable "backup_container_name" {
 
-  description = "AKS Backup Storage Container Name"
+  description = "Backup container name"
 
   type = string
 }
 
 variable "backup_policy_name" {
 
-  description = "AKS Backup Policy Name"
+  description = "Backup policy name"
 
   type = string
 }
 
 variable "backup_schedule_repeating_time_intervals" {
 
-  description = "AKS Backup Schedule Intervals"
+  description = "Backup schedule intervals"
 
   type = list(string)
 }
 
 variable "backup_retention_duration_count" {
 
-  description = "AKS Backup Retention Count"
+  description = "Backup retention count"
 
   type = number
 }
 
 variable "backup_retention_duration_type" {
 
-  description = "AKS Backup Retention Duration Type"
+  description = "Backup retention duration type"
 
   type = string
 }
 
 variable "backup_additional_tags" {
 
-  description = "Additional AKS Backup Tags"
+  description = "Additional backup tags"
 
   type = map(string)
 
@@ -261,20 +299,22 @@ variable "backup_additional_tags" {
 # =====================================
 
 variable "namespace_name" {
+
+  description = "Kubernetes namespace"
+
   type = string
 }
 
 variable "namespace_labels" {
+
+  description = "Namespace labels"
+
   type = map(string)
 }
 
-# =====================================
-# OPTIONAL NAMESPACE ANNOTATIONS
-# =====================================
-
 variable "namespace_annotations" {
 
-  description = "Optional namespace annotations"
+  description = "Namespace annotations"
 
   type = map(string)
 
@@ -286,32 +326,43 @@ variable "namespace_annotations" {
 # =====================================
 
 variable "quota_limits" {
+
+  description = "Resource quota limits"
+
   type = map(string)
 }
 
 variable "limit_max" {
+
+  description = "Limit range max"
+
   type = map(string)
 }
 
 variable "limit_min" {
+
+  description = "Limit range min"
+
   type = map(string)
 }
 
 variable "limit_default" {
+
+  description = "Limit range default"
+
   type = map(string)
 }
 
 variable "limit_default_request" {
+
+  description = "Limit range default request"
+
   type = map(string)
 }
 
-# =====================================
-# OPTIONAL GOVERNANCE METADATA
-# =====================================
-
 variable "governance_labels" {
 
-  description = "Optional governance labels"
+  description = "Governance labels"
 
   type = map(string)
 
@@ -320,7 +371,7 @@ variable "governance_labels" {
 
 variable "governance_annotations" {
 
-  description = "Optional governance annotations"
+  description = "Governance annotations"
 
   type = map(string)
 
@@ -332,28 +383,36 @@ variable "governance_annotations" {
 # =====================================
 
 variable "service_account_name" {
+
+  description = "Kubernetes service account"
+
   type = string
 }
 
 variable "role_name" {
+
+  description = "Kubernetes RBAC role"
+
   type = string
 }
 
 variable "allowed_resources" {
+
+  description = "Allowed Kubernetes resources"
+
   type = list(string)
 }
 
 variable "allowed_verbs" {
+
+  description = "Allowed Kubernetes verbs"
+
   type = list(string)
 }
 
-# =====================================
-# OPTIONAL RBAC ANNOTATIONS
-# =====================================
-
 variable "service_account_annotations" {
 
-  description = "Optional ServiceAccount annotations"
+  description = "ServiceAccount annotations"
 
   type = map(string)
 
@@ -362,7 +421,7 @@ variable "service_account_annotations" {
 
 variable "role_annotations" {
 
-  description = "Optional Role annotations"
+  description = "Role annotations"
 
   type = map(string)
 
@@ -371,7 +430,7 @@ variable "role_annotations" {
 
 variable "role_binding_annotations" {
 
-  description = "Optional RoleBinding annotations"
+  description = "RoleBinding annotations"
 
   type = map(string)
 
@@ -397,85 +456,24 @@ variable "rbac_additional_annotations" {
 }
 
 # =====================================
-# SECRET
-# =====================================
-
-variable "secret_name" {
-  type = string
-}
-
-variable "secret_data" {
-
-  type = map(string)
-
-  sensitive = true
-
-  default = {}
-}
-
-# =====================================
-# OPTIONAL SECRET SETTINGS
-# =====================================
-
-variable "secret_annotations" {
-
-  description = "Optional Kubernetes Secret annotations"
-
-  type = map(string)
-
-  default = {}
-}
-
-variable "secret_type" {
-
-  description = "Kubernetes Secret type"
-
-  type = string
-
-  default = "Opaque"
-}
-
-variable "secret_immutable" {
-
-  description = "Immutable Kubernetes Secret"
-
-  type = bool
-
-  default = false
-}
-
-variable "secret_additional_labels" {
-
-  description = "Additional Secret labels"
-
-  type = map(string)
-
-  default = {}
-}
-
-variable "secret_additional_annotations" {
-
-  description = "Additional Secret annotations"
-
-  type = map(string)
-
-  default = {}
-}
-
-# =====================================
-# KEY VAULT RBAC
+# KEY VAULT
 # =====================================
 
 variable "keyvault_admin_object_id" {
 
-  description = "Stable Object ID for Key Vault Administrator RBAC assignment"
+  description = "Key Vault Administrator object ID"
 
   type = string
 }
 
-# =====================================
-# OPTIONAL KEY VAULT FEATURES
-# =====================================
+variable "enable_aks_kv_rbac" {
+
+  description = "Enable AKS Key Vault CSI RBAC"
+
+  type = bool
+
+  default = true
+}
 
 variable "enable_network_acls" {
 
@@ -495,28 +493,35 @@ variable "keyvault_additional_tags" {
   default = {}
 }
 
-# =====================================
-# OPTIONAL DEFAULT KEY VAULT SECRETS
-# =====================================
-
 variable "enable_default_key_vault_secrets" {
 
-  description = "Enable Azure Key Vault default secret creation"
+  description = "Enable default Key Vault secrets"
 
   type = bool
 
-  default = false
+  default = true
 }
 
-variable "default_key_vault_secrets" {
+# =====================================
+# DATABASE SECRETS
+# =====================================
 
-  description = "Azure Key Vault default secrets map"
+variable "db_username" {
 
-  type = map(string)
+  description = "Database username"
+
+  type = string
 
   sensitive = true
+}
 
-  default = {}
+variable "db_password" {
+
+  description = "Database password"
+
+  type = string
+
+  sensitive = true
 }
 
 # =====================================
@@ -524,32 +529,43 @@ variable "default_key_vault_secrets" {
 # =====================================
 
 variable "ingress_name" {
+
+  description = "Ingress name"
+
   type = string
 }
 
 variable "ingress_host" {
+
+  description = "Ingress hostname"
+
   type = string
 }
 
 variable "ingress_path" {
+
+  description = "Ingress path"
+
   type = string
 }
 
 variable "ingress_path_type" {
+
+  description = "Ingress path type"
+
   type = string
 }
 
 variable "service_name" {
+
+  description = "Kubernetes service name"
+
   type = string
 }
 
-# =====================================
-# OPTIONAL INGRESS FEATURES
-# =====================================
-
 variable "ingress_class_name" {
 
-  description = "Ingress Controller Class Name"
+  description = "Ingress class name"
 
   type = string
 
@@ -558,7 +574,7 @@ variable "ingress_class_name" {
 
 variable "enable_rewrite_target" {
 
-  description = "Enable ingress rewrite-target annotation"
+  description = "Enable ingress rewrite-target"
 
   type = bool
 
@@ -567,7 +583,7 @@ variable "enable_rewrite_target" {
 
 variable "enable_proxy_body_size" {
 
-  description = "Enable ingress proxy-body-size annotation"
+  description = "Enable ingress proxy-body-size"
 
   type = bool
 
@@ -585,7 +601,7 @@ variable "proxy_body_size" {
 
 variable "cluster_issuer" {
 
-  description = "Optional cert-manager ClusterIssuer"
+  description = "cert-manager ClusterIssuer"
 
   type = string
 
@@ -598,7 +614,7 @@ variable "cluster_issuer" {
 
 variable "enable_tls" {
 
-  description = "Enable HTTPS ingress"
+  description = "Enable TLS ingress"
 
   type = bool
 
@@ -607,7 +623,7 @@ variable "enable_tls" {
 
 variable "tls_secret_name" {
 
-  description = "TLS Secret"
+  description = "TLS secret name"
 
   type = string
 
@@ -619,6 +635,9 @@ variable "tls_secret_name" {
 # =====================================
 
 variable "release_name" {
+
+  description = "Helm release name"
+
   type = string
 }
 
@@ -627,20 +646,29 @@ variable "release_name" {
 # =====================================
 
 variable "log_analytics_workspace_name" {
+
+  description = "Log Analytics workspace name"
+
   type = string
 }
 
 variable "log_analytics_sku" {
+
+  description = "Log Analytics SKU"
+
   type = string
 }
 
 variable "log_retention_in_days" {
+
+  description = "Log retention days"
+
   type = number
 }
 
 variable "enable_alerts" {
 
-  description = "Enable Azure Monitor Alerts"
+  description = "Enable Azure Monitor alerts"
 
   type = bool
 
@@ -649,7 +677,7 @@ variable "enable_alerts" {
 
 variable "enable_managed_prometheus" {
 
-  description = "Enable Azure Managed Prometheus and Grafana"
+  description = "Enable managed Prometheus"
 
   type = bool
 
@@ -658,7 +686,7 @@ variable "enable_managed_prometheus" {
 
 variable "grafana_major_version" {
 
-  description = "Azure Managed Grafana version"
+  description = "Grafana major version"
 
   type = number
 
@@ -688,35 +716,54 @@ variable "monitoring_additional_tags" {
 # =====================================
 
 variable "enable_network" {
+
+  description = "Enable network module"
+
   type = bool
 }
 
 variable "enable_aks" {
+
+  description = "Enable AKS module"
+
   type = bool
 }
 
 variable "enable_namespace" {
+
+  description = "Enable namespace module"
+
   type = bool
 }
 
 variable "enable_rbac" {
+
+  description = "Enable RBAC module"
+
   type = bool
 }
 
 variable "enable_governance" {
-  type = bool
-}
 
-variable "enable_secret" {
+  description = "Enable governance module"
+
   type = bool
 }
 
 variable "enable_ingress" {
+
+  description = "Enable ingress module"
+
   type = bool
 }
 
 variable "enable_monitoring" {
+
+  description = "Enable monitoring"
+
   type = bool
+
+  default = true
 }
 
 variable "enable_hpa" {
@@ -725,7 +772,7 @@ variable "enable_hpa" {
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "enable_loadbalancer" {
@@ -743,7 +790,7 @@ variable "enable_loadbalancer" {
 
 variable "enable_spot_node_pool" {
 
-  description = "Enable AKS Spot node pool"
+  description = "Enable spot node pool"
 
   type = bool
 
@@ -752,7 +799,7 @@ variable "enable_spot_node_pool" {
 
 variable "spot_node_pool_name" {
 
-  description = "AKS Spot node pool name"
+  description = "Spot node pool name"
 
   type = string
 
@@ -761,7 +808,7 @@ variable "spot_node_pool_name" {
 
 variable "spot_node_vm_size" {
 
-  description = "AKS Spot node VM size"
+  description = "Spot node VM size"
 
   type = string
 
@@ -770,7 +817,7 @@ variable "spot_node_vm_size" {
 
 variable "spot_max_price" {
 
-  description = "Maximum Spot node price"
+  description = "Spot max price"
 
   type = number
 
@@ -779,7 +826,7 @@ variable "spot_max_price" {
 
 variable "spot_node_min_count" {
 
-  description = "Minimum Spot node count"
+  description = "Spot minimum node count"
 
   type = number
 
@@ -788,7 +835,7 @@ variable "spot_node_min_count" {
 
 variable "spot_node_max_count" {
 
-  description = "Maximum Spot node count"
+  description = "Spot maximum node count"
 
   type = number
 
@@ -819,7 +866,7 @@ variable "spot_node_taints" {
 
 variable "enable_aks_backup" {
 
-  description = "Enable AKS Backup Module"
+  description = "Enable AKS backup"
 
   type = bool
 
@@ -827,16 +874,16 @@ variable "enable_aks_backup" {
 }
 
 # =====================================
-# INGRESS NGINX CONTROLLER
+# INGRESS CONTROLLER
 # =====================================
 
 variable "enable_ingress_controller" {
 
-  description = "Enable NGINX ingress controller"
+  description = "Enable ingress controller"
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "ingress_controller_namespace" {
@@ -850,7 +897,7 @@ variable "ingress_controller_namespace" {
 
 variable "ingress_controller_chart_version" {
 
-  description = "Ingress NGINX chart version"
+  description = "Ingress controller chart version"
 
   type = string
 
@@ -899,7 +946,7 @@ variable "cert_manager_namespace" {
 
 variable "cert_manager_chart_version" {
 
-  description = "cert-manager Helm chart version"
+  description = "cert-manager chart version"
 
   type = string
 
@@ -930,7 +977,7 @@ variable "cluster_issuer_name" {
 
 variable "enable_pod_disruption_budget" {
 
-  description = "Enable or disable Pod Disruption Budget"
+  description = "Enable Pod Disruption Budget"
 
   type = bool
 
@@ -948,7 +995,7 @@ variable "pod_disruption_budget_name" {
 
 variable "pdb_max_unavailable" {
 
-  description = "Maximum unavailable pods during voluntary disruptions"
+  description = "Maximum unavailable pods"
 
   type = string
 
@@ -957,7 +1004,7 @@ variable "pdb_max_unavailable" {
 
 variable "pdb_match_labels" {
 
-  description = "Labels used for Pod Disruption Budget selector"
+  description = "PDB selector labels"
 
   type = map(string)
 
@@ -968,33 +1015,11 @@ variable "pdb_match_labels" {
 
 variable "pod_disruption_budget_annotations" {
 
-  description = "Annotations for Pod Disruption Budget"
+  description = "PDB annotations"
 
   type = map(string)
 
   default = {}
-}
-
-# =====================================
-# OPTIONAL USER ASSIGNED IDENTITY
-# =====================================
-
-variable "enable_user_assigned_identity" {
-
-  description = "Enable User Assigned Managed Identity"
-
-  type = bool
-
-  default = false
-}
-
-variable "user_assigned_identity_ids" {
-
-  description = "User Assigned Managed Identity IDs"
-
-  type = list(string)
-
-  default = []
 }
 
 # =====================================
@@ -1024,17 +1049,4 @@ variable "acr_sku" {
   type = string
 
   default = "Basic"
-}
-
-# =====================================
-# WORKLOAD IDENTITY
-# =====================================
-
-variable "enable_workload_identity_resources" {
-
-  description = "Enable Workload Identity Resources"
-
-  type = bool
-
-  default = true
 }
