@@ -170,28 +170,35 @@ resource "azurerm_key_vault" "kv" {
 # OPTIONAL DEFAULT KEY VAULT SECRETS
 # =====================================
 
-resource "azurerm_key_vault_secret" "default_secrets" {
+# NOTE:
+# Disabled because Azure DevOps SPN does not have:
+# Key Vault Secrets Officer/Admin permissions.
+#
+# Secrets should be managed manually
+# or by a dedicated secure secrets pipeline.
 
-  for_each = var.enable_default_key_vault_secrets ? nonsensitive(toset(keys(local.default_key_vault_secrets))) : []
-
-  name = each.value
-
-  value = local.default_key_vault_secrets[each.value]
-
-  key_vault_id = azurerm_key_vault.kv.id
-}
+# resource "azurerm_key_vault_secret" "default_secrets" {
+#
+#   for_each = var.enable_default_key_vault_secrets ? nonsensitive(toset(keys(local.default_key_vault_secrets))) : []
+#
+#   name = each.value
+#
+#   value = local.default_key_vault_secrets[each.value]
+#
+#   key_vault_id = azurerm_key_vault.kv.id
+# }
 
 # =====================================
 # OPTIONAL SAMPLE SECRET
 # =====================================
 
-resource "azurerm_key_vault_secret" "app_secret" {
-
-  count = 0
-
-  name = "employee-db-connection"
-
-  value = "sample-secret-value"
-
-  key_vault_id = azurerm_key_vault.kv.id
-}
+# resource "azurerm_key_vault_secret" "app_secret" {
+#
+#   count = 0
+#
+#   name = "employee-db-connection"
+#
+#   value = "sample-secret-value"
+#
+#   key_vault_id = azurerm_key_vault.kv.id
+# }
