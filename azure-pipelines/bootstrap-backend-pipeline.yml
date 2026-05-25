@@ -1,0 +1,70 @@
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+
+  - group: employeeprofileapp-dev-vars
+
+  - name: terraformWorkingDirectory
+    value: terraform/bootstrap/backend
+
+  - name: terraformVersion
+    value: 1.13.2
+
+stages:
+
+  - stage: BootstrapBackend
+    displayName: Bootstrap Terraform Backend
+
+    jobs:
+
+      - job: Bootstrap
+        displayName: Bootstrap Backend
+
+        steps:
+
+          - checkout: self
+
+          - task: TerraformInstaller@1
+            displayName: Install Terraform
+
+            inputs:
+              terraformVersion: $(terraformVersion)
+
+          - task: AzureCLI@2
+            displayName: Bootstrap Backend
+
+            inputs:
+
+              azureSubscription: $(azureInfraServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              workingDirectory: $(terraformWorkingDirectory)
+
+              inlineScript: |
+
+                set -e
+
+                echo "=================================="
+                echo "Azure Subscription Context"
+                echo "=================================="
+
+                az account show
+
+                echo "=================================="
+                echo "Terraform Init"
+                echo "=================================="
+
+                terraform init
+
+                echo "=================================="
+                echo "Terraform Apply"
+                echo "=================================="
+
+                terraform apply \
+                  -auto-approve
