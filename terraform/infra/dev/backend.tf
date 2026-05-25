@@ -8,7 +8,7 @@ terraform {
 
     resource_group_name  = "employeeprofileapp-tfstate-rg"
 
-    storage_account_name = "empproftfstate2026"
+    storage_account_name = "empproftfstate2027"
 
     container_name       = "tfstate"
 
