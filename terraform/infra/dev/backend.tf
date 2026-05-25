@@ -19,24 +19,9 @@ terraform {
     key                  = "dev.terraform.tfstate"
 
     # =====================================
-    # Enterprise Authentication
+    # Azure AD Authentication
     # =====================================
 
     use_azuread_auth     = true
   }
 }
-
-# =====================================
-# OPTIONAL FUTURE BACKEND NOTES
-# =====================================
-
-# Future enterprise enhancements may include:
-#
-# - Separate backend per environment
-# - Dedicated subscription for state storage
-# - State access policies
-# - Terraform Cloud migration
-# - State replication / DR strategy
-#
-# Current backend model intentionally
-# preserves stable remote state behavior.
