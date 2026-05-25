@@ -12,6 +12,26 @@ resource "helm_release" "cert_manager" {
 
   create_namespace = true
 
+  # =====================================
+  # HELM STABILIZATION
+  # =====================================
+
+  wait = true
+
+  wait_for_jobs = true
+
+  timeout = 1200
+
+  atomic = false
+
+  cleanup_on_fail = false
+
+  dependency_update = true
+
+  # =====================================
+  # CERT MANAGER CRDS
+  # =====================================
+
   set {
     name  = "installCRDs"
     value = "true"
