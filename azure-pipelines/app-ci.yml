@@ -1,4 +1,14 @@
+# =====================================
+# Azure DevOps CI Pipeline
+# File: azure-pipelines/app-ci.yaml
+# Version: v1.0-final
+# =====================================
+
 name: $(Date:yyyyMMdd).$(Rev:r)
+
+# =====================================
+# TRIGGER
+# =====================================
 
 trigger:
   branches:
@@ -17,6 +27,10 @@ trigger:
       - azure-pipelines/infra-pipeline.yml
       - README.md
 
+# =====================================
+# AGENT POOL
+# =====================================
+
 pool:
   vmImage: ubuntu-latest
 
@@ -25,6 +39,10 @@ pool:
 # =====================================
 
 variables:
+
+  # =====================================
+  # VARIABLE GROUP
+  # =====================================
 
   - group: employeeprofileapp-dev-vars
 
@@ -38,15 +56,25 @@ variables:
   - name: imageRepository
     value: 'prasidsash/employeeprofileapp-aks'
 
-# =====================================
-# ACR CONFIGURATION
-# =====================================
+  # =====================================
+  # ACR CONFIGURATION
+  # =====================================
 
   - name: acrServiceConnection
     value: 'ACR-SC'
 
   - name: acrRepository
     value: 'employeeprofileapp-aks'
+
+  # =====================================
+  # DOCKER FILE CONFIGURATION
+  # =====================================
+
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+
+  - name: buildContext
+    value: '$(Build.SourcesDirectory)'
 
 # =====================================
 # STAGES
@@ -65,6 +93,10 @@ stages:
         displayName: Docker Build Scan Push
 
         steps:
+
+          # =====================================
+          # CHECKOUT
+          # =====================================
 
           - checkout: self
 
@@ -164,97 +196,114 @@ stages:
             displayName: Install Trivy
 
           # =====================================
-          # DOCKER HUB BUILD
+          # DOCKER HUB BUILD AND PUSH
           # =====================================
 
           - task: Docker@2
 
-            displayName: Docker Hub Build
+            displayName: Docker Hub Build And Push
 
             condition: eq(lower(variables['enableAcr']), 'false')
 
             inputs:
 
-              command: build
+              command: buildAndPush
 
               containerRegistry: $(dockerRegistryServiceConnection)
 
               repository: $(imageRepository)
 
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              dockerfile: $(dockerfilePath)
 
-              buildContext: '$(Build.SourcesDirectory)'
-
-              tags: |
-                $(Build.BuildNumber)
-                latest
-
-          # =====================================
-          # DOCKER HUB PUSH
-          # =====================================
-
-          - task: Docker@2
-
-            displayName: Docker Hub Push
-
-            condition: eq(lower(variables['enableAcr']), 'false')
-
-            inputs:
-
-              command: push
-
-              containerRegistry: $(dockerRegistryServiceConnection)
-
-              repository: $(imageRepository)
+              buildContext: $(buildContext)
 
               tags: |
                 $(Build.BuildNumber)
                 latest
 
           # =====================================
-          # ACR BUILD
+          # ACR LOGIN VALIDATION
           # =====================================
 
           - task: Docker@2
 
-            displayName: ACR Build
+            displayName: ACR Login
 
             condition: eq(lower(variables['enableAcr']), 'true')
 
             inputs:
 
-              command: build
+              command: login
 
               containerRegistry: $(acrServiceConnection)
 
-              repository: $(acrRepository)
-
-              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-
-              buildContext: '$(Build.SourcesDirectory)'
-
-              tags: |
-                $(Build.BuildNumber)
-                latest
-
           # =====================================
-          # ACR PUSH
+          # ACR BUILD AND PUSH
           # =====================================
 
           - task: Docker@2
 
-            displayName: ACR Push
+            displayName: ACR Build And Push
 
             condition: eq(lower(variables['enableAcr']), 'true')
 
             inputs:
 
-              command: push
+              command: buildAndPush
 
               containerRegistry: $(acrServiceConnection)
 
               repository: $(acrRepository)
 
+              dockerfile: $(dockerfilePath)
+
+              buildContext: $(buildContext)
+
               tags: |
                 $(Build.BuildNumber)
                 latest
+
+          # =====================================
+          # IMAGE SECURITY SCAN
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Trivy Security Scan"
+              echo "=================================="
+
+              if [ "$(enableAcr)" = "true" ]; then
+
+                IMAGE_NAME="$(acrRepository):$(Build.BuildNumber)"
+
+              else
+
+                IMAGE_NAME="$(imageRepository):$(Build.BuildNumber)"
+
+              fi
+
+              echo "Scanning Image: ${IMAGE_NAME}"
+
+              trivy image \
+                --severity HIGH,CRITICAL \
+                --exit-code 0 \
+                --no-progress \
+                ${IMAGE_NAME}
+
+            displayName: Trivy Image Scan
+
+          # =====================================
+          # PIPELINE COMPLETION
+          # =====================================
+
+          - script: |
+
+              echo "=================================="
+              echo "Pipeline Completed Successfully"
+              echo "=================================="
+
+              echo "Build Number: $(Build.BuildNumber)"
+              echo "Branch: $(Build.SourceBranchName)"
+
+            displayName: Pipeline Completion
