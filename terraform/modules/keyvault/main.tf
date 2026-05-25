@@ -137,27 +137,34 @@ resource "azurerm_key_vault" "kv" {
 # RBAC FOR KEY VAULT
 # =====================================
 
-resource "azurerm_role_assignment" "kv_admin" {
+# NOTE:
+# Disabled because Azure DevOps SPN does not have:
+# Microsoft.Authorization/roleAssignments/write
+#
+# Key Vault RBAC assignments should be handled
+# manually or by cloud/security admin team.
 
-  scope = azurerm_key_vault.kv.id
-
-  role_definition_name = var.keyvault_role_definition_name
-
-  principal_id = var.keyvault_admin_object_id
-}
+# resource "azurerm_role_assignment" "kv_admin" {
+#
+#   scope = azurerm_key_vault.kv.id
+#
+#   role_definition_name = var.keyvault_role_definition_name
+#
+#   principal_id = var.keyvault_admin_object_id
+# }
 
 # =====================================
 # RBAC PROPAGATION WAIT
 # =====================================
 
-resource "time_sleep" "wait_for_kv_rbac" {
-
-  depends_on = [
-    azurerm_role_assignment.kv_admin
-  ]
-
-  create_duration = "180s"
-}
+# resource "time_sleep" "wait_for_kv_rbac" {
+#
+#   depends_on = [
+#     azurerm_role_assignment.kv_admin
+#   ]
+#
+#   create_duration = "180s"
+# }
 
 # =====================================
 # OPTIONAL DEFAULT KEY VAULT SECRETS
@@ -172,10 +179,6 @@ resource "azurerm_key_vault_secret" "default_secrets" {
   value = local.default_key_vault_secrets[each.value]
 
   key_vault_id = azurerm_key_vault.kv.id
-
-  depends_on = [
-    time_sleep.wait_for_kv_rbac
-  ]
 }
 
 # =====================================
@@ -191,8 +194,4 @@ resource "azurerm_key_vault_secret" "app_secret" {
   value = "sample-secret-value"
 
   key_vault_id = azurerm_key_vault.kv.id
-
-  depends_on = [
-    time_sleep.wait_for_kv_rbac
-  ]
 }

@@ -1,16 +1,20 @@
+# =====================================
+# AKS CLUSTER
+# =====================================
+
 resource "azurerm_kubernetes_cluster" "aks" {
 
-  name                = var.cluster_name
+  name = var.cluster_name
 
-  location            = var.location
+  location = var.location
 
   resource_group_name = var.resource_group_name
 
-  dns_prefix          = "${var.cluster_name}-${var.environment}"
+  dns_prefix = "${var.cluster_name}-${var.environment}"
 
-  kubernetes_version  = var.kubernetes_version
+  kubernetes_version = var.kubernetes_version
 
-  sku_tier            = "Standard"
+  sku_tier = "Standard"
 
   oidc_issuer_enabled = var.enable_oidc_issuer
 
@@ -110,15 +114,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   dynamic "monitor_metrics" {
 
-  for_each = var.azure_monitor_workspace_id != null ? [1] : []
+    for_each = var.azure_monitor_workspace_id != null ? [1] : []
 
-  content {
+    content {
 
-    annotations_allowed = null
+      annotations_allowed = null
 
-    labels_allowed = null
+      labels_allowed = null
+    }
   }
-}
 
   # =====================================
   # IMAGE CLEANER
@@ -238,13 +242,20 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 # OPTIONAL ACR PULL ROLE ASSIGNMENT
 # =====================================
 
-resource "azurerm_role_assignment" "aks_acr_pull" {
+# NOTE:
+# Disabled because Azure DevOps SPN does not have:
+# Microsoft.Authorization/roleAssignments/write
+#
+# AcrPull role assignment should be handled
+# manually or by cloud/security admin team.
 
-  count = var.enable_acr_pull_role_assignment ? 1 : 0
-
-  scope = var.acr_id
-
-  role_definition_name = "AcrPull"
-
-  principal_id = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-}
+# resource "azurerm_role_assignment" "aks_acr_pull" {
+#
+#   count = var.enable_acr_pull_role_assignment ? 1 : 0
+#
+#   scope = var.acr_id
+#
+#   role_definition_name = "AcrPull"
+#
+#   principal_id = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+# }
