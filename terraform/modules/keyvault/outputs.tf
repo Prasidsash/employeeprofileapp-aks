@@ -35,12 +35,13 @@ output "key_vault_role_assignment_id" {
 }
 
 # =====================================
-# OPTIONAL TENANT OUTPUT
+# TENANT OUTPUT
+# Used by CI/CD and Helm deployments
 # =====================================
 
-output "key_vault_tenant_id" {
+output "tenant_id" {
 
-  description = "Key Vault tenant ID"
+  description = "Azure Tenant ID"
 
   value = azurerm_key_vault.kv.tenant_id
 }
@@ -55,11 +56,4 @@ output "key_vault_resource_group_name" {
   description = "Key Vault Resource Group Name"
 
   value = azurerm_key_vault.kv.resource_group_name
-}
-
-output "tenant_id" {
-
-  description = "Azure Tenant ID"
-
-  value = azurerm_key_vault.kv.tenant_id
 }
