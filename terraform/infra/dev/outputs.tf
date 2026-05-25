@@ -203,3 +203,10 @@ output "workload_identity_principal_id" {
 
   value = module.workload_identity.workload_identity_principal_id
 }
+
+output "tenant_id" {
+
+  description = "Azure Tenant ID"
+
+  value = module.keyvault.tenant_id
+}
