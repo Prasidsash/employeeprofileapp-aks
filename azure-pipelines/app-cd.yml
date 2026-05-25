@@ -42,10 +42,6 @@ stages:
   - stage: DEV
     displayName: DEV Deployment
     variables:
-      aksResourceGroup: employeeprofileapp-dev-rg
-      aksClusterName: employeeprofileapp-dev-aks
-      namespace: employeeprofileapp-dev
-      helmReleaseName: employeeprofileapp-dev
       valuesFile: helm/employeeprofileapp/values-dev.yaml
     jobs:
       - deployment: DeployDEV
