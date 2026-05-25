@@ -6,22 +6,22 @@ terraform {
     # Remote Terraform State
     # =====================================
 
-    resource_group_name  = "employeeprofileapp-tfstate-rg"
+    resource_group_name = "employeeprofileapp-tfstate-rg"
 
     storage_account_name = "empproftfstate2027"
 
-    container_name       = "tfstate"
+    container_name = "tfstate"
 
     # =====================================
     # Environment-Specific State File
     # =====================================
 
-    key                  = "dev.terraform.tfstate"
+    key = "dev.terraform.tfstate"
 
     # =====================================
     # Azure AD Authentication
     # =====================================
 
-    use_azuread_auth     = true
+    use_azuread_auth = true
   }
 }
