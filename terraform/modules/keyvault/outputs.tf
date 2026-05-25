@@ -27,12 +27,17 @@ output "key_vault_uri" {
 # OPTIONAL RBAC OUTPUT
 # =====================================
 
-output "key_vault_role_assignment_id" {
+# NOTE:
+# Disabled because RBAC role assignment resource
+# is intentionally removed for enterprise-safe
+# restricted-permission deployments.
 
-  description = "Key Vault RBAC role assignment ID"
-
-  value = azurerm_role_assignment.kv_admin.id
-}
+# output "key_vault_role_assignment_id" {
+#
+#   description = "Key Vault RBAC role assignment ID"
+#
+#   value = azurerm_role_assignment.kv_admin.id
+# }
 
 # =====================================
 # TENANT OUTPUT

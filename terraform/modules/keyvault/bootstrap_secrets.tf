@@ -1,5 +1,5 @@
 # =====================================
-# OPTIONAL BOOTSTRAP SECRETS
+# OPTIONAL BOOTSTRAP KEY VAULT SECRETS
 # =====================================
 
 resource "azurerm_key_vault_secret" "bootstrap_secrets" {
@@ -11,19 +11,4 @@ resource "azurerm_key_vault_secret" "bootstrap_secrets" {
   value = each.value
 
   key_vault_id = azurerm_key_vault.kv.id
-
-  content_type = "bootstrap-secret"
-
-  tags = merge(
-    {
-      environment = var.environment
-      managed_by  = "terraform"
-      secret_type = "bootstrap"
-    },
-    var.additional_tags
-  )
-
-  depends_on = [
-    time_sleep.wait_for_kv_rbac
-  ]
 }
