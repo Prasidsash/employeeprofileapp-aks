@@ -1,4 +1,26 @@
 # =====================================
+# BOOTSTRAP SECRETS
+# =====================================
+
+variable "enable_bootstrap_secrets" {
+
+  description = "Enable bootstrap Key Vault secrets"
+
+  type = bool
+
+  default = false
+}
+
+variable "bootstrap_secrets" {
+
+  description = "Bootstrap Key Vault secrets"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # COMMON
 # =====================================
 

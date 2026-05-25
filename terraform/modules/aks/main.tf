@@ -50,8 +50,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     node_labels = var.node_labels
 
-    node_taints = var.node_taints
-  }
+      }
 
   # =====================================
   # SYSTEM ASSIGNED IDENTITY
