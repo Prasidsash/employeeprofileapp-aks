@@ -1,3 +1,8 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/ingress.yaml
+# VERSION: v6-enterprise-disposable-final
+# =====================================
+
 {{- if and .Values.ingress .Values.ingress.enabled }}
 
 apiVersion: networking.k8s.io/v1
@@ -5,33 +10,97 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 
 metadata:
+
   name: {{ default "employeeprofileapp" .Values.app.name }}-ingress
 
+  namespace: {{ .Release.Namespace }}
+
   labels:
+
     app: {{ default "employeeprofileapp" .Values.app.name }}
 
-  {{- if .Values.ingress.annotations }}
   annotations:
+
+    # =====================================
+    # INGRESS CLASS
+    # =====================================
+
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
+
+    # =====================================
+    # SSL REDIRECT
+    # =====================================
+
+    nginx.ingress.kubernetes.io/ssl-redirect: {{ ternary "true" "false" .Values.ingress.tls.enabled | quote }}
+
+    # =====================================
+    # OPTIONAL REWRITE TARGET
+    # =====================================
+
+    {{- if .Values.enable_rewrite_target }}
+
+    nginx.ingress.kubernetes.io/rewrite-target: "/"
+
+    {{- end }}
+
+    # =====================================
+    # OPTIONAL PROXY BODY SIZE
+    # =====================================
+
+    {{- if .Values.enable_proxy_body_size }}
+
+    nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.proxy_body_size | quote }}
+
+    {{- end }}
+
+    # =====================================
+    # OPTIONAL CERT MANAGER
+    # =====================================
+
+    {{- if and .Values.enable_tls .Values.cluster_issuer }}
+
+    cert-manager.io/cluster-issuer: {{ .Values.cluster_issuer | quote }}
+
+    {{- end }}
+
+    # =====================================
+    # ADDITIONAL USER ANNOTATIONS
+    # =====================================
+
+    {{- if .Values.ingress.annotations }}
+
 {{ toYaml .Values.ingress.annotations | indent 4 }}
-  {{- end }}
+
+    {{- end }}
 
 spec:
 
   ingressClassName: {{ .Values.ingress.className }}
 
+  # =====================================
+  # TLS
+  # =====================================
+
   {{- if and .Values.ingress.tls .Values.ingress.tls.enabled }}
+
   tls:
 
     - hosts:
+
         - {{ .Values.ingress.host }}
 
       secretName: {{ .Values.ingress.tls.secretName }}
 
   {{- end }}
 
+  # =====================================
+  # RULES
+  # =====================================
+
   rules:
 
     {{- if .Values.ingress.host }}
+
     - host: {{ .Values.ingress.host }}
 
       http:
@@ -45,11 +114,15 @@ spec:
             backend:
 
               service:
+
                 name: {{ default "employeeprofileapp" .Values.app.name }}
 
                 port:
+
                   number: {{ .Values.service.port }}
+
     {{- else }}
+
     - http:
 
         paths:
@@ -61,10 +134,13 @@ spec:
             backend:
 
               service:
+
                 name: {{ default "employeeprofileapp" .Values.app.name }}
 
                 port:
+
                   number: {{ .Values.service.port }}
+
     {{- end }}
 
 {{- end }}

@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/infra/dev/variables.tf
+# VERSION: v8-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # COMMON
 # =====================================
 
@@ -26,6 +31,15 @@ variable "location" {
 # =====================================
 # NETWORK
 # =====================================
+
+variable "enable_network" {
+
+  description = "Enable network module"
+
+  type = bool
+
+  default = true
+}
 
 variable "vnet_name" {
 
@@ -58,6 +72,15 @@ variable "aks_subnet_prefixes" {
 # =====================================
 # AKS
 # =====================================
+
+variable "enable_aks" {
+
+  description = "Enable AKS module"
+
+  type = bool
+
+  default = true
+}
 
 variable "cluster_name" {
 
@@ -110,6 +133,8 @@ variable "enable_node_autoscaling" {
   description = "Enable AKS node autoscaling"
 
   type = bool
+
+  default = true
 }
 
 variable "only_critical_addons_enabled" {
@@ -133,6 +158,98 @@ variable "system_node_max_count" {
   description = "Maximum system node count"
 
   type = number
+}
+
+# =====================================
+# ENTERPRISE OIDC
+# =====================================
+
+variable "enable_oidc_issuer" {
+
+  description = "Enable AKS OIDC issuer"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+variable "enable_workload_identity" {
+
+  description = "Enable AKS Workload Identity"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# USER ASSIGNED MANAGED IDENTITY
+# =====================================
+
+variable "enable_user_assigned_identity" {
+
+  description = "Enable User Assigned Managed Identity"
+
+  type = bool
+
+  default = true
+}
+
+variable "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  type = list(string)
+
+  default = []
+}
+
+variable "user_assigned_identity_name" {
+
+  description = "User Assigned Managed Identity name"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# FEDERATED IDENTITY
+# =====================================
+
+variable "enable_federated_identity_credentials" {
+
+  description = "Enable federated identity credentials"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# DISPOSABLE ENVIRONMENT MODE
+# =====================================
+
+variable "enable_disposable_environment_mode" {
+
+  description = "Enable disposable AKS environment protections"
+
+  type = bool
+
+  default = true
+}
+
+variable "enable_stale_identity_cleanup" {
+
+  description = "Enable stale identity cleanup protection"
+
+  type = bool
+
+  default = true
 }
 
 # =====================================
@@ -233,70 +350,46 @@ variable "aks_additional_tags" {
 }
 
 # =====================================
-# AKS BACKUP
+# OPTIONAL ACR
 # =====================================
 
-variable "backup_vault_name" {
+variable "enable_acr" {
 
-  description = "Backup vault name"
+  description = "Enable Azure Container Registry"
+
+  type = bool
+
+  default = true
+}
+
+variable "acr_name" {
+
+  description = "Azure Container Registry name"
 
   type = string
 }
 
-variable "backup_storage_account_name" {
+variable "acr_sku" {
 
-  description = "Backup storage account name"
-
-  type = string
-}
-
-variable "backup_container_name" {
-
-  description = "Backup container name"
+  description = "Azure Container Registry SKU"
 
   type = string
-}
 
-variable "backup_policy_name" {
-
-  description = "Backup policy name"
-
-  type = string
-}
-
-variable "backup_schedule_repeating_time_intervals" {
-
-  description = "Backup schedule intervals"
-
-  type = list(string)
-}
-
-variable "backup_retention_duration_count" {
-
-  description = "Backup retention count"
-
-  type = number
-}
-
-variable "backup_retention_duration_type" {
-
-  description = "Backup retention duration type"
-
-  type = string
-}
-
-variable "backup_additional_tags" {
-
-  description = "Additional backup tags"
-
-  type = map(string)
-
-  default = {}
+  default = "Basic"
 }
 
 # =====================================
 # NAMESPACE
 # =====================================
+
+variable "enable_namespace" {
+
+  description = "Enable namespace module"
+
+  type = bool
+
+  default = true
+}
 
 variable "namespace_name" {
 
@@ -310,6 +403,8 @@ variable "namespace_labels" {
   description = "Namespace labels"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "namespace_annotations" {
@@ -325,11 +420,22 @@ variable "namespace_annotations" {
 # GOVERNANCE
 # =====================================
 
+variable "enable_governance" {
+
+  description = "Enable governance module"
+
+  type = bool
+
+  default = true
+}
+
 variable "quota_limits" {
 
   description = "Resource quota limits"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "limit_max" {
@@ -337,6 +443,8 @@ variable "limit_max" {
   description = "Limit range max"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "limit_min" {
@@ -344,6 +452,8 @@ variable "limit_min" {
   description = "Limit range min"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "limit_default" {
@@ -351,6 +461,8 @@ variable "limit_default" {
   description = "Limit range default"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "limit_default_request" {
@@ -358,6 +470,8 @@ variable "limit_default_request" {
   description = "Limit range default request"
 
   type = map(string)
+
+  default = {}
 }
 
 variable "governance_labels" {
@@ -379,8 +493,68 @@ variable "governance_annotations" {
 }
 
 # =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+variable "enable_pod_disruption_budget" {
+
+  description = "Enable Pod Disruption Budget"
+
+  type = bool
+
+  default = false
+}
+
+variable "pod_disruption_budget_name" {
+
+  description = "Pod Disruption Budget name"
+
+  type = string
+
+  default = "employeeprofileapp-pdb"
+}
+
+variable "pdb_max_unavailable" {
+
+  description = "Maximum unavailable pods"
+
+  type = string
+
+  default = "1"
+}
+
+variable "pdb_match_labels" {
+
+  description = "PDB selector labels"
+
+  type = map(string)
+
+  default = {
+    app = "employeeprofileapp"
+  }
+}
+
+variable "pod_disruption_budget_annotations" {
+
+  description = "PDB annotations"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
 # RBAC
 # =====================================
+
+variable "enable_rbac" {
+
+  description = "Enable RBAC module"
+
+  type = bool
+
+  default = true
+}
 
 variable "service_account_name" {
 
@@ -401,6 +575,13 @@ variable "allowed_resources" {
   description = "Allowed Kubernetes resources"
 
   type = list(string)
+
+  default = [
+    "pods",
+    "services",
+    "configmaps",
+    "secrets"
+  ]
 }
 
 variable "allowed_verbs" {
@@ -408,6 +589,12 @@ variable "allowed_verbs" {
   description = "Allowed Kubernetes verbs"
 
   type = list(string)
+
+  default = [
+    "get",
+    "list",
+    "watch"
+  ]
 }
 
 variable "service_account_annotations" {
@@ -464,6 +651,8 @@ variable "keyvault_admin_object_id" {
   description = "Key Vault Administrator object ID"
 
   type = string
+
+  default = null
 }
 
 variable "enable_aks_kv_rbac" {
@@ -525,8 +714,145 @@ variable "db_password" {
 }
 
 # =====================================
+# MONITORING
+# =====================================
+
+variable "enable_monitoring" {
+
+  description = "Enable monitoring"
+
+  type = bool
+
+  default = false
+}
+
+variable "log_analytics_workspace_name" {
+
+  description = "Log Analytics workspace name"
+
+  type = string
+}
+
+variable "log_analytics_sku" {
+
+  description = "Log Analytics SKU"
+
+  type = string
+}
+
+variable "log_retention_in_days" {
+
+  description = "Log retention days"
+
+  type = number
+}
+
+variable "enable_alerts" {
+
+  description = "Enable Azure Monitor alerts"
+
+  type = bool
+
+  default = false
+}
+
+variable "enable_managed_prometheus" {
+
+  description = "Enable managed Prometheus"
+
+  type = bool
+
+  default = false
+}
+
+variable "grafana_major_version" {
+
+  description = "Grafana major version"
+
+  type = number
+
+  default = 11
+}
+
+variable "grafana_api_key_enabled" {
+
+  description = "Enable Grafana API keys"
+
+  type = bool
+
+  default = false
+}
+
+variable "monitoring_additional_tags" {
+
+  description = "Additional monitoring tags"
+
+  type = map(string)
+
+  default = {}
+}
+
+# =====================================
+# INGRESS CONTROLLER
+# =====================================
+
+variable "enable_ingress_controller" {
+
+  description = "Enable ingress controller"
+
+  type = bool
+
+  default = true
+}
+
+variable "ingress_controller_namespace" {
+
+  description = "Ingress controller namespace"
+
+  type = string
+
+  default = "ingress-nginx"
+}
+
+variable "ingress_controller_chart_version" {
+
+  description = "Ingress controller chart version"
+
+  type = string
+
+  default = "4.12.2"
+}
+
+variable "ingress_controller_service_type" {
+
+  description = "Ingress controller service type"
+
+  type = string
+
+  default = "LoadBalancer"
+}
+
+variable "ingress_controller_replica_count" {
+
+  description = "Ingress controller replica count"
+
+  type = number
+
+  default = 1
+}
+
+# =====================================
 # INGRESS
 # =====================================
+
+variable "enable_ingress" {
+
+  description = "Enable ingress module"
+
+  type = bool
+
+  default = true
+}
 
 variable "ingress_name" {
 
@@ -547,6 +873,8 @@ variable "ingress_path" {
   description = "Ingress path"
 
   type = string
+
+  default = "/"
 }
 
 variable "ingress_path_type" {
@@ -554,6 +882,8 @@ variable "ingress_path_type" {
   description = "Ingress path type"
 
   type = string
+
+  default = "Prefix"
 }
 
 variable "service_name" {
@@ -642,129 +972,8 @@ variable "release_name" {
 }
 
 # =====================================
-# MONITORING
+# PLATFORM FEATURES
 # =====================================
-
-variable "log_analytics_workspace_name" {
-
-  description = "Log Analytics workspace name"
-
-  type = string
-}
-
-variable "log_analytics_sku" {
-
-  description = "Log Analytics SKU"
-
-  type = string
-}
-
-variable "log_retention_in_days" {
-
-  description = "Log retention days"
-
-  type = number
-}
-
-variable "enable_alerts" {
-
-  description = "Enable Azure Monitor alerts"
-
-  type = bool
-
-  default = false
-}
-
-variable "enable_managed_prometheus" {
-
-  description = "Enable managed Prometheus"
-
-  type = bool
-
-  default = false
-}
-
-variable "grafana_major_version" {
-
-  description = "Grafana major version"
-
-  type = number
-
-  default = 11
-}
-
-variable "grafana_api_key_enabled" {
-
-  description = "Enable Grafana API keys"
-
-  type = bool
-
-  default = true
-}
-
-variable "monitoring_additional_tags" {
-
-  description = "Additional monitoring tags"
-
-  type = map(string)
-
-  default = {}
-}
-
-# =====================================
-# FEATURE TOGGLES
-# =====================================
-
-variable "enable_network" {
-
-  description = "Enable network module"
-
-  type = bool
-}
-
-variable "enable_aks" {
-
-  description = "Enable AKS module"
-
-  type = bool
-}
-
-variable "enable_namespace" {
-
-  description = "Enable namespace module"
-
-  type = bool
-}
-
-variable "enable_rbac" {
-
-  description = "Enable RBAC module"
-
-  type = bool
-}
-
-variable "enable_governance" {
-
-  description = "Enable governance module"
-
-  type = bool
-}
-
-variable "enable_ingress" {
-
-  description = "Enable ingress module"
-
-  type = bool
-}
-
-variable "enable_monitoring" {
-
-  description = "Enable monitoring"
-
-  type = bool
-
-  default = true
-}
 
 variable "enable_hpa" {
 
@@ -772,7 +981,7 @@ variable "enable_hpa" {
 
   type = bool
 
-  default = true
+  default = false
 }
 
 variable "enable_loadbalancer" {
@@ -861,68 +1070,6 @@ variable "spot_node_taints" {
 }
 
 # =====================================
-# AKS BACKUP FEATURE TOGGLE
-# =====================================
-
-variable "enable_aks_backup" {
-
-  description = "Enable AKS backup"
-
-  type = bool
-
-  default = false
-}
-
-# =====================================
-# INGRESS CONTROLLER
-# =====================================
-
-variable "enable_ingress_controller" {
-
-  description = "Enable ingress controller"
-
-  type = bool
-
-  default = true
-}
-
-variable "ingress_controller_namespace" {
-
-  description = "Ingress controller namespace"
-
-  type = string
-
-  default = "ingress-nginx"
-}
-
-variable "ingress_controller_chart_version" {
-
-  description = "Ingress controller chart version"
-
-  type = string
-
-  default = "4.12.2"
-}
-
-variable "ingress_controller_service_type" {
-
-  description = "Ingress controller service type"
-
-  type = string
-
-  default = "LoadBalancer"
-}
-
-variable "ingress_controller_replica_count" {
-
-  description = "Ingress controller replica count"
-
-  type = number
-
-  default = 1
-}
-
-# =====================================
 # CERT MANAGER
 # =====================================
 
@@ -932,7 +1079,7 @@ variable "enable_cert_manager" {
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "cert_manager_namespace" {
@@ -959,7 +1106,7 @@ variable "enable_cluster_issuer" {
 
   type = bool
 
-  default = false
+  default = true
 }
 
 variable "cluster_issuer_name" {
@@ -969,84 +1116,4 @@ variable "cluster_issuer_name" {
   type = string
 
   default = "selfsigned-cluster-issuer"
-}
-
-# =====================================
-# POD DISRUPTION BUDGET
-# =====================================
-
-variable "enable_pod_disruption_budget" {
-
-  description = "Enable Pod Disruption Budget"
-
-  type = bool
-
-  default = false
-}
-
-variable "pod_disruption_budget_name" {
-
-  description = "Pod Disruption Budget name"
-
-  type = string
-
-  default = "employeeprofileapp-pdb"
-}
-
-variable "pdb_max_unavailable" {
-
-  description = "Maximum unavailable pods"
-
-  type = string
-
-  default = "1"
-}
-
-variable "pdb_match_labels" {
-
-  description = "PDB selector labels"
-
-  type = map(string)
-
-  default = {
-    app = "employeeprofileapp"
-  }
-}
-
-variable "pod_disruption_budget_annotations" {
-
-  description = "PDB annotations"
-
-  type = map(string)
-
-  default = {}
-}
-
-# =====================================
-# ACR
-# =====================================
-
-variable "enable_acr" {
-
-  description = "Enable Azure Container Registry"
-
-  type = bool
-
-  default = true
-}
-
-variable "acr_name" {
-
-  description = "Azure Container Registry name"
-
-  type = string
-}
-
-variable "acr_sku" {
-
-  description = "Azure Container Registry SKU"
-
-  type = string
-
-  default = "Basic"
 }

@@ -1,0 +1,39 @@
+1. Get application pods
+
+kubectl get pods -n {{ .Release.Namespace }}
+
+2. Get application service
+
+kubectl get svc -n {{ .Release.Namespace }}
+
+3. Get ingress details
+
+kubectl get ingress -n {{ .Release.Namespace }}
+
+4. Describe deployment
+
+kubectl describe deployment {{ default "employeeprofileapp" .Values.app.name }} -n {{ .Release.Namespace }}
+
+5. View application logs
+
+kubectl logs -f deployment/{{ default "employeeprofileapp" .Values.app.name }} -n {{ .Release.Namespace }}
+
+6. Validate Workload Identity
+
+kubectl get sa {{ .Values.serviceAccount.name }} -n {{ .Release.Namespace }} -o yaml
+
+7. Validate SecretProviderClass
+
+kubectl get secretproviderclass -n {{ .Release.Namespace }}
+
+8. Validate mounted secrets
+
+kubectl exec -it deploy/{{ default "employeeprofileapp" .Values.app.name }} -n {{ .Release.Namespace }} -- ls {{ .Values.keyVault.mountPath }}
+
+9. Validate synced Kubernetes secrets
+
+kubectl get secret {{ .Values.keyVault.k8sSecretName }} -n {{ .Release.Namespace }}
+
+10. Validate ingress endpoint
+
+kubectl get ingress {{ default "employeeprofileapp" .Values.app.name }}-ingress -n {{ .Release.Namespace }}

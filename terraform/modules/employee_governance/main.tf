@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/employee_governance/main.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # RESOURCE QUOTA
 # =====================================
 
@@ -10,28 +15,18 @@ resource "kubernetes_resource_quota_v1" "quota" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
-      },
 
-      # =====================================
-      # OPTIONAL ADDITIONAL LABELS
-      # =====================================
+        module = "employee_governance"
+      },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL RESOURCE QUOTA ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 
@@ -59,28 +54,18 @@ resource "kubernetes_limit_range_v1" "limits" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
-      },
 
-      # =====================================
-      # OPTIONAL ADDITIONAL LABELS
-      # =====================================
+        module = "employee_governance"
+      },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL LIMIT RANGE ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 
@@ -121,24 +106,18 @@ resource "kubernetes_pod_disruption_budget_v1" "pdb" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
+
+        module = "employee_governance"
       },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL PDB ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 

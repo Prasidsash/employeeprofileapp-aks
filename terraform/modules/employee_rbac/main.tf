@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/employee_rbac/main.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # SERVICE ACCOUNT
 # =====================================
 
@@ -20,6 +25,8 @@ resource "kubernetes_service_account_v1" "sa" {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
+
+        module = "employee_rbac"
       },
 
       # =====================================
@@ -41,11 +48,6 @@ resource "kubernetes_service_account_v1" "sa" {
     )
   }
 
-  # =====================================
-  # Optional Future Security Hardening
-  # Preserve Existing Behavior
-  # =====================================
-
   automount_service_account_token = true
 }
 
@@ -61,28 +63,18 @@ resource "kubernetes_role_v1" "role" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
-      },
 
-      # =====================================
-      # OPTIONAL ADDITIONAL LABELS
-      # =====================================
+        module = "employee_rbac"
+      },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL ROLE ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 
@@ -114,28 +106,18 @@ resource "kubernetes_role_binding_v1" "binding" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
-      },
 
-      # =====================================
-      # OPTIONAL ADDITIONAL LABELS
-      # =====================================
+        module = "employee_rbac"
+      },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL ROLE BINDING ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 
@@ -178,24 +160,18 @@ resource "kubernetes_role_binding_v1" "aad_binding" {
 
     namespace = var.namespace_name
 
-    # =====================================
-    # STANDARD PLATFORM LABELS
-    # =====================================
-
     labels = merge(
 
       {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
+
+        module = "employee_rbac"
       },
 
       var.additional_labels
     )
-
-    # =====================================
-    # OPTIONAL ROLE BINDING ANNOTATIONS
-    # =====================================
 
     annotations = merge(
 
@@ -214,10 +190,6 @@ resource "kubernetes_role_binding_v1" "aad_binding" {
     name = kubernetes_role_v1.role.metadata[0].name
   }
 
-  # =====================================
-  # AAD USERS
-  # =====================================
-
   dynamic "subject" {
 
     for_each = var.aad_user_object_ids
@@ -227,14 +199,8 @@ resource "kubernetes_role_binding_v1" "aad_binding" {
       kind = "User"
 
       name = subject.value
-
-      api_group = "rbac.authorization.k8s.io"
     }
   }
-
-  # =====================================
-  # AAD GROUPS
-  # =====================================
 
   dynamic "subject" {
 
@@ -245,8 +211,6 @@ resource "kubernetes_role_binding_v1" "aad_binding" {
       kind = "Group"
 
       name = subject.value
-
-      api_group = "rbac.authorization.k8s.io"
     }
   }
 }

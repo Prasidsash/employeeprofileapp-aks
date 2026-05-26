@@ -1,8 +1,7 @@
 # =====================================
-# REPLICAS
+# FILE: helm/employeeprofileapp/values-dev.yaml
+# VERSION: v10-enterprise-disposable-final
 # =====================================
-
-replicaCount: 1
 
 # =====================================
 # APPLICATION
@@ -10,7 +9,19 @@ replicaCount: 1
 
 app:
 
-  name: employeeprofileapp-dev
+  name: employeeprofileapp
+
+# =====================================
+# NAMESPACE
+# =====================================
+
+namespaceOverride: employeeprofileapp-dev
+
+# =====================================
+# REPLICA CONFIGURATION
+# =====================================
+
+replicaCount: 1
 
 # =====================================
 # IMAGE
@@ -18,23 +29,17 @@ app:
 
 image:
 
-  # Runtime override from Azure DevOps CD pipeline
+  repository: empprofacr2026.azurecr.io/employeeprofileapp-aks
 
-  repository: "empprofacr2027.azurecr.io/employeeprofileapp-aks"
-
-  # Runtime override from pipeline release/version
-
-  tag: "latest"
+  tag: latest
 
   pullPolicy: Always
 
 # =====================================
-# OPTIONAL ACR SETTINGS
+# IMAGE PULL SECRETS
 # =====================================
 
-acr:
-
-  enabled: true
+imagePullSecrets: []
 
 # =====================================
 # SERVICE ACCOUNT
@@ -46,15 +51,69 @@ serviceAccount:
 
   name: employee-sa
 
-  annotations: {}
+  annotations:
+
+    azure.workload.identity/client-id: ""
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+workloadIdentity:
+
+  enabled: true
+
+  clientId: ""
+
+  tenantId: ""
+
+# =====================================
+# POD LABELS
+# =====================================
+
+podLabels:
+
+  app: employeeprofileapp
+
+# =====================================
+# POD ANNOTATIONS
+# =====================================
+
+podAnnotations:
+
+  azure.workload.identity/use: "true"
+
+# =====================================
+# SECURITY CONTEXT
+# =====================================
+
+podSecurityContext:
+
+  runAsNonRoot: true
+
+  fsGroup: 2000
+
+securityContext:
+
+  allowPrivilegeEscalation: false
+
+  readOnlyRootFilesystem: false
+
+  runAsNonRoot: true
+
+  runAsUser: 1000
+
+  capabilities:
+
+    drop:
+
+      - ALL
 
 # =====================================
 # SERVICE
 # =====================================
 
 service:
-
-  enabled: true
 
   type: ClusterIP
 
@@ -63,99 +122,6 @@ service:
   targetPort: 8080
 
   annotations: {}
-
-  externalTrafficPolicy: ""
-
-  sessionAffinity: ""
-
-  loadBalancerIP: ""
-
-# =====================================
-# ENVIRONMENT VARIABLES
-# =====================================
-
-env:
-
-  ASPNETCORE_ENVIRONMENT: dev
-
-# =====================================
-# RESOURCE SETTINGS
-# =====================================
-
-resources:
-
-  requests:
-
-    cpu: "100m"
-
-    memory: "128Mi"
-
-  limits:
-
-    cpu: "250m"
-
-    memory: "256Mi"
-
-# =====================================
-# AZURE KEY VAULT
-# =====================================
-
-keyVault:
-
-  enabled: true
-
-  # =====================================
-  # AZURE KEY VAULT NAME
-  # =====================================
-
-  keyVaultName: "employeeprofileapp-devkv"
-
-  # =====================================
-  # AZURE TENANT ID
-  # =====================================
-
-  tenantId: "242264b2-609f-4466-8afa-9c028b4003d2"
-
-  # =====================================
-  # AKS KUBELET MANAGED IDENTITY
-  # IMPORTANT:
-  # Must match:
-  # az aks show --query identityProfile.kubeletidentity.clientId
-  # =====================================
-
-  userAssignedIdentityID: "fd790a52-e4a9-4b32-8db7-5b36bd91e6fb"
-
-  # =====================================
-  # SECRET PROVIDER CLASS
-  # =====================================
-
-  secretProviderClass: employeeprofileapp-spc
-
-  # =====================================
-  # KUBERNETES SECRET SYNC
-  # =====================================
-
-  k8sSecretName: employeeprofileapp-kv-secret
-
-  # =====================================
-  # CSI DRIVER MOUNT PATH
-  # =====================================
-
-  mountPath: "/mnt/secrets-store"
-
-  # =====================================
-  # KEY VAULT SECRETS
-  # MUST EXACTLY MATCH:
-  # Terraform secret names
-  # =====================================
-
-  secrets:
-
-    - objectName: db-username
-      objectType: secret
-
-    - objectName: db-password
-      objectType: secret
 
 # =====================================
 # INGRESS
@@ -167,31 +133,51 @@ ingress:
 
   className: nginx
 
-  host: "employeeprofileapp-dev.example.com"
+  host: dev.employee.local
 
   path: /
 
   pathType: Prefix
 
-  annotations: {}
+  annotations:
+
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
   tls:
 
     enabled: false
 
-    secretName: ""
+    secretName: null
 
 # =====================================
-# HPA
+# RESOURCES
+# =====================================
+
+resources:
+
+  requests:
+
+    cpu: 100m
+
+    memory: 128Mi
+
+  limits:
+
+    cpu: 500m
+
+    memory: 512Mi
+
+# =====================================
+# AUTOSCALING
 # =====================================
 
 hpa:
 
-  enabled: true
+  enabled: false
 
   minReplicas: 1
 
-  maxReplicas: 3
+  maxReplicas: 2
 
   averageUtilization: 70
 
@@ -200,34 +186,30 @@ hpa:
   stabilizationWindowSeconds: 300
 
 # =====================================
-# IMAGE PULL SECRETS
+# NODE SELECTOR
 # =====================================
 
-imagePullSecrets:
-
-  enabled: false
-
-  name: ""
+nodeSelector: {}
 
 # =====================================
-# POD ANNOTATIONS
+# TOLERATIONS
 # =====================================
 
-podAnnotations: {}
+tolerations: []
 
 # =====================================
-# CONFIGMAP ANNOTATIONS
+# AFFINITY
 # =====================================
+
+affinity: {}
+
+# =====================================
+# CONFIGMAP
+# =====================================
+
+extraConfig: {}
 
 configMapAnnotations: {}
-
-# =====================================
-# CONFIGMAP AUTO RELOAD
-# =====================================
-
-configMapAutoReload:
-
-  enabled: true
 
 # =====================================
 # NETWORK POLICY
@@ -240,49 +222,61 @@ networkPolicy:
   ingressControllerNamespace: ingress-nginx
 
 # =====================================
-# OPTIONAL EXTRA CONFIGURATION
+# KEY VAULT
 # =====================================
 
-extraConfig:
-
-  TEST_VALUE: "v1"
-
-# =====================================
-# AFFINITY
-# =====================================
-
-affinity: {}
-
-# =====================================
-# SECURITY CONTEXT
-# =====================================
-
-securityContext: {}
-
-# =====================================
-# READINESS PROBE
-# =====================================
-
-readinessProbe:
+keyVault:
 
   enabled: true
 
-  path: /
+  keyVaultName: ""
 
-  port: 8080
+  tenantId: ""
 
-  initialDelaySeconds: 10
+  cloudName: AzurePublicCloud
 
-  periodSeconds: 10
+  secretProviderClass: employeeprofileapp-spc
 
-  timeoutSeconds: 5
+  k8sSecretName: employeeprofileapp-kv-secret
 
-  successThreshold: 1
+  secrets:
 
-  failureThreshold: 3
+    - objectName: db-username
+      objectType: secret
+
+    - objectName: db-password
+      objectType: secret
 
 # =====================================
-# LIVENESS PROBE
+# SECRET PROVIDER CLASS
+# =====================================
+
+secretProviderClass:
+
+  enabled: true
+
+# =====================================
+# SECRET MOUNT
+# =====================================
+
+secretMounts:
+
+  enabled: true
+
+  mountPath: /mnt/secrets-store
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
+
+env:
+
+  ASPNETCORE_ENVIRONMENT: Development
+
+  KEYVAULT_NAME: ""
+
+# =====================================
+# PROBES
 # =====================================
 
 livenessProbe:
@@ -291,12 +285,50 @@ livenessProbe:
 
   path: /
 
-  port: 8080
+  initialDelaySeconds: 30
 
-  initialDelaySeconds: 15
+  periodSeconds: 10
 
-  periodSeconds: 20
+readinessProbe:
 
-  timeoutSeconds: 5
+  enabled: true
 
-  failureThreshold: 3
+  path: /
+
+  initialDelaySeconds: 20
+
+  periodSeconds: 10
+
+startupProbe:
+
+  enabled: true
+
+  path: /
+
+  failureThreshold: 30
+
+  periodSeconds: 10
+
+# =====================================
+# RBAC
+# =====================================
+
+rbac:
+
+  create: true
+
+# =====================================
+# PDB
+# =====================================
+
+pdb:
+
+  enabled: false
+
+# =====================================
+# OPTIONAL EXTRA VOLUMES
+# =====================================
+
+extraVolumes: []
+
+extraVolumeMounts: []

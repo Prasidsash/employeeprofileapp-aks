@@ -1,5 +1,6 @@
 # =====================================
-# AKS CLUSTER
+# FILE: terraform/modules/aks/main.tf
+# VERSION: v4-enterprise-disposable-final
 # =====================================
 
 resource "azurerm_kubernetes_cluster" "aks" {
@@ -20,9 +21,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # ENTERPRISE IDENTITY MODEL
   # =====================================
 
-  oidc_issuer_enabled = false
+  oidc_issuer_enabled = var.enable_oidc_issuer
 
-  workload_identity_enabled = false
+  workload_identity_enabled = var.enable_workload_identity
 
   # =====================================
   # DEFAULT SYSTEM NODE POOL
@@ -50,15 +51,23 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     node_labels = var.node_labels
 
-      }
+    node_taints = var.node_taints
+
+    upgrade_settings {
+
+      max_surge = "33%"
+    }
+  }
 
   # =====================================
-  # SYSTEM ASSIGNED IDENTITY
+  # ENTERPRISE MANAGED IDENTITY
   # =====================================
 
   identity {
 
-    type = "SystemAssigned"
+    type = var.enable_user_assigned_identity ? "UserAssigned" : "SystemAssigned"
+
+    identity_ids = var.enable_user_assigned_identity ? var.user_assigned_identity_ids : null
   }
 
   # =====================================
@@ -84,7 +93,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   dynamic "oms_agent" {
 
-    for_each = var.enable_monitoring ? [1] : []
+    for_each = (
+      var.enable_monitoring &&
+      var.log_analytics_workspace_id != null
+    ) ? [1] : []
 
     content {
 
@@ -129,6 +141,20 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   # =====================================
+  # DISPOSABLE ENVIRONMENT SAFETY
+  # =====================================
+
+  lifecycle {
+
+    ignore_changes = [
+
+      default_node_pool[0].node_count,
+
+      kubernetes_version
+    ]
+  }
+
+  # =====================================
   # TAGS
   # =====================================
 
@@ -136,8 +162,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
     {
       environment = var.environment
-      managed_by  = "terraform"
-      module      = "aks"
+
+      managed_by = "terraform"
+
+      module = "aks"
     },
 
     var.additional_tags
@@ -194,12 +222,29 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
     var.spot_node_taints
   )
 
+  upgrade_settings {
+
+    max_surge = "33%"
+  }
+
+  lifecycle {
+
+    ignore_changes = [
+
+      node_count,
+
+      orchestrator_version
+    ]
+  }
+
   tags = merge(
 
     {
       environment = var.environment
-      managed_by  = "terraform"
-      module      = "aks-spotpool"
+
+      managed_by = "terraform"
+
+      module = "aks-spotpool"
     },
 
     var.additional_tags
@@ -212,7 +257,10 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
 resource "azurerm_role_assignment" "aks_acr_pull" {
 
-  count = var.enable_acr_pull_role_assignment ? 1 : 0
+  count = (
+    var.enable_acr_pull_role_assignment &&
+    var.acr_id != null
+  ) ? 1 : 0
 
   scope = var.acr_id
 
@@ -221,10 +269,14 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   principal_id = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
 
   skip_service_principal_aad_check = true
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks
+  ]
 }
 
 # =====================================
-# RBAC PROPAGATION WAIT
+# ACR RBAC PROPAGATION WAIT
 # =====================================
 
 resource "time_sleep" "wait_for_acr_rbac" {
@@ -233,5 +285,5 @@ resource "time_sleep" "wait_for_acr_rbac" {
     azurerm_role_assignment.aks_acr_pull
   ]
 
-  create_duration = "120s"
+  create_duration = "180s"
 }

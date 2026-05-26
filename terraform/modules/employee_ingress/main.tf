@@ -1,3 +1,8 @@
+# =====================================
+# FILE: terraform/modules/employee_ingress/main.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
 resource "kubernetes_ingress_v1" "ingress" {
 
   metadata {
@@ -18,7 +23,6 @@ resource "kubernetes_ingress_v1" "ingress" {
 
       # =====================================
       # OPTIONAL CERT-MANAGER SUPPORT
-      # Existing deployments unaffected
       # =====================================
 
       var.enable_tls && var.cluster_issuer != null ? {
@@ -84,10 +88,6 @@ resource "kubernetes_ingress_v1" "ingress" {
   }
 
   spec {
-
-    # =====================================
-    # OPTIONAL INGRESS CLASS
-    # =====================================
 
     ingress_class_name = var.ingress_class_name
 

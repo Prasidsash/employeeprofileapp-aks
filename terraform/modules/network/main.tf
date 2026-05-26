@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/network/main.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # VIRTUAL NETWORK
 # =====================================
 
@@ -12,14 +17,20 @@ resource "azurerm_virtual_network" "vnet" {
 
   resource_group_name = var.resource_group_name
 
-  tags = {
+  tags = merge(
 
-    environment = var.environment
+    {
+      environment = var.environment
 
-    managed_by = "terraform"
+      managed_by = "terraform"
 
-    project = "employeeprofileapp"
-  }
+      project = "employeeprofileapp"
+
+      module = "network"
+    },
+
+    var.additional_tags
+  )
 }
 
 # =====================================
@@ -37,10 +48,12 @@ resource "azurerm_subnet" "aks_subnet" {
   address_prefixes = var.aks_subnet_prefixes
 
   # =====================================
-  # Optional Future Enhancements
-  # Preserve Existing Behavior
+  # OPTIONAL FUTURE ENHANCEMENTS
   # =====================================
 
-  service_endpoints = []
+  service_endpoints = var.service_endpoints
 
+  private_endpoint_network_policies = "Enabled"
+
+  private_link_service_network_policies_enabled = true
 }

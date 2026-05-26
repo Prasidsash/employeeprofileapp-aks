@@ -1,11 +1,34 @@
 # =====================================
-# Current Azure Client Info
+# FILE: terraform/backend/main.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
+# CURRENT AZURE CLIENT INFO
 # =====================================
 
 data "azurerm_client_config" "current" {}
 
 # =====================================
-# Terraform State Resource Group
+# LOCAL VALUES
+# =====================================
+
+locals {
+
+  common_tags = {
+
+    environment = var.environment
+
+    project = "employeeprofileapp"
+
+    managed_by = "terraform"
+
+    module = "backend"
+  }
+}
+
+# =====================================
+# TERRAFORM STATE RESOURCE GROUP
 # =====================================
 
 resource "azurerm_resource_group" "tfstate" {
@@ -13,15 +36,17 @@ resource "azurerm_resource_group" "tfstate" {
   name = var.resource_group_name
 
   location = var.location
+
+  tags = local.common_tags
 }
 
 # =====================================
-# Terraform State Storage Account
+# TERRAFORM STATE STORAGE ACCOUNT
 # =====================================
 
 resource "azurerm_storage_account" "tfstate" {
 
-  name = var.storage_account_name
+  name = lower(var.storage_account_name)
 
   resource_group_name = azurerm_resource_group.tfstate.name
 
@@ -32,10 +57,34 @@ resource "azurerm_storage_account" "tfstate" {
   account_replication_type = "LRS"
 
   account_kind = "StorageV2"
+
+  min_tls_version = "TLS1_2"
+
+  allow_nested_items_to_be_public = false
+
+  shared_access_key_enabled = false
+
+  public_network_access_enabled = true
+
+  infrastructure_encryption_enabled = false
+
+  blob_properties {
+
+    versioning_enabled = true
+  }
+
+  lifecycle {
+
+    ignore_changes = [
+      tags
+    ]
+  }
+
+  tags = local.common_tags
 }
 
 # =====================================
-# Terraform State Container
+# TERRAFORM STATE CONTAINER
 # =====================================
 
 resource "azurerm_storage_container" "tfstate" {
@@ -48,7 +97,7 @@ resource "azurerm_storage_container" "tfstate" {
 }
 
 # =====================================
-# Backend RBAC Access
+# BACKEND RBAC ACCESS
 # =====================================
 
 resource "azurerm_role_assignment" "tfstate_blob_contributor" {
@@ -58,4 +107,6 @@ resource "azurerm_role_assignment" "tfstate_blob_contributor" {
   role_definition_name = "Storage Blob Data Contributor"
 
   principal_id = data.azurerm_client_config.current.object_id
+
+  skip_service_principal_aad_check = true
 }

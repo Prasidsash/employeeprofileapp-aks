@@ -1,13 +1,6 @@
 # =====================================
-# Azure DevOps CI Pipeline
-# File: azure-pipelines/app-ci.yaml
-# Version: v3.0-enterprise-final
-# =====================================
-
-name: $(Date:yyyyMMdd).$(Rev:r)
-
-# =====================================
-# TRIGGER
+# FILE: azure-pipelines/app-ci.yml
+# VERSION: v9-enterprise-disposable-final
 # =====================================
 
 trigger:
@@ -23,248 +16,200 @@ trigger:
     include:
 
       - src/**
-
-      - helm/**
-
       - Dockerfile
-
-      - azure-pipelines/app-ci.yaml
-
-    exclude:
-
-      - terraform/**
-
-      - azure-pipelines/infra-pipeline.yml
-
-      - README.md
-
-# =====================================
-# AGENT POOL
-# =====================================
+      - azure-pipelines/app-ci.yml
 
 pool:
 
   vmImage: ubuntu-latest
 
-# =====================================
-# VARIABLES
-# =====================================
-
 variables:
-
-  # =====================================
-  # VARIABLE GROUP
-  # =====================================
 
   - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # ACR CONFIGURATION
+  # DOCKER
   # =====================================
 
-  - name: acrServiceConnection
-    value: 'ACR-SC'
-
-  - name: acrLoginServer
-    value: 'empprofacr2027.azurecr.io'
-
-  - name: acrRepository
-    value: 'employeeprofileapp-aks'
-
-  # =====================================
-  # IMAGE NAME
-  # =====================================
-
-  - name: imageName
-    value: '$(acrLoginServer)/$(acrRepository):$(Build.BuildNumber)'
-
-  # =====================================
-  # DOCKER CONFIGURATION
-  # =====================================
+  - name: imageRepository
+    value: employeeprofileapp-aks
 
   - name: dockerfilePath
-    value: '$(Build.SourcesDirectory)/Dockerfile'
+    value: Dockerfile
 
-  - name: buildContext
-    value: '$(Build.SourcesDirectory)'
+  - name: imageTag
+    value: $(Build.BuildId)
 
-# =====================================
-# STAGES
-# =====================================
+  # =====================================
+  # ACR
+  # =====================================
+
+  - name: acrName
+    value: empprofacr2026
+
+  # =====================================
+  # DOTNET
+  # =====================================
+
+  - name: dotnetSdkVersion
+    value: 8.0.x
 
 stages:
 
   # =====================================
-  # VALIDATION STAGE
+  # BUILD STAGE
   # =====================================
 
-  - stage: Validate
+  - stage: Build
 
-    displayName: Validate Source
+    displayName: Build Application
 
     jobs:
 
-      - job: Validation
+      - job: Build
 
-        displayName: Validation Checks
+        displayName: Build .NET Application
 
         steps:
 
           - checkout: self
 
+            clean: true
+
           # =====================================
-          # DOCKER VALIDATION
+          # INSTALL .NET SDK
+          # =====================================
+
+          - task: UseDotNet@2
+
+            displayName: Install .NET SDK
+
+            inputs:
+
+              packageType: sdk
+
+              version: $(dotnetSdkVersion)
+
+          # =====================================
+          # RESTORE
           # =====================================
 
           - script: |
 
-              echo "=================================="
-              echo "Docker Validation"
-              echo "=================================="
+              set -euo pipefail
 
-              docker --version
+              dotnet restore src/EmployeeProfileApp/EmployeeProfileApp.csproj
 
-            displayName: Validate Docker
+            displayName: DotNet Restore
 
           # =====================================
-          # HELM VALIDATION
+          # BUILD
           # =====================================
 
           - script: |
 
-              echo "=================================="
-              echo "Helm Validation"
-              echo "=================================="
+              set -euo pipefail
 
-              helm lint helm/employeeprofileapp
+              dotnet build \
+                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
+                --configuration Release \
+                --no-restore
 
-            displayName: Helm Lint
+            displayName: DotNet Build
 
           # =====================================
-          # KUBERNETES TEMPLATE VALIDATION
+          # TEST
           # =====================================
 
           - script: |
 
-              echo "=================================="
-              echo "Helm Template Validation"
-              echo "=================================="
+              set -euo pipefail
 
-              helm template employeeprofileapp \
-                helm/employeeprofileapp \
-                --values helm/employeeprofileapp/values-dev.yaml \
-                > rendered-manifest.yaml
+              dotnet test \
+                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
+                --configuration Release \
+                --no-build \
+                --verbosity normal || true
 
-              cat rendered-manifest.yaml
-
-            displayName: Helm Template Validation
+            displayName: DotNet Test
 
           # =====================================
-          # DOTNET RESTORE
+          # PUBLISH
           # =====================================
 
-          - task: DotNetCoreCLI@2
+          - script: |
 
-            displayName: Dotnet Restore
+              set -euo pipefail
+
+              dotnet publish \
+                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
+                --configuration Release \
+                --output $(Build.ArtifactStagingDirectory)/publish
+
+            displayName: DotNet Publish
+
+          # =====================================
+          # PUBLISH ARTIFACTS
+          # =====================================
+
+          - task: PublishBuildArtifacts@1
+
+            displayName: Publish Build Artifacts
 
             inputs:
 
-              command: restore
+              PathtoPublish: $(Build.ArtifactStagingDirectory)/publish
 
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
+              ArtifactName: drop
 
-          # =====================================
-          # DOTNET BUILD
-          # =====================================
-
-          - task: DotNetCoreCLI@2
-
-            displayName: Dotnet Build
-
-            inputs:
-
-              command: build
-
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
-
-              arguments: '--configuration Release'
-
-          # =====================================
-          # DOTNET TEST
-          # =====================================
-
-          - task: DotNetCoreCLI@2
-
-            displayName: Dotnet Test
-
-            inputs:
-
-              command: test
-
-              projects: 'src/Employeeprofileapp/EmployeeProfileApp.csproj'
-
-              arguments: '--configuration Release'
+              publishLocation: Container
 
   # =====================================
-  # BUILD AND SECURITY STAGE
+  # DOCKER BUILD STAGE
   # =====================================
 
-  - stage: BuildAndScan
+  - stage: Docker
 
-    displayName: Build Scan And Push
+    displayName: Build And Push Docker Image
 
-    dependsOn: Validate
+    dependsOn: Build
 
     jobs:
 
-      - job: DockerBuildScanPush
+      - job: DockerBuild
 
-        displayName: Docker Build Scan Push
+        displayName: Docker Build And Push
 
         steps:
 
           - checkout: self
 
-          # =====================================
-          # INSTALL TRIVY
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Install Trivy"
-              echo "=================================="
-
-              sudo apt-get update
-
-              sudo apt-get install wget gnupg lsb-release apt-transport-https -y
-
-              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | \
-              gpg --dearmor | \
-              sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-
-              echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | \
-              sudo tee /etc/apt/sources.list.d/trivy.list
-
-              sudo apt-get update
-
-              sudo apt-get install trivy -y
-
-            displayName: Install Trivy
+            clean: true
 
           # =====================================
           # ACR LOGIN
           # =====================================
 
-          - task: Docker@2
+          - task: AzureCLI@2
 
             displayName: ACR Login
 
             inputs:
 
-              command: login
+              azureSubscription: $(azureInfraServiceConnection)
 
-              containerRegistry: $(acrServiceConnection)
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              addSpnToEnvironment: true
+
+              inlineScript: |
+
+                set -euo pipefail
+
+                az acr login \
+                  --name $(acrName)
 
           # =====================================
           # DOCKER BUILD
@@ -272,101 +217,101 @@ stages:
 
           - script: |
 
-              echo "=================================="
-              echo "Docker Build"
-              echo "=================================="
+              set -euo pipefail
 
               docker build \
-                -t $(imageName) \
                 -f $(dockerfilePath) \
-                $(buildContext)
+                -t $(acrName).azurecr.io/$(imageRepository):$(imageTag) \
+                -t $(acrName).azurecr.io/$(imageRepository):latest \
+                .
 
             displayName: Docker Build
 
           # =====================================
-          # VERIFY IMAGE EXISTS
+          # DOCKER PUSH
           # =====================================
 
           - script: |
 
-              echo "=================================="
-              echo "Verify Docker Image"
-              echo "=================================="
+              set -euo pipefail
 
-              docker images
+              docker push $(acrName).azurecr.io/$(imageRepository):$(imageTag)
 
-              docker inspect $(imageName)
+              docker push $(acrName).azurecr.io/$(imageRepository):latest
 
-            displayName: Verify Docker Image
+            displayName: Docker Push
 
           # =====================================
-          # TRIVY LOCAL IMAGE SCAN
+          # IMAGE VALIDATION
           # =====================================
 
-          - script: |
+          - task: AzureCLI@2
 
-              echo "=================================="
-              echo "Trivy Security Scan"
-              echo "=================================="
+            displayName: Image Validation
 
-              echo "Scanning Local Image:"
-              echo "$(imageName)"
+            inputs:
 
-              trivy image \
-                --severity HIGH,CRITICAL \
-                --exit-code 0 \
-                --timeout 10m \
-                $(imageName)
+              azureSubscription: $(azureInfraServiceConnection)
 
-            displayName: Trivy Image Scan
+              scriptType: bash
 
-          # =====================================
-          # PUSH IMAGE TO ACR
-          # =====================================
+              scriptLocation: inlineScript
 
-          - script: |
+              addSpnToEnvironment: true
 
-              echo "=================================="
-              echo "Push Image To ACR"
-              echo "=================================="
+              inlineScript: |
 
-              docker push $(imageName)
+                set -euo pipefail
 
-              docker tag $(imageName) \
-                $(acrLoginServer)/$(acrRepository):latest
-
-              docker push \
-                $(acrLoginServer)/$(acrRepository):latest
-
-            displayName: Push Image To ACR
+                az acr repository show-tags \
+                  --name $(acrName) \
+                  --repository $(imageRepository) \
+                  --output table
 
           # =====================================
-          # VERIFY ACR PUSH
+          # EXPORT IMAGE VARIABLES
           # =====================================
 
           - script: |
 
-              echo "=================================="
-              echo "Verify ACR Push"
-              echo "=================================="
+              echo "##vso[task.setvariable variable=IMAGE_TAG]$(imageTag)"
 
-              az acr repository show-tags \
-                --name empprofacr2027 \
-                --repository $(acrRepository)
+              echo "##vso[task.setvariable variable=IMAGE_REPOSITORY]$(imageRepository)"
 
-            displayName: Verify ACR Push
+            displayName: Export Image Variables
 
           # =====================================
-          # PIPELINE COMPLETION
+          # FAILURE DIAGNOSTICS
           # =====================================
 
-          - script: |
+          - task: AzureCLI@2
 
-              echo "=================================="
-              echo "Pipeline Completed Successfully"
-              echo "=================================="
+            displayName: Failure Diagnostics
 
-              echo "Image:"
-              echo "$(imageName)"
+            condition: failed()
 
-            displayName: Pipeline Completion
+            inputs:
+
+              azureSubscription: $(azureInfraServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              addSpnToEnvironment: true
+
+              inlineScript: |
+
+                echo "=================================="
+                echo "ACR REPOSITORIES"
+                echo "=================================="
+
+                az acr repository list \
+                  --name $(acrName) \
+                  --output table || true
+
+                echo "=================================="
+                echo "DOCKER IMAGES"
+                echo "=================================="
+
+                docker images || true

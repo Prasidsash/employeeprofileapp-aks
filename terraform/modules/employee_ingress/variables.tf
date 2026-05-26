@@ -1,8 +1,16 @@
 # =====================================
+# FILE: terraform/modules/employee_ingress/variables.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # NAMESPACE
 # =====================================
 
 variable "namespace_name" {
+
+  description = "Kubernetes namespace name"
+
   type = string
 }
 
@@ -11,22 +19,37 @@ variable "namespace_name" {
 # =====================================
 
 variable "ingress_name" {
+
+  description = "Ingress resource name"
+
   type = string
 }
 
 variable "ingress_host" {
+
+  description = "Ingress host"
+
   type = string
 }
 
 variable "ingress_path" {
+
+  description = "Ingress path"
+
   type = string
 }
 
 variable "ingress_path_type" {
+
+  description = "Ingress path type"
+
   type = string
 }
 
 variable "service_name" {
+
+  description = "Backend service name"
+
   type = string
 }
 
@@ -67,7 +90,6 @@ variable "tls_secret_name" {
 
 # =====================================
 # OPTIONAL CERT-MANAGER SUPPORT
-# Existing deployments unaffected
 # =====================================
 
 variable "cluster_issuer" {

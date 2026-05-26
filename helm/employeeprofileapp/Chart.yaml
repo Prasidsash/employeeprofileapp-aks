@@ -1,3 +1,8 @@
+# =====================================
+# FILE: helm/employeeprofileapp/Chart.yaml
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
 apiVersion: v2
 
 name: employeeprofileapp
@@ -10,13 +15,13 @@ type: application
 # CHART VERSION
 # =====================================
 
-version: 0.1.0
+version: 1.0.0
 
 # =====================================
 # APPLICATION VERSION
 # =====================================
 
-appVersion: "1.0"
+appVersion: "1.0.0"
 
 # =====================================
 # KUBERNETES COMPATIBILITY
@@ -29,14 +34,43 @@ kubeVersion: ">=1.28.0"
 # =====================================
 
 keywords:
+
   - aks
+
   - kubernetes
+
   - helm
+
   - azure-devops
+
   - employeeprofileapp
 
+  - workload-identity
+
+  - keyvault-csi
+
+  - oidc
+
+  - enterprise-platform
+
 maintainers:
+
   - name: employeeprofileapp-team
 
 annotations:
+
   category: application
+
+  artifacthub.io/license: MIT
+
+  artifacthub.io/operator: "false"
+
+  artifacthub.io/prerelease: "false"
+
+  artifacthub.io/containsSecurityUpdates: "true"
+
+# =====================================
+# OPTIONAL DEPENDENCIES
+# =====================================
+
+dependencies: []

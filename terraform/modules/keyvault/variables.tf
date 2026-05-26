@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/keyvault/variables.tf
+# VERSION: v6-enterprise-disposable-stable
+# =====================================
+
+# =====================================
 # BOOTSTRAP SECRETS
 # =====================================
 
@@ -67,6 +72,8 @@ variable "keyvault_admin_object_id" {
   description = "Azure AD Object ID for Key Vault Administrator RBAC assignment"
 
   type = string
+
+  default = null
 }
 
 # =====================================
@@ -85,6 +92,28 @@ variable "enable_aks_kv_rbac" {
 variable "aks_kubelet_object_id" {
 
   description = "AKS kubelet managed identity object ID"
+
+  type = string
+
+  default = null
+}
+
+# =====================================
+# WORKLOAD IDENTITY KEYVAULT ACCESS
+# =====================================
+
+variable "enable_workload_identity_keyvault_access" {
+
+  description = "Enable workload identity access to Azure Key Vault"
+
+  type = bool
+
+  default = true
+}
+
+variable "workload_identity_principal_id" {
+
+  description = "User Assigned Managed Identity Principal ID"
 
   type = string
 

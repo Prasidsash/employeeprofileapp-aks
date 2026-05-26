@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/employee_rbac/variables.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # NAMESPACE
 # =====================================
 
@@ -81,7 +86,7 @@ variable "role_annotations" {
 
 variable "role_binding_annotations" {
 
-  description = "Optional Kubernetes RoleBinding annotations"
+  description = "Optional RoleBinding annotations"
 
   type = map(string)
 

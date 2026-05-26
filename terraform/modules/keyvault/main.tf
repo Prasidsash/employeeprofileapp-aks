@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/keyvault/main.tf
+# VERSION: v7-enterprise-disposable-stable
+# =====================================
+
+# =====================================
 # CURRENT AZURE CLIENT INFO
 # =====================================
 
@@ -68,6 +73,17 @@ locals {
 
     keyvault-name = local.key_vault_name
   }
+
+  # =====================================
+  # ENTERPRISE ADMIN OBJECT ID
+  # =====================================
+
+  effective_admin_object_id = coalesce(
+
+    var.keyvault_admin_object_id,
+
+    data.azurerm_client_config.current.object_id
+  )
 }
 
 # =====================================
@@ -117,6 +133,17 @@ resource "azurerm_key_vault" "kv" {
   }
 
   # =====================================
+  # LIFECYCLE
+  # =====================================
+
+  lifecycle {
+
+    ignore_changes = [
+      tags
+    ]
+  }
+
+  # =====================================
   # TAGS
   # =====================================
 
@@ -146,7 +173,7 @@ resource "azurerm_role_assignment" "kv_admin" {
 
   role_definition_name = "Key Vault Administrator"
 
-  principal_id = var.keyvault_admin_object_id
+  principal_id = local.effective_admin_object_id
 
   skip_service_principal_aad_check = true
 }
@@ -157,13 +184,42 @@ resource "azurerm_role_assignment" "kv_admin" {
 
 resource "azurerm_role_assignment" "aks_kv_secrets_user" {
 
-  count = var.enable_aks_kv_rbac ? 1 : 0
+  count = (
+
+    var.enable_aks_kv_rbac &&
+
+    var.aks_kubelet_object_id != null
+
+  ) ? 1 : 0
 
   scope = azurerm_key_vault.kv.id
 
   role_definition_name = "Key Vault Secrets User"
 
   principal_id = var.aks_kubelet_object_id
+
+  skip_service_principal_aad_check = true
+}
+
+# =====================================
+# OPTIONAL WORKLOAD IDENTITY RBAC
+# =====================================
+
+resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
+
+  count = (
+
+    var.enable_workload_identity_keyvault_access &&
+
+    var.workload_identity_principal_id != null
+
+  ) ? 1 : 0
+
+  scope = azurerm_key_vault.kv.id
+
+  role_definition_name = "Key Vault Secrets User"
+
+  principal_id = var.workload_identity_principal_id
 
   skip_service_principal_aad_check = true
 }
@@ -178,7 +234,9 @@ resource "time_sleep" "wait_for_kv_rbac" {
 
     azurerm_role_assignment.kv_admin,
 
-    azurerm_role_assignment.aks_kv_secrets_user
+    azurerm_role_assignment.aks_kv_secrets_user,
+
+    azurerm_role_assignment.workload_identity_kv_secrets_user
   ]
 
   create_duration = "180s"

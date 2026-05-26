@@ -1,0 +1,44 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/role.yaml
+# VERSION: v1-enterprise-disposable-final
+# =====================================
+
+{{- if .Values.enable_rbac }}
+
+apiVersion: rbac.authorization.k8s.io/v1
+
+kind: Role
+
+metadata:
+
+  name: {{ .Values.role_name }}
+
+  namespace: {{ .Release.Namespace }}
+
+  labels:
+
+    app: {{ default .Chart.Name .Values.app.name }}
+
+  annotations:
+
+    {{- if .Values.role_annotations }}
+
+{{ toYaml .Values.role_annotations | indent 4 }}
+
+    {{- end }}
+
+rules:
+
+  - apiGroups:
+
+      - ""
+
+    resources:
+
+{{ toYaml .Values.allowed_resources | indent 6 }}
+
+    verbs:
+
+{{ toYaml .Values.allowed_verbs | indent 6 }}
+
+{{- end }}

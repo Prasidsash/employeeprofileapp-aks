@@ -1,17 +1,29 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/configmap.yaml
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
 apiVersion: v1
 
 kind: ConfigMap
 
 metadata:
+
   name: {{ default "employeeprofileapp" .Values.app.name }}-config
 
+  namespace: {{ .Release.Namespace }}
+
   labels:
+
     app: {{ default .Chart.Name .Values.app.name }}
 
-  {{- if .Values.configMapAnnotations }}
   annotations:
+
+    {{- if .Values.configMapAnnotations }}
+
 {{ toYaml .Values.configMapAnnotations | indent 4 }}
-  {{- end }}
+
+    {{- end }}
 
 data:
 
@@ -22,9 +34,23 @@ data:
   APP_NAME: "{{ default "employeeprofileapp" .Values.app.name }}"
 
   # =====================================
+  # ASPNETCORE ENVIRONMENT
+  # =====================================
+
+  ASPNETCORE_ENVIRONMENT: "{{ .Values.env.ASPNETCORE_ENVIRONMENT }}"
+
+  # =====================================
+  # KEY VAULT NAME
+  # =====================================
+
+  KEYVAULT_NAME: "{{ .Values.keyVault.keyVaultName }}"
+
+  # =====================================
   # OPTIONAL EXTRA CONFIGURATION
   # =====================================
 
   {{- if .Values.extraConfig }}
+
 {{ toYaml .Values.extraConfig | indent 2 }}
+
   {{- end }}

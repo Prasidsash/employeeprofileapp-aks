@@ -1,35 +1,66 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/service.yaml
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
 apiVersion: v1
 
 kind: Service
 
 metadata:
+
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
+  namespace: {{ .Release.Namespace }}
+
   labels:
+
     app: {{ default "employeeprofileapp" .Values.app.name }}
 
   {{- if .Values.service.annotations }}
+
   annotations:
+
 {{ toYaml .Values.service.annotations | indent 4 }}
+
   {{- end }}
 
 spec:
 
   type: {{ .Values.service.type }}
 
+  # =====================================
+  # OPTIONAL EXTERNAL TRAFFIC POLICY
+  # =====================================
+
   {{- if .Values.service.externalTrafficPolicy }}
+
   externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+
   {{- end }}
+
+  # =====================================
+  # OPTIONAL SESSION AFFINITY
+  # =====================================
 
   {{- if .Values.service.sessionAffinity }}
+
   sessionAffinity: {{ .Values.service.sessionAffinity }}
+
   {{- end }}
 
+  # =====================================
+  # OPTIONAL LOAD BALANCER IP
+  # =====================================
+
   {{- if .Values.service.loadBalancerIP }}
+
   loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+
   {{- end }}
 
   selector:
+
     app: {{ default "employeeprofileapp" .Values.app.name }}
 
   ports:

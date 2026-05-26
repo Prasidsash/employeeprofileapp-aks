@@ -1,104 +1,97 @@
 # =====================================
-# Azure DevOps CD Pipeline
-# File: azure-pipelines/app-cd.yaml
-# Version: v3.0-enterprise-final
+# FILE: azure-pipelines/app-cd.yml
+# VERSION: v10-enterprise-disposable-final
 # =====================================
 
 trigger: none
 
-pr: none
-
-# =====================================
-# PIPELINE RESOURCES
-# =====================================
-
-resources:
-
-  pipelines:
-
-    - pipeline: ciPipeline
-
-      source: CI
-
-      trigger: true
-
-# =====================================
-# AGENT POOL
-# =====================================
-
 pool:
 
   vmImage: ubuntu-latest
-
-# =====================================
-# VARIABLES
-# =====================================
 
 variables:
 
   - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # ACR
+  # TERRAFORM
   # =====================================
 
-  - name: acrLoginServer
+  - name: terraformVersion
+    value: 1.11.4
 
-    value: "empprofacr2027.azurecr.io"
-
-  - name: imageRepository
-
-    value: "employeeprofileapp-aks"
-
-  - name: finalImageRepository
-
-    value: "empprofacr2027.azurecr.io/employeeprofileapp-aks"
-
-  # =====================================
-  # AZURE SERVICE CONNECTION
-  # =====================================
-
-  - name: azureServiceConnection
-
-    value: "AzureAKS-SCN"
+  - name: terraformWorkingDirectory
+    value: terraform/infra/dev
 
   # =====================================
   # HELM
   # =====================================
 
+  - name: helmVersion
+    value: latest
+
   - name: helmChartPath
+    value: helm/employeeprofileapp
 
-    value: "helm/employeeprofileapp"
+  - name: helmReleaseName
+    value: employeeprofileapp-dev-release
 
-# =====================================
-# DEV STAGE
-# =====================================
+  - name: namespace
+    value: employeeprofileapp-dev
+
+  # =====================================
+  # IMAGE
+  # =====================================
+
+  - name: imageRepository
+    value: employeeprofileapp-aks
+
+  - name: imageTag
+    value: $(Build.BuildId)
+
+  # =====================================
+  # AKS
+  # =====================================
+
+  - name: aksClusterName
+    value: employeeprofileapp-dev-aks
+
+  - name: aksResourceGroup
+    value: employeeprofileapp-dev-rg
+
+  # =====================================
+  # BACKEND
+  # =====================================
+
+  - name: backendResourceGroupName
+    value: $(tfBackendResourceGroup)
+
+  - name: backendStorageAccountName
+    value: $(tfBackendStorageAccount)
+
+  - name: backendContainerName
+    value: $(tfBackendContainer)
+
+  - name: backendStateKey
+    value: dev.terraform.tfstate
 
 stages:
 
-  - stage: DEV
+  # =====================================
+  # DEPLOY APPLICATION
+  # =====================================
 
-    displayName: DEV Deployment
+  - stage: Deploy
 
-    variables:
-
-      aksResourceGroup: employeeprofileapp-dev-rg
-
-      aksClusterName: employeeprofileapp-dev-aks
-
-      namespace: employeeprofileapp-dev
-
-      helmReleaseName: employeeprofileapp-dev
-
-      valuesFile: helm/employeeprofileapp/values-dev.yaml
+    displayName: Deploy Application
 
     jobs:
 
-      - deployment: DeployDEV
+      - deployment: HelmDeployment
 
-        displayName: Deploy DEV
+        displayName: Helm Deployment
 
-        environment: employeeprofileapp-dev
+        environment: dev
 
         strategy:
 
@@ -110,343 +103,393 @@ stages:
 
                 - checkout: self
 
+                  clean: true
+
                 # =====================================
-                # AKS LOGIN VALIDATION
+                # INSTALL TERRAFORM
+                # =====================================
+
+                - task: TerraformInstaller@1
+
+                  displayName: Install Terraform
+
+                  inputs:
+
+                    terraformVersion: $(terraformVersion)
+
+                # =====================================
+                # INSTALL HELM
+                # =====================================
+
+                - task: HelmInstaller@1
+
+                  displayName: Install Helm
+
+                  inputs:
+
+                    helmVersionToInstall: $(helmVersion)
+
+                # =====================================
+                # TERRAFORM INIT
                 # =====================================
 
                 - task: AzureCLI@2
 
-                  displayName: AKS Connectivity Validation
+                  displayName: Terraform Init
 
                   inputs:
 
-                    azureSubscription: $(azureServiceConnection)
+                    azureSubscription: $(azureInfraServiceConnection)
 
                     scriptType: bash
 
                     scriptLocation: inlineScript
 
+                    addSpnToEnvironment: true
+
+                    workingDirectory: $(terraformWorkingDirectory)
+
                     inlineScript: |
+
+                      set -euo pipefail
+
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      terraform init \
+                        -upgrade \
+                        -reconfigure \
+                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                        -backend-config="container_name=$(backendContainerName)" \
+                        -backend-config="key=$(backendStateKey)" \
+                        -backend-config="use_azuread_auth=true"
+
+                # =====================================
+                # EXPORT TERRAFORM OUTPUTS
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Export Terraform Outputs
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    workingDirectory: $(terraformWorkingDirectory)
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      KEYVAULT_NAME=$(terraform output -raw key_vault_name)
+                      WORKLOAD_CLIENT_ID=$(terraform output -raw workload_identity_client_id)
+                      TENANT_ID=$(terraform output -raw tenant_id)
+
+                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]$KEYVAULT_NAME"
+                      echo "##vso[task.setvariable variable=WORKLOAD_CLIENT_ID]$WORKLOAD_CLIENT_ID"
+                      echo "##vso[task.setvariable variable=TENANT_ID]$TENANT_ID"
+
+                      echo "=================================="
+                      echo "TERRAFORM OUTPUTS"
+                      echo "=================================="
+
+                      echo "KEYVAULT_NAME=$KEYVAULT_NAME"
+                      echo "WORKLOAD_CLIENT_ID=$WORKLOAD_CLIENT_ID"
+                      echo "TENANT_ID=$TENANT_ID"
+
+                # =====================================
+                # AKS LOGIN
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: AKS Login
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
 
                       az aks get-credentials \
                         --resource-group $(aksResourceGroup) \
                         --name $(aksClusterName) \
                         --overwrite-existing
 
-                      kubectl cluster-info
-
-                      kubectl get nodes
+                      kubectl get nodes -o wide
 
                 # =====================================
-                # HELM VALIDATION
-                # =====================================
-
-                - script: |
-
-                    echo "=================================="
-                    echo "Helm Lint Validation"
-                    echo "=================================="
-
-                    helm lint $(helmChartPath) \
-                      -f $(valuesFile)
-
-                  displayName: Helm Lint Validation
-
-                # =====================================
-                # HELM TEMPLATE VALIDATION
-                # =====================================
-
-                - script: |
-
-                    echo "=================================="
-                    echo "Helm Template Validation"
-                    echo "=================================="
-
-                    helm template employeeprofileapp \
-                      $(helmChartPath) \
-                      -f $(valuesFile)
-
-                  displayName: Helm Template Validation
-
-                # =====================================
-                # LOAD TERRAFORM OUTPUTS
+                # NAMESPACE VALIDATION
                 # =====================================
 
                 - task: AzureCLI@2
 
-                  displayName: Load Terraform Outputs
+                  displayName: Namespace Validation
 
                   inputs:
 
-                    azureSubscription: $(azureServiceConnection)
+                    azureSubscription: $(azureInfraServiceConnection)
 
                     scriptType: bash
 
                     scriptLocation: inlineScript
 
+                    addSpnToEnvironment: true
+
                     inlineScript: |
 
-                      cd terraform/infra/dev
+                      set -euo pipefail
 
-                      terraform init -input=false
-
-                      AKS_KUBELET_CLIENT_ID=$(terraform output -raw aks_kubelet_client_id)
-
-                      TENANT_ID=$(terraform output -raw tenant_id)
-
-                      KEYVAULT_NAME=$(terraform output -raw key_vault_name)
-
-                      echo "##vso[task.setvariable variable=AKS_KUBELET_CLIENT_ID]$AKS_KUBELET_CLIENT_ID"
-
-                      echo "##vso[task.setvariable variable=AZURE_TENANT_ID]$TENANT_ID"
-
-                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]$KEYVAULT_NAME"
+                      kubectl get namespace $(namespace)
 
                 # =====================================
-                # DEPLOY HELM CHART
-                # =====================================
-
-                - task: HelmDeploy@0
-
-                  displayName: Deploy DEV Helm Chart
-
-                  inputs:
-
-                    connectionType: Azure Resource Manager
-
-                    azureSubscription: $(azureServiceConnection)
-
-                    azureResourceGroup: $(aksResourceGroup)
-
-                    kubernetesCluster: $(aksClusterName)
-
-                    namespace: $(namespace)
-
-                    command: upgrade
-
-                    chartType: FilePath
-
-                    chartPath: $(helmChartPath)
-
-                    releaseName: $(helmReleaseName)
-
-                    install: true
-
-                    waitForExecution: true
-
-                    valueFile: $(valuesFile)
-
-                    arguments: >
-
-                      --create-namespace
-
-                      --wait
-
-                      --timeout 10m
-
-                      --set image.repository=$(finalImageRepository)
-
-                      --set image.tag=$(resources.pipeline.ciPipeline.runName)
-
-                      --set-string keyVault.userAssignedIdentityID=$(AKS_KUBELET_CLIENT_ID)
-
-                      --set-string keyVault.tenantId=$(AZURE_TENANT_ID)
-
-                      --set-string keyVault.keyVaultName=$(KEYVAULT_NAME)
-
-                # =====================================
-                # POST DEPLOYMENT VALIDATION
+                # WORKLOAD IDENTITY VALIDATION
                 # =====================================
 
                 - task: AzureCLI@2
 
-                  displayName: Post Deployment Validation
+                  displayName: Workload Identity Validation
 
                   inputs:
 
-                    azureSubscription: $(azureServiceConnection)
+                    azureSubscription: $(azureInfraServiceConnection)
 
                     scriptType: bash
 
                     scriptLocation: inlineScript
 
+                    addSpnToEnvironment: true
+
                     inlineScript: |
+
+                      set -euo pipefail
+
+                      echo "=================================="
+                      echo "SERVICE ACCOUNT"
+                      echo "=================================="
+
+                      kubectl get sa employee-sa \
+                        -n $(namespace) \
+                        -o yaml || true
+
+                      echo "=================================="
+                      echo "FEDERATED IDENTITY"
+                      echo "=================================="
+
+                      az identity federated-credential list \
+                        --identity-name employeeprofileapp-dev-aks-wi \
+                        --resource-group $(aksResourceGroup) || true
+
+                # =====================================
+                # HELM DEPLOYMENT
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Helm Upgrade Install
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      helm dependency update $(helmChartPath)
+
+                      helm upgrade --install $(helmReleaseName) \
+                        $(helmChartPath) \
+                        --namespace $(namespace) \
+                        --create-namespace \
+                        --values $(helmChartPath)/values-dev.yaml \
+                        --set image.repository=$(ACR_LOGIN_SERVER)/$(imageRepository) \
+                        --set image.tag=$(imageTag) \
+                        --set workloadIdentity.enabled=true \
+                        --set workloadIdentity.clientId=$(WORKLOAD_CLIENT_ID) \
+                        --set workloadIdentity.tenantId=$(TENANT_ID) \
+                        --set keyVault.enabled=true \
+                        --set keyVault.keyVaultName=$(KEYVAULT_NAME) \
+                        --wait \
+                        --timeout 20m
+
+                # =====================================
+                # HELM RELEASE VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Helm Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      helm list -n $(namespace)
+
+                      kubectl get all -n $(namespace)
+
+                # =====================================
+                # ROLLOUT VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Rollout Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      kubectl rollout status deployment/employeeprofileapp \
+                        -n $(namespace) \
+                        --timeout=1200s
 
                       kubectl get pods -n $(namespace)
 
-                      kubectl get svc -n $(namespace)
-
-                      kubectl get ingress -n $(namespace)
-
-                      kubectl rollout status deployment/employeeprofileapp-dev \
-                        -n $(namespace) \
-                        --timeout=600s
-
                 # =====================================
-                # SECRET VALIDATION
+                # CSI SECRET VALIDATION
                 # =====================================
 
                 - task: AzureCLI@2
 
-                  displayName: Validate CSI Secret Mount
+                  displayName: CSI Secret Validation
 
                   inputs:
 
-                    azureSubscription: $(azureServiceConnection)
+                    azureSubscription: $(azureInfraServiceConnection)
 
                     scriptType: bash
 
                     scriptLocation: inlineScript
 
+                    addSpnToEnvironment: true
+
                     inlineScript: |
 
-                      POD_NAME=$(kubectl get pods -n $(namespace) \
-                        -l app=employeeprofileapp-dev \
-                        -o jsonpath='{.items[0].metadata.name}')
+                      set -euo pipefail
 
-                      kubectl exec -n $(namespace) $POD_NAME -- \
-                        ls /mnt/secrets-store
+                      kubectl get secretproviderclass \
+                        -n $(namespace)
 
-# =====================================
-# QA STAGE
-# =====================================
+                      kubectl describe pod \
+                        -n $(namespace) \
+                        -l app=employeeprofileapp || true
 
-  - stage: QA
+                      kubectl get secret -n $(namespace)
 
-    displayName: QA Deployment
+                # =====================================
+                # INGRESS VALIDATION
+                # =====================================
 
-    dependsOn: DEV
+                - task: AzureCLI@2
 
-    condition: succeeded()
+                  displayName: Ingress Validation
 
-    variables:
+                  inputs:
 
-      aksResourceGroup: employeeprofileapp-qa-rg
+                    azureSubscription: $(azureInfraServiceConnection)
 
-      aksClusterName: employeeprofileapp-qa-aks
+                    scriptType: bash
 
-      namespace: employeeprofileapp-qa
+                    scriptLocation: inlineScript
 
-      helmReleaseName: employeeprofileapp-qa
+                    addSpnToEnvironment: true
 
-      valuesFile: helm/employeeprofileapp/values-qa.yaml
+                    inlineScript: |
 
-    jobs:
+                      set -euo pipefail
 
-      - deployment: DeployQA
+                      kubectl get ingress -n $(namespace)
 
-        displayName: Deploy QA
+                      kubectl get svc -A
 
-        environment: employeeprofileapp-qa
+                # =====================================
+                # FAILURE DEBUG
+                # =====================================
 
-        strategy:
+                - task: AzureCLI@2
 
-          runOnce:
+                  displayName: Failure Diagnostics
 
-            deploy:
+                  condition: failed()
 
-              steps:
+                  inputs:
 
-                - checkout: self
+                    azureSubscription: $(azureInfraServiceConnection)
 
-                - script: |
+                    scriptType: bash
 
-                    echo "QA deployment placeholder"
+                    scriptLocation: inlineScript
 
-                  displayName: QA Deployment
+                    addSpnToEnvironment: true
 
-# =====================================
-# UAT STAGE
-# =====================================
+                    inlineScript: |
 
-  - stage: UAT
+                      kubectl get all -A || true
 
-    displayName: UAT Deployment
+                      kubectl get ingress -A || true
 
-    dependsOn: QA
+                      kubectl get secretproviderclass -A || true
 
-    condition: succeeded()
+                      kubectl get events -A \
+                        --sort-by=.metadata.creationTimestamp || true
 
-    variables:
+                      kubectl describe pods \
+                        -n $(namespace) || true
 
-      aksResourceGroup: employeeprofileapp-uat-rg
-
-      aksClusterName: employeeprofileapp-uat-aks
-
-      namespace: employeeprofileapp-uat
-
-      helmReleaseName: employeeprofileapp-uat
-
-      valuesFile: helm/employeeprofileapp/values-uat.yaml
-
-    jobs:
-
-      - deployment: DeployUAT
-
-        displayName: Deploy UAT
-
-        environment: employeeprofileapp-uat
-
-        strategy:
-
-          runOnce:
-
-            deploy:
-
-              steps:
-
-                - checkout: self
-
-                - script: |
-
-                    echo "UAT deployment placeholder"
-
-                  displayName: UAT Deployment
-
-# =====================================
-# PROD STAGE
-# =====================================
-
-  - stage: PROD
-
-    displayName: PROD Deployment
-
-    dependsOn: UAT
-
-    condition: succeeded()
-
-    variables:
-
-      aksResourceGroup: employeeprofileapp-prod-rg
-
-      aksClusterName: employeeprofileapp-prod-aks
-
-      namespace: employeeprofileapp-prod
-
-      helmReleaseName: employeeprofileapp-prod
-
-      valuesFile: helm/employeeprofileapp/values-prod.yaml
-
-    jobs:
-
-      - deployment: DeployPROD
-
-        displayName: Deploy PROD
-
-        environment: employeeprofileapp-prod
-
-        strategy:
-
-          runOnce:
-
-            deploy:
-
-              steps:
-
-                - checkout: self
-
-                - script: |
-
-                    echo "PROD deployment placeholder"
-
-                  displayName: PROD Deployment
+                      kubectl logs \
+                        -n $(namespace) \
+                        -l app=employeeprofileapp \
+                        --tail=200 || true

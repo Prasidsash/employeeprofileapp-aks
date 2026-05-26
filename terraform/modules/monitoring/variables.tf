@@ -1,16 +1,30 @@
 # =====================================
+# FILE: terraform/modules/monitoring/variables.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # COMMON
 # =====================================
 
 variable "environment" {
+
+  description = "Environment name"
+
   type = string
 }
 
 variable "location" {
+
+  description = "Azure region"
+
   type = string
 }
 
 variable "resource_group_name" {
+
+  description = "Azure Resource Group name"
+
   type = string
 }
 
@@ -93,7 +107,7 @@ variable "grafana_api_key_enabled" {
 
   type = bool
 
-  default = true
+  default = false
 }
 
 # =====================================

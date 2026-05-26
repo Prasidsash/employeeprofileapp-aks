@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/aks/variables.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # COMMON
 # =====================================
 
@@ -342,4 +347,52 @@ variable "acr_id" {
   type = string
 
   default = null
+}
+
+# =====================================
+# ENTERPRISE OIDC
+# =====================================
+
+variable "enable_oidc_issuer" {
+
+  description = "Enable AKS OIDC issuer"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+variable "enable_workload_identity" {
+
+  description = "Enable AKS Workload Identity"
+
+  type = bool
+
+  default = true
+}
+
+# =====================================
+# USER ASSIGNED MANAGED IDENTITY
+# =====================================
+
+variable "enable_user_assigned_identity" {
+
+  description = "Enable User Assigned Managed Identity"
+
+  type = bool
+
+  default = false
+}
+
+variable "user_assigned_identity_ids" {
+
+  description = "User Assigned Managed Identity IDs"
+
+  type = list(string)
+
+  default = []
 }

@@ -1,11 +1,11 @@
 # =====================================
-# FILE: terraform/modules/acr/variables.tf
-# VERSION: v5-enterprise-disposable-final
+# FILE: terraform/modules/uami/variables.tf
+# VERSION: v2-enterprise-disposable-final
 # =====================================
 
-variable "acr_name" {
+variable "identity_name" {
 
-  description = "Azure Container Registry name"
+  description = "User Assigned Managed Identity name"
 
   type = string
 }
@@ -24,15 +24,6 @@ variable "location" {
   type = string
 }
 
-variable "acr_sku" {
-
-  description = "Azure Container Registry SKU"
-
-  type = string
-
-  default = "Basic"
-}
-
 variable "environment" {
 
   description = "Environment name"
@@ -42,7 +33,7 @@ variable "environment" {
 
 variable "additional_tags" {
 
-  description = "Additional ACR tags"
+  description = "Additional resource tags"
 
   type = map(string)
 

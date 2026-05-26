@@ -1,0 +1,46 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/rolebinding.yaml
+# VERSION: v1-enterprise-disposable-final
+# =====================================
+
+{{- if .Values.enable_rbac }}
+
+apiVersion: rbac.authorization.k8s.io/v1
+
+kind: RoleBinding
+
+metadata:
+
+  name: {{ .Values.role_name }}-binding
+
+  namespace: {{ .Release.Namespace }}
+
+  labels:
+
+    app: {{ default .Chart.Name .Values.app.name }}
+
+  annotations:
+
+    {{- if .Values.role_binding_annotations }}
+
+{{ toYaml .Values.role_binding_annotations | indent 4 }}
+
+    {{- end }}
+
+subjects:
+
+  - kind: ServiceAccount
+
+    name: {{ .Values.serviceAccount.name }}
+
+    namespace: {{ .Release.Namespace }}
+
+roleRef:
+
+  apiGroup: rbac.authorization.k8s.io
+
+  kind: Role
+
+  name: {{ .Values.role_name }}
+
+{{- end }}

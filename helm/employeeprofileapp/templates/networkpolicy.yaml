@@ -1,3 +1,8 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/networkpolicy.yaml
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
 {{- if and .Values.networkPolicy .Values.networkPolicy.enabled }}
 
 apiVersion: networking.k8s.io/v1
@@ -5,9 +10,13 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 
 metadata:
+
   name: {{ default "employeeprofileapp" .Values.app.name }}-network-policy
 
+  namespace: {{ .Release.Namespace }}
+
   labels:
+
     app: {{ default .Chart.Name .Values.app.name }}
 
 spec:
@@ -15,11 +24,13 @@ spec:
   podSelector:
 
     matchLabels:
+
       app: {{ default .Chart.Name .Values.app.name }}
 
   policyTypes:
 
     - Ingress
+
     - Egress
 
   ingress:
@@ -33,6 +44,7 @@ spec:
         - podSelector:
 
             matchLabels:
+
               app: {{ default .Chart.Name .Values.app.name }}
 
     # =====================================
@@ -44,7 +56,14 @@ spec:
         - namespaceSelector:
 
             matchLabels:
+
               kubernetes.io/metadata.name: {{ .Values.networkPolicy.ingressControllerNamespace }}
+
+      ports:
+
+        - protocol: TCP
+
+          port: {{ .Values.service.targetPort }}
 
   egress:
 
@@ -57,23 +76,31 @@ spec:
         - namespaceSelector:
 
             matchLabels:
+
               kubernetes.io/metadata.name: kube-system
 
       ports:
 
         - protocol: UDP
+
           port: 53
 
         - protocol: TCP
+
           port: 53
 
     # =====================================
     # ALLOW HTTPS OUTBOUND
+    # REQUIRED FOR:
+    # - AZURE KEY VAULT
+    # - OIDC TOKEN FLOW
+    # - MICROSOFT LOGIN
     # =====================================
 
     - ports:
 
         - protocol: TCP
+
           port: 443
 
     # =====================================
@@ -85,6 +112,7 @@ spec:
         - namespaceSelector:
 
             matchLabels:
+
               kubernetes.io/metadata.name: {{ .Release.Namespace }}
 
 {{- end }}

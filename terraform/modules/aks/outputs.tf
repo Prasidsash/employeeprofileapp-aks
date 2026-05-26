@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/aks/outputs.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # AKS CLUSTER
 # =====================================
 
@@ -52,14 +57,20 @@ output "aks_principal_id" {
 
   description = "AKS Managed Identity Principal ID"
 
-  value = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].principal_id,
+    null
+  )
 }
 
 output "aks_tenant_id" {
 
   description = "AKS Managed Identity Tenant ID"
 
-  value = azurerm_kubernetes_cluster.aks.identity[0].tenant_id
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].tenant_id,
+    null
+  )
 }
 
 # =====================================
@@ -87,7 +98,7 @@ output "kubelet_identity_client_id" {
 }
 
 # =====================================
-# OPTIONAL FUTURE OIDC SUPPORT
+# OIDC ISSUER
 # =====================================
 
 output "oidc_issuer_url" {
@@ -101,7 +112,7 @@ output "oidc_issuer_url" {
 }
 
 # =====================================
-# OPTIONAL FUTURE WORKLOAD IDENTITY
+# WORKLOAD IDENTITY
 # =====================================
 
 output "workload_identity_enabled" {
@@ -110,12 +121,12 @@ output "workload_identity_enabled" {
 
   value = try(
     azurerm_kubernetes_cluster.aks.workload_identity_enabled,
-    null
+    false
   )
 }
 
 # =====================================
-# OPTIONAL KEY VAULT CSI DRIVER
+# KEY VAULT CSI DRIVER
 # =====================================
 
 output "key_vault_secrets_provider_enabled" {
@@ -173,7 +184,7 @@ output "cluster_ca_certificate" {
 }
 
 # =====================================
-# OPTIONAL USER ASSIGNED IDENTITY OUTPUT
+# USER ASSIGNED MANAGED IDENTITY
 # =====================================
 
 output "user_assigned_identity_ids" {
@@ -194,19 +205,160 @@ output "aks_kubelet_client_id" {
 
   description = "AKS Kubelet Identity Client ID"
 
-  value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].client_id
+  value = try(
+    azurerm_kubernetes_cluster.aks.kubelet_identity[0].client_id,
+    null
+  )
 }
 
 output "aks_kubelet_object_id" {
 
   description = "AKS Kubelet Identity Object ID"
 
-  value = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  value = try(
+    azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id,
+    null
+  )
 }
 
 output "tenant_id" {
 
   description = "Azure Tenant ID"
 
-  value = azurerm_kubernetes_cluster.aks.identity[0].tenant_id
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].tenant_id,
+    null
+  )
+}
+
+# =====================================
+# ENTERPRISE WORKLOAD IDENTITY OUTPUTS
+# =====================================
+
+output "aks_oidc_issuer_url" {
+
+  description = "AKS OIDC Issuer URL for Federated Credentials"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.oidc_issuer_url,
+    null
+  )
+}
+
+output "aks_workload_identity_enabled" {
+
+  description = "AKS Workload Identity Status"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.workload_identity_enabled,
+    false
+  )
+}
+
+output "aks_identity_type" {
+
+  description = "AKS Managed Identity Type"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].type,
+    null
+  )
+}
+
+output "aks_system_assigned_principal_id" {
+
+  description = "AKS System Assigned Principal ID"
+
+  value = (
+    try(
+      azurerm_kubernetes_cluster.aks.identity[0].type,
+      ""
+    ) == "SystemAssigned"
+  ) ? try(
+    azurerm_kubernetes_cluster.aks.identity[0].principal_id,
+    null
+  ) : null
+}
+
+output "aks_user_assigned_identity_ids" {
+
+  description = "AKS User Assigned Identity IDs"
+
+  value = try(
+    azurerm_kubernetes_cluster.aks.identity[0].identity_ids,
+    []
+  )
+}
+
+# =====================================
+# ENTERPRISE DISPOSABLE ENVIRONMENT
+# =====================================
+
+output "aks_identity_principal_ids" {
+
+  description = "AKS Identity Principal IDs"
+
+  value = {
+
+    principal_id = try(
+      azurerm_kubernetes_cluster.aks.identity[0].principal_id,
+      null
+    )
+
+    kubelet_object_id = try(
+      azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id,
+      null
+    )
+
+    kubelet_client_id = try(
+      azurerm_kubernetes_cluster.aks.kubelet_identity[0].client_id,
+      null
+    )
+  }
+}
+
+# =====================================
+# ACR PULL STATUS
+# =====================================
+
+output "acr_pull_role_assignment_id" {
+
+  description = "AKS AcrPull Role Assignment ID"
+
+  value = try(
+    azurerm_role_assignment.aks_acr_pull[0].id,
+    null
+  )
+}
+
+# =====================================
+# ENTERPRISE OIDC STATUS
+# =====================================
+
+output "oidc_enabled" {
+
+  description = "OIDC Enabled Status"
+
+  value = var.enable_oidc_issuer
+}
+
+# =====================================
+# WORKLOAD IDENTITY STATUS
+# =====================================
+
+output "workload_identity_status" {
+
+  description = "Workload Identity Status"
+
+  value = {
+
+    enabled = var.enable_workload_identity
+
+    oidc_enabled = var.enable_oidc_issuer
+
+    identity_type = try(
+      azurerm_kubernetes_cluster.aks.identity[0].type,
+      null
+    )
+  }
 }

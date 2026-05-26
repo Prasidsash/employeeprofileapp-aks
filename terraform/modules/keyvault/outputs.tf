@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/keyvault/outputs.tf
+# VERSION: v4-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # KEY VAULT
 # =====================================
 
@@ -24,24 +29,12 @@ output "key_vault_uri" {
 }
 
 # =====================================
-# OPTIONAL RBAC OUTPUT
-# =====================================
-
-# NOTE:
-# Disabled because RBAC role assignment resource
-# is intentionally removed for enterprise-safe
-# restricted-permission deployments.
-
-# output "key_vault_role_assignment_id" {
-#
-#   description = "Key Vault RBAC role assignment ID"
-#
-#   value = azurerm_role_assignment.kv_admin.id
-# }
-
-# =====================================
 # TENANT OUTPUT
-# Used by CI/CD and Helm deployments
+# USED BY:
+# - AKS
+# - HELM
+# - WORKLOAD IDENTITY
+# - CSI DRIVER
 # =====================================
 
 output "tenant_id" {
@@ -52,8 +45,7 @@ output "tenant_id" {
 }
 
 # =====================================
-# OPTIONAL KEY VAULT NAME OUTPUT
-# FOR FUTURE CSI / WORKLOAD IDENTITY
+# KEY VAULT RESOURCE GROUP
 # =====================================
 
 output "key_vault_resource_group_name" {
@@ -61,4 +53,25 @@ output "key_vault_resource_group_name" {
   description = "Key Vault Resource Group Name"
 
   value = azurerm_key_vault.kv.resource_group_name
+}
+
+# =====================================
+# OPTIONAL RBAC OUTPUTS
+# =====================================
+
+output "key_vault_admin_role_assignment_id" {
+
+  description = "Key Vault Administrator RBAC Assignment ID"
+
+  value = azurerm_role_assignment.kv_admin.id
+}
+
+output "aks_keyvault_secrets_user_role_assignment_id" {
+
+  description = "AKS Key Vault Secrets User Role Assignment ID"
+
+  value = try(
+    azurerm_role_assignment.aks_kv_secrets_user[0].id,
+    null
+  )
 }

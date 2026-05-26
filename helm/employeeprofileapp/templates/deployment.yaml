@@ -1,3 +1,8 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/deployment.yaml
+# VERSION: v8-enterprise-disposable-final
+# =====================================
+
 apiVersion: apps/v1
 
 kind: Deployment
@@ -6,21 +11,15 @@ metadata:
 
   name: {{ default "employeeprofileapp" .Values.app.name }}
 
+  namespace: {{ .Release.Namespace }}
+
   labels:
 
     app: {{ default .Chart.Name .Values.app.name }}
 
   annotations:
 
-    {{- if .Values.configMapAutoReload.enabled }}
-
     checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-
-    {{- else }}
-
-    checksum/config: {{ .Values.app.name | sha256sum }}
-
-    {{- end }}
 
 spec:
 
@@ -52,6 +51,16 @@ spec:
 
         app: {{ default .Chart.Name .Values.app.name }}
 
+        # =====================================
+        # WORKLOAD IDENTITY LABEL
+        # =====================================
+
+        {{- if .Values.workloadIdentity.enabled }}
+
+        azure.workload.identity/use: "true"
+
+        {{- end }}
+
       {{- if .Values.podAnnotations }}
 
       annotations:
@@ -70,17 +79,27 @@ spec:
 
       terminationGracePeriodSeconds: 30
 
+      automountServiceAccountToken: true
+
       # =====================================
       # OPTIONAL IMAGE PULL SECRETS
       # =====================================
 
-      {{- if and (.Values.imagePullSecrets) (.Values.imagePullSecrets.enabled) (.Values.imagePullSecrets.name) }}
+      {{- if .Values.imagePullSecrets }}
 
       imagePullSecrets:
 
-        - name: {{ .Values.imagePullSecrets.name }}
+{{ toYaml .Values.imagePullSecrets | indent 8 }}
 
       {{- end }}
+
+      # =====================================
+      # POD SECURITY CONTEXT
+      # =====================================
+
+      securityContext:
+
+{{ toYaml .Values.podSecurityContext | indent 8 }}
 
       # =====================================
       # NODE SELECTOR
@@ -110,6 +129,14 @@ spec:
       # AFFINITY
       # =====================================
 
+      {{- if .Values.affinity }}
+
+      affinity:
+
+{{ toYaml .Values.affinity | indent 8 }}
+
+      {{- else }}
+
       affinity:
 
         podAntiAffinity:
@@ -133,6 +160,8 @@ spec:
                       values:
 
                         - {{ default .Chart.Name .Values.app.name }}
+
+      {{- end }}
 
       # =====================================
       # TOPOLOGY SPREAD
@@ -166,19 +195,15 @@ spec:
 
           securityContext:
 
-            allowPrivilegeEscalation: false
-
-            runAsNonRoot: true
-
-            capabilities:
-
-              drop:
-
-                - ALL
+{{ toYaml .Values.securityContext | indent 12 }}
 
           ports:
 
-            - containerPort: {{ .Values.service.targetPort }}
+            - name: http
+
+              containerPort: {{ .Values.service.targetPort }}
+
+              protocol: TCP
 
           # =====================================
           # ENVIRONMENT VARIABLES
@@ -189,6 +214,34 @@ spec:
             - name: ASPNETCORE_ENVIRONMENT
 
               value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
+
+            - name: ASPNETCORE_URLS
+
+              value: "http://+:{{ .Values.service.targetPort }}"
+
+            - name: KEYVAULT_NAME
+
+              value: {{ .Values.keyVault.keyVaultName | quote }}
+
+            # =====================================
+            # WORKLOAD IDENTITY ENV VARIABLES
+            # =====================================
+
+            {{- if .Values.workloadIdentity.enabled }}
+
+            - name: AZURE_CLIENT_ID
+
+              value: {{ .Values.workloadIdentity.clientId | quote }}
+
+            - name: AZURE_TENANT_ID
+
+              value: {{ .Values.workloadIdentity.tenantId | quote }}
+
+            - name: AZURE_AUTHORITY_HOST
+
+              value: "https://login.microsoftonline.com/"
+
+            {{- end }}
 
           # =====================================
           # KEY VAULT SECRET SYNC
@@ -210,15 +263,21 @@ spec:
           # AZURE KEY VAULT CSI DRIVER
           # =====================================
 
-          {{- if .Values.keyVault.enabled }}
+          {{- if and .Values.keyVault.enabled .Values.secretMounts.enabled }}
 
           volumeMounts:
 
             - name: secrets-store-inline
 
-              mountPath: {{ .Values.keyVault.mountPath }}
+              mountPath: {{ .Values.secretMounts.mountPath }}
 
               readOnly: true
+
+            {{- if .Values.extraVolumeMounts }}
+
+{{ toYaml .Values.extraVolumeMounts | indent 12 }}
+
+            {{- end }}
 
           {{- end }}
 
@@ -226,17 +285,21 @@ spec:
           # STARTUP PROBE
           # =====================================
 
+          {{- if and .Values.startupProbe .Values.startupProbe.enabled }}
+
           startupProbe:
 
             httpGet:
 
-              path: /
+              path: {{ .Values.startupProbe.path }}
 
               port: {{ .Values.service.targetPort }}
 
-            failureThreshold: 30
+            failureThreshold: {{ .Values.startupProbe.failureThreshold }}
 
-            periodSeconds: 10
+            periodSeconds: {{ .Values.startupProbe.periodSeconds }}
+
+          {{- end }}
 
           # =====================================
           # READINESS PROBE
@@ -250,17 +313,11 @@ spec:
 
               path: {{ .Values.readinessProbe.path }}
 
-              port: {{ .Values.readinessProbe.port }}
+              port: {{ .Values.service.targetPort }}
 
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
 
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-
-            successThreshold: {{ .Values.readinessProbe.successThreshold }}
-
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
 
           {{- end }}
 
@@ -276,15 +333,11 @@ spec:
 
               path: {{ .Values.livenessProbe.path }}
 
-              port: {{ .Values.livenessProbe.port }}
+              port: {{ .Values.service.targetPort }}
 
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
 
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
 
           {{- end }}
 
@@ -294,17 +347,7 @@ spec:
 
           resources:
 
-            requests:
-
-              cpu: {{ .Values.resources.requests.cpu }}
-
-              memory: {{ .Values.resources.requests.memory }}
-
-            limits:
-
-              cpu: {{ .Values.resources.limits.cpu }}
-
-              memory: {{ .Values.resources.limits.memory }}
+{{ toYaml .Values.resources | indent 12 }}
 
       # =====================================
       # AZURE KEY VAULT CSI DRIVER
@@ -325,5 +368,11 @@ spec:
             volumeAttributes:
 
               secretProviderClass: {{ .Values.keyVault.secretProviderClass }}
+
+        {{- if .Values.extraVolumes }}
+
+{{ toYaml .Values.extraVolumes | indent 8 }}
+
+        {{- end }}
 
       {{- end }}

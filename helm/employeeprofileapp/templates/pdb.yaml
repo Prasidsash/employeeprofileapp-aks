@@ -1,0 +1,40 @@
+# =====================================
+# FILE: helm/employeeprofileapp/templates/pdb.yaml
+# VERSION: v1-enterprise-disposable-final
+# =====================================
+
+{{- if .Values.enable_pod_disruption_budget }}
+
+apiVersion: policy/v1
+
+kind: PodDisruptionBudget
+
+metadata:
+
+  name: {{ .Values.pod_disruption_budget_name }}
+
+  namespace: {{ .Release.Namespace }}
+
+  labels:
+
+    app: {{ default .Chart.Name .Values.app.name }}
+
+  annotations:
+
+    {{- if .Values.pod_disruption_budget_annotations }}
+
+{{ toYaml .Values.pod_disruption_budget_annotations | indent 4 }}
+
+    {{- end }}
+
+spec:
+
+  maxUnavailable: {{ .Values.pdb_max_unavailable }}
+
+  selector:
+
+    matchLabels:
+
+      app: {{ default .Chart.Name .Values.app.name }}
+
+{{- end }}

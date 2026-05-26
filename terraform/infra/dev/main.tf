@@ -1,4 +1,31 @@
 # =====================================
+# FILE: terraform/infra/dev/main.tf
+# VERSION: v7-enterprise-disposable-final
+# =====================================
+
+# =====================================
+# CURRENT AZURE CLIENT CONFIG
+# =====================================
+
+data "azurerm_client_config" "current" {}
+
+# =====================================
+# LOCAL VALUES
+# =====================================
+
+locals {
+
+  common_tags = {
+
+    environment = var.environment
+
+    project = "employeeprofileapp"
+
+    managed_by = "terraform"
+  }
+}
+
+# =====================================
 # RESOURCE GROUP
 # =====================================
 
@@ -8,14 +35,7 @@ resource "azurerm_resource_group" "main" {
 
   location = var.location
 
-  tags = {
-
-    environment = var.environment
-
-    project = "employeeprofileapp"
-
-    managed_by = "terraform"
-  }
+  tags = local.common_tags
 }
 
 # =====================================
@@ -39,6 +59,10 @@ module "network" {
   aks_subnet_prefixes = var.aks_subnet_prefixes
 
   environment = var.environment
+
+  depends_on = [
+    azurerm_resource_group.main
+  ]
 }
 
 # =====================================
@@ -70,6 +94,10 @@ module "monitoring" {
   aks_cluster_id = null
 
   additional_tags = var.monitoring_additional_tags
+
+  depends_on = [
+    azurerm_resource_group.main
+  ]
 }
 
 # =====================================
@@ -93,6 +121,36 @@ module "acr" {
   environment = var.environment
 
   additional_tags = var.aks_additional_tags
+
+  depends_on = [
+    azurerm_resource_group.main
+  ]
+}
+
+# =====================================
+# ENTERPRISE UAMI MODULE
+# PHASE-2 IDENTITY LIFECYCLE
+# =====================================
+
+module "aks_workload_identity" {
+
+  count = var.enable_user_assigned_identity ? 1 : 0
+
+  source = "../../modules/uami"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  identity_name = "${var.cluster_name}-wi"
+
+  additional_tags = local.common_tags
+
+  depends_on = [
+    azurerm_resource_group.main
+  ]
 }
 
 # =====================================
@@ -111,15 +169,57 @@ module "aks" {
 
   kubernetes_version = var.kubernetes_version
 
+  environment = var.environment
+
+  # =====================================
+  # SYSTEM NODE POOL
+  # =====================================
+
   system_node_count = var.system_node_count
 
   system_node_vm_size = var.system_node_vm_size
+
+  enable_node_autoscaling = var.enable_node_autoscaling
 
   system_node_min_count = var.system_node_min_count
 
   system_node_max_count = var.system_node_max_count
 
-  enable_node_autoscaling = var.enable_node_autoscaling
+  only_critical_addons_enabled = var.only_critical_addons_enabled
+
+  node_labels = var.node_labels
+
+  node_taints = var.node_taints
+
+  # =====================================
+  # NETWORKING
+  # =====================================
+
+  subnet_id = module.network.subnet_id
+
+  service_cidr = var.service_cidr
+
+  dns_service_ip = var.dns_service_ip
+
+  # =====================================
+  # ENTERPRISE OIDC + WORKLOAD IDENTITY
+  # =====================================
+
+  enable_oidc_issuer = var.enable_oidc_issuer
+
+  enable_workload_identity = var.enable_workload_identity
+
+  # =====================================
+  # USER ASSIGNED MANAGED IDENTITY
+  # =====================================
+
+  enable_user_assigned_identity = var.enable_user_assigned_identity
+
+  user_assigned_identity_ids = var.enable_user_assigned_identity ? [
+
+    module.aks_workload_identity[0].identity_id
+
+  ] : var.user_assigned_identity_ids
 
   # =====================================
   # SPOT NODE POOL
@@ -142,18 +242,10 @@ module "aks" {
   spot_node_taints = var.spot_node_taints
 
   # =====================================
-  # NETWORKING
-  # =====================================
-
-  subnet_id = module.network.subnet_id
-
-  service_cidr = var.service_cidr
-
-  dns_service_ip = var.dns_service_ip
-
-  # =====================================
   # MONITORING
   # =====================================
+
+  enable_monitoring = var.enable_monitoring
 
   log_analytics_workspace_id = try(
     module.monitoring[0].log_analytics_workspace_id,
@@ -164,12 +256,6 @@ module "aks" {
     module.monitoring[0].monitor_workspace_id,
     null
   )
-
-  # =====================================
-  # ENVIRONMENT
-  # =====================================
-
-  environment = var.environment
 
   # =====================================
   # KEY VAULT CSI DRIVER
@@ -188,14 +274,6 @@ module "aks" {
   image_cleaner_interval_hours = var.image_cleaner_interval_hours
 
   # =====================================
-  # NODE LABELS / TAINTS
-  # =====================================
-
-  node_labels = var.node_labels
-
-  node_taints = var.node_taints
-
-  # =====================================
   # API SERVER ACCESS PROFILE
   # =====================================
 
@@ -203,7 +281,16 @@ module "aks" {
 
   authorized_ip_ranges = var.authorized_ip_ranges
 
-  additional_tags = var.aks_additional_tags
+  # =====================================
+  # TAGS
+  # =====================================
+
+  additional_tags = merge(
+
+    local.common_tags,
+
+    var.aks_additional_tags
+  )
 
   # =====================================
   # ACR AUTOMATION
@@ -211,11 +298,61 @@ module "aks" {
 
   enable_acr_pull_role_assignment = true
 
-  acr_id = try(module.acr[0].acr_id, null)
+  acr_id = try(
+    module.acr[0].acr_id,
+    null
+  )
 
   depends_on = [
     module.network,
-    module.monitoring
+    module.monitoring,
+    module.acr,
+    module.aks_workload_identity
+  ]
+}
+
+# =====================================
+# AKS READINESS WAIT
+# =====================================
+
+resource "time_sleep" "wait_for_aks" {
+
+  depends_on = [
+    module.aks
+  ]
+
+  create_duration = "240s"
+}
+
+# =====================================
+# FEDERATED CREDENTIAL MODULE
+# PHASE-2 IDENTITY LIFECYCLE
+# =====================================
+
+module "federated_identity" {
+
+  count = var.enable_user_assigned_identity ? 1 : 0
+
+  source = "../../modules/federated_identity"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  namespace = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  identity_name = module.aks_workload_identity[0].identity_name
+
+  identity_resource_group_name = azurerm_resource_group.main.name
+
+  user_assigned_identity_id = module.aks_workload_identity[0].identity_id
+
+  oidc_issuer_url = module.aks.aks_oidc_issuer_url
+
+  depends_on = [
+    module.aks,
+    module.aks_workload_identity,
+    time_sleep.wait_for_aks
   ]
 }
 
@@ -237,7 +374,10 @@ module "keyvault" {
   # KEY VAULT ADMIN RBAC
   # =====================================
 
-  keyvault_admin_object_id = var.keyvault_admin_object_id
+  keyvault_admin_object_id = coalesce(
+    var.keyvault_admin_object_id,
+    data.azurerm_client_config.current.object_id
+  )
 
   # =====================================
   # AKS CSI RBAC
@@ -248,10 +388,21 @@ module "keyvault" {
   aks_kubelet_object_id = module.aks.aks_kubelet_object_id
 
   # =====================================
+  # WORKLOAD IDENTITY KEYVAULT ACCESS
+  # =====================================
+
+  enable_workload_identity_keyvault_access = true
+
+  workload_identity_principal_id = try(
+    module.aks_workload_identity[0].principal_id,
+    null
+  )
+
+  # =====================================
   # DEFAULT SECRETS
   # =====================================
 
-  enable_default_key_vault_secrets = true
+  enable_default_key_vault_secrets = var.enable_default_key_vault_secrets
 
   db_username = var.db_username
 
@@ -263,24 +414,18 @@ module "keyvault" {
 
   enable_network_acls = var.enable_network_acls
 
-  additional_tags = var.keyvault_additional_tags
+  additional_tags = merge(
+
+    local.common_tags,
+
+    var.keyvault_additional_tags
+  )
 
   depends_on = [
-    module.aks
+    module.aks,
+    module.aks_workload_identity,
+    time_sleep.wait_for_aks
   ]
-}
-
-# =====================================
-# AKS READINESS WAIT
-# =====================================
-
-resource "time_sleep" "wait_for_aks" {
-
-  depends_on = [
-    module.aks
-  ]
-
-  create_duration = "120s"
 }
 
 # =====================================
@@ -298,6 +443,7 @@ module "namespace" {
   namespace_annotations = var.namespace_annotations
 
   depends_on = [
+    module.aks,
     time_sleep.wait_for_aks
   ]
 }
@@ -320,7 +466,13 @@ module "rbac" {
 
   allowed_verbs = var.allowed_verbs
 
-  service_account_annotations = var.service_account_annotations
+  service_account_annotations = {
+
+    "azure.workload.identity/client-id" = try(
+      module.aks_workload_identity[0].client_id,
+      ""
+    )
+  }
 
   role_annotations = var.role_annotations
 
@@ -331,7 +483,8 @@ module "rbac" {
   additional_annotations = var.rbac_additional_annotations
 
   depends_on = [
-    module.namespace
+    module.namespace,
+    module.federated_identity
   ]
 }
 
@@ -466,10 +619,6 @@ module "governance" {
   resource_quota_annotations = {}
 
   limit_range_annotations = {}
-
-  # =====================================
-  # POD DISRUPTION BUDGET
-  # =====================================
 
   enable_pod_disruption_budget = var.enable_pod_disruption_budget
 

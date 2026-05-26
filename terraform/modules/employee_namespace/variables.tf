@@ -1,4 +1,20 @@
 # =====================================
+# FILE: terraform/modules/employee_namespace/variables.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
+# ENVIRONMENT
+# =====================================
+
+variable "environment" {
+
+  description = "Environment name"
+
+  type = string
+}
+
+# =====================================
 # NAMESPACE
 # =====================================
 

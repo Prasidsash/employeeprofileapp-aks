@@ -1,3 +1,8 @@
+# =====================================
+# FILE: terraform/modules/cert_manager/main.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
 resource "helm_release" "cert_manager" {
 
   name = "cert-manager"
@@ -35,6 +40,20 @@ resource "helm_release" "cert_manager" {
   set {
     name  = "installCRDs"
     value = "true"
+  }
+
+  # =====================================
+  # OPTIONAL HARDENING FLAGS
+  # =====================================
+
+  set {
+    name  = "global.leaderElection.namespace"
+    value = var.namespace
+  }
+
+  set {
+    name  = "prometheus.enabled"
+    value = "false"
   }
 }
 

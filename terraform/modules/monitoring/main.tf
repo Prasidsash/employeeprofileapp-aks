@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/monitoring/main.tf
+# VERSION: v6-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # LOG ANALYTICS WORKSPACE
 # =====================================
 
@@ -22,6 +27,8 @@ resource "azurerm_log_analytics_workspace" "law" {
       managed_by = "terraform"
 
       project = "employeeprofileapp"
+
+      module = "monitoring"
     },
 
     var.additional_tags
@@ -40,7 +47,11 @@ resource "azurerm_monitor_action_group" "alerts" {
 
   resource_group_name = var.resource_group_name
 
-  short_name = "alerts"
+  short_name = substr(
+    replace("${var.environment}alerts", "-", ""),
+    0,
+    12
+  )
 
   tags = merge(
 
@@ -50,6 +61,8 @@ resource "azurerm_monitor_action_group" "alerts" {
       managed_by = "terraform"
 
       project = "employeeprofileapp"
+
+      module = "monitoring"
     },
 
     var.additional_tags
@@ -58,7 +71,7 @@ resource "azurerm_monitor_action_group" "alerts" {
 
 # =====================================
 # AZURE MONITOR WORKSPACE
-# (Managed Prometheus backend)
+# (Managed Prometheus Backend)
 # =====================================
 
 resource "azurerm_monitor_workspace" "prometheus" {
@@ -79,6 +92,8 @@ resource "azurerm_monitor_workspace" "prometheus" {
       managed_by = "terraform"
 
       project = "employeeprofileapp"
+
+      module = "monitoring"
     },
 
     var.additional_tags
@@ -104,8 +119,7 @@ resource "azurerm_dashboard_grafana" "grafana" {
   api_key_enabled = var.grafana_api_key_enabled
 
   # =====================================
-  # Optional Future Network Hardening
-  # Preserve Existing Behavior
+  # OPTIONAL FUTURE NETWORK HARDENING
   # =====================================
 
   public_network_access_enabled = true
@@ -132,10 +146,16 @@ resource "azurerm_dashboard_grafana" "grafana" {
       managed_by = "terraform"
 
       project = "employeeprofileapp"
+
+      module = "monitoring"
     },
 
     var.additional_tags
   )
+
+  depends_on = [
+    azurerm_monitor_workspace.prometheus
+  ]
 }
 
 # =====================================
@@ -151,4 +171,11 @@ resource "azurerm_role_assignment" "grafana_monitor_reader" {
   role_definition_name = "Monitoring Reader"
 
   principal_id = azurerm_dashboard_grafana.grafana[0].identity[0].principal_id
+
+  skip_service_principal_aad_check = true
+
+  depends_on = [
+    azurerm_dashboard_grafana.grafana,
+    azurerm_monitor_workspace.prometheus
+  ]
 }

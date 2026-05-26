@@ -1,3 +1,8 @@
+# =====================================
+# FILE: terraform/modules/cert_manager/variables.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
 variable "namespace" {
 
   description = "cert-manager namespace"
@@ -9,7 +14,7 @@ variable "namespace" {
 
 variable "chart_version" {
 
-  description = "cert-manager chart version"
+  description = "cert-manager Helm chart version"
 
   type = string
 
@@ -18,7 +23,7 @@ variable "chart_version" {
 
 variable "enable_cluster_issuer" {
 
-  description = "Enable ClusterIssuer"
+  description = "Enable ClusterIssuer creation"
 
   type = bool
 

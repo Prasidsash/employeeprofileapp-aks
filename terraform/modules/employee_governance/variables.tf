@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/employee_governance/variables.tf
+# VERSION: v2-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # NAMESPACE
 # =====================================
 

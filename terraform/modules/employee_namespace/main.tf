@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/employee_namespace/main.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # KUBERNETES NAMESPACE
 # =====================================
 
@@ -18,6 +23,10 @@ resource "kubernetes_namespace_v1" "namespace" {
         managed_by = "terraform"
 
         project = "employeeprofileapp"
+
+        environment = var.environment
+
+        module = "employee_namespace"
       },
 
       # =====================================

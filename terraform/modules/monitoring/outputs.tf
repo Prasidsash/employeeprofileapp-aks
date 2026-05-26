@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/modules/monitoring/outputs.tf
+# VERSION: v5-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # LOG ANALYTICS
 # =====================================
 
@@ -24,14 +29,20 @@ output "monitor_workspace_id" {
 
   description = "Azure Monitor Workspace ID"
 
-  value = var.enable_managed_prometheus ? azurerm_monitor_workspace.prometheus[0].id : null
+  value = try(
+    azurerm_monitor_workspace.prometheus[0].id,
+    null
+  )
 }
 
 output "monitor_workspace_name" {
 
   description = "Azure Monitor Workspace Name"
 
-  value = var.enable_managed_prometheus ? azurerm_monitor_workspace.prometheus[0].name : null
+  value = try(
+    azurerm_monitor_workspace.prometheus[0].name,
+    null
+  )
 }
 
 # =====================================
@@ -42,19 +53,28 @@ output "grafana_id" {
 
   description = "Managed Grafana ID"
 
-  value = var.enable_managed_prometheus ? azurerm_dashboard_grafana.grafana[0].id : null
+  value = try(
+    azurerm_dashboard_grafana.grafana[0].id,
+    null
+  )
 }
 
 output "grafana_name" {
 
   description = "Managed Grafana Name"
 
-  value = var.enable_managed_prometheus ? azurerm_dashboard_grafana.grafana[0].name : null
+  value = try(
+    azurerm_dashboard_grafana.grafana[0].name,
+    null
+  )
 }
 
 output "grafana_endpoint" {
 
   description = "Managed Grafana Endpoint"
 
-  value = var.enable_managed_prometheus ? azurerm_dashboard_grafana.grafana[0].endpoint : null
+  value = try(
+    azurerm_dashboard_grafana.grafana[0].endpoint,
+    null
+  )
 }

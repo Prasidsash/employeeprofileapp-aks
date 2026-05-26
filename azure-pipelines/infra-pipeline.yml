@@ -1,99 +1,114 @@
+# =====================================
+# FILE: azure-pipelines/infra-pipeline.yml
+# VERSION: v11-enterprise-disposable-final
+# =====================================
+
 trigger:
+
   branches:
+
     include:
+
       - main
 
   paths:
+
     include:
-      - terraform/**
+
+      - terraform/infra/**
+      - terraform/modules/**
       - azure-pipelines/infra-pipeline.yml
 
     exclude:
+
       - src/**
       - helm/**
-      - Dockerfile
-      - azure-pipelines/app-ci.yml
-      - azure-pipelines/app-cd.yml
-      - README.md
-
-parameters:
-  - name: environment
-    type: string
-    default: dev
 
 pool:
+
   vmImage: ubuntu-latest
 
 variables:
 
-  - group: employeeprofileapp-${{ parameters.environment }}-vars
-
-  - name: terraformWorkingDirectory
-    value: terraform/infra/${{ parameters.environment }}
-
-  - name: resourceGroupName
-    value: employeeprofileapp-${{ parameters.environment }}-rg
-
-  - name: aksClusterName
-    value: employeeprofileapp-${{ parameters.environment }}-aks
+  - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # TERRAFORM VERSION
+  # TERRAFORM
   # =====================================
 
   - name: terraformVersion
-    value: 1.13.2
+    value: 1.11.4
+
+  - name: terraformWorkingDirectory
+    value: terraform/infra/dev
+
+  # =====================================
+  # BACKEND
+  # =====================================
+
+  - name: backendResourceGroupName
+    value: $(tfBackendResourceGroup)
+
+  - name: backendStorageAccountName
+    value: $(tfBackendStorageAccount)
+
+  - name: backendContainerName
+    value: $(tfBackendContainer)
+
+  - name: backendStateKey
+    value: dev.terraform.tfstate
+
+  # =====================================
+  # AKS
+  # =====================================
+
+  - name: aksClusterName
+    value: employeeprofileapp-dev-aks
+
+  - name: aksResourceGroup
+    value: employeeprofileapp-dev-rg
 
 stages:
 
-  - stage: Terraform
-    displayName: Terraform Deployment
+  # =====================================
+  # VALIDATION STAGE
+  # =====================================
+
+  - stage: Validation
+
+    displayName: Terraform Validation
 
     jobs:
 
-      - job: TerraformApply
-        displayName: Terraform Apply
+      - job: TerraformValidation
+
+        displayName: Terraform Validation
 
         steps:
 
           - checkout: self
+
+            clean: true
 
           # =====================================
           # INSTALL TERRAFORM
           # =====================================
 
           - task: TerraformInstaller@1
+
             displayName: Install Terraform
 
             inputs:
+
               terraformVersion: $(terraformVersion)
 
           # =====================================
-          # TOOLING VALIDATION
-          # =====================================
-
-          - script: |
-
-              echo "=================================="
-              echo "Terraform Version"
-              echo "=================================="
-
-              terraform version
-
-              echo "=================================="
-              echo "Kubectl Version"
-              echo "=================================="
-
-              kubectl version --client || true
-
-            displayName: Validate Tooling
-
-          # =====================================
-          # TERRAFORM DEPLOYMENT
+          # AZURE LOGIN VALIDATION
           # =====================================
 
           - task: AzureCLI@2
-            displayName: Terraform Apply
+
+            displayName: Azure Login Validation
 
             inputs:
 
@@ -103,100 +118,441 @@ stages:
 
               scriptLocation: inlineScript
 
-              workingDirectory: $(terraformWorkingDirectory)
+              addSpnToEnvironment: true
 
               inlineScript: |
 
-                set -e
+                set -euo pipefail
+
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
 
                 echo "=================================="
-                echo "Azure Subscription Context"
+                echo "AZURE ACCOUNT"
                 echo "=================================="
 
                 az account show
 
-                echo "=================================="
-                echo "Terraform Initialization"
-                echo "=================================="
+          # =====================================
+          # TERRAFORM INIT
+          # =====================================
 
-                terraform init -reconfigure
+          - task: AzureCLI@2
 
-                echo "=================================="
-                echo "Terraform Providers"
-                echo "=================================="
+            displayName: Terraform Init
 
-                terraform providers
+            inputs:
 
-                echo "=================================="
-                echo "Terraform Formatting Validation"
-                echo "=================================="
+              azureSubscription: $(azureInfraServiceConnection)
 
-                terraform fmt -check
+              scriptType: bash
 
-                echo "=================================="
-                echo "Terraform Validation"
-                echo "=================================="
+              scriptLocation: inlineScript
+
+              addSpnToEnvironment: true
+
+              workingDirectory: $(terraformWorkingDirectory)
+
+              inlineScript: |
+
+                set -euo pipefail
+
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                terraform init \
+                  -upgrade \
+                  -reconfigure \
+                  -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                  -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                  -backend-config="container_name=$(backendContainerName)" \
+                  -backend-config="key=$(backendStateKey)" \
+                  -backend-config="use_azuread_auth=true"
+
+          # =====================================
+          # TERRAFORM FORMAT
+          # =====================================
+
+          - script: |
+
+              set -euo pipefail
+
+              terraform fmt -recursive -check
+
+            displayName: Terraform Format Check
+
+            workingDirectory: $(terraformWorkingDirectory)
+
+          # =====================================
+          # TERRAFORM VALIDATE
+          # =====================================
+
+          - task: AzureCLI@2
+
+            displayName: Terraform Validate
+
+            inputs:
+
+              azureSubscription: $(azureInfraServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              addSpnToEnvironment: true
+
+              workingDirectory: $(terraformWorkingDirectory)
+
+              inlineScript: |
+
+                set -euo pipefail
+
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
                 terraform validate
 
-                echo "=================================="
-                echo "Terraform Plan"
-                echo "=================================="
+          # =====================================
+          # TERRAFORM PLAN
+          # =====================================
+
+          - task: AzureCLI@2
+
+            displayName: Terraform Plan
+
+            inputs:
+
+              azureSubscription: $(azureInfraServiceConnection)
+
+              scriptType: bash
+
+              scriptLocation: inlineScript
+
+              addSpnToEnvironment: true
+
+              workingDirectory: $(terraformWorkingDirectory)
+
+              inlineScript: |
+
+                set -euo pipefail
+
+                export ARM_USE_OIDC=true
+                export ARM_USE_AZUREAD=true
+                export ARM_CLIENT_ID=$servicePrincipalId
+                export ARM_TENANT_ID=$tenantId
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
                 terraform plan \
                   -input=false \
                   -out=tfplan
 
-                echo "=================================="
-                echo "Terraform Apply"
-                echo "=================================="
+  # =====================================
+  # DEPLOYMENT STAGE
+  # =====================================
 
-                terraform apply \
-                  -input=false \
-                  -auto-approve \
-                  tfplan
+  - stage: Deployment
 
-                echo "=================================="
-                echo "AKS Credentials"
-                echo "=================================="
+    displayName: Terraform Deployment
 
-                az aks get-credentials \
-                  --resource-group $(resourceGroupName) \
-                  --name $(aksClusterName) \
-                  --admin \
-                  --overwrite-existing
+    dependsOn: Validation
 
-                echo "=================================="
-                echo "Cluster Validation"
-                echo "=================================="
+    jobs:
 
-                kubectl get nodes
+      - deployment: TerraformDeployment
 
-                kubectl get namespaces
+        displayName: Terraform Apply
 
-                echo "=================================="
-                echo "Cluster Info"
-                echo "=================================="
+        environment: dev
 
-                kubectl cluster-info
+        strategy:
 
-                # ==================================
-                # Optional Future Destroy
-                # ==================================
-                # terraform destroy -auto-approve
+          runOnce:
 
-          # =====================================
-          # OPTIONAL FAILURE DIAGNOSTICS
-          # =====================================
+            deploy:
 
-          - script: |
+              steps:
 
-              echo "=================================="
-              echo "Terraform Failure Diagnostics"
-              echo "=================================="
+                - checkout: self
 
-              terraform version || true
+                  clean: true
 
-            condition: failed()
+                # =====================================
+                # INSTALL TERRAFORM
+                # =====================================
 
-            displayName: Optional Failure Diagnostics
+                - task: TerraformInstaller@1
+
+                  displayName: Install Terraform
+
+                  inputs:
+
+                    terraformVersion: $(terraformVersion)
+
+                # =====================================
+                # TERRAFORM INIT
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Terraform Init
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    workingDirectory: $(terraformWorkingDirectory)
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      terraform init \
+                        -upgrade \
+                        -reconfigure \
+                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                        -backend-config="container_name=$(backendContainerName)" \
+                        -backend-config="key=$(backendStateKey)" \
+                        -backend-config="use_azuread_auth=true"
+
+                # =====================================
+                # TERRAFORM APPLY
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Terraform Apply
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    workingDirectory: $(terraformWorkingDirectory)
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      terraform apply \
+                        -auto-approve \
+                        -input=false
+
+                # =====================================
+                # EXPORT TERRAFORM OUTPUTS
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Export Terraform Outputs
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    workingDirectory: $(terraformWorkingDirectory)
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      AKS_NAME=$(terraform output -raw aks_name)
+                      ACR_NAME=$(terraform output -raw acr_name)
+                      KEYVAULT_NAME=$(terraform output -raw key_vault_name)
+
+                      echo "##vso[task.setvariable variable=AKS_NAME]$AKS_NAME"
+                      echo "##vso[task.setvariable variable=ACR_NAME]$ACR_NAME"
+                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]$KEYVAULT_NAME"
+
+                # =====================================
+                # AKS LOGIN
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: AKS Login
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      az aks get-credentials \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --overwrite-existing
+
+                      kubectl get nodes -o wide
+
+                # =====================================
+                # AKS CSI VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: AKS CSI Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      kubectl get pods -A | grep csi || true
+
+                      kubectl get daemonset -A | grep secrets-store || true
+
+                # =====================================
+                # WORKLOAD IDENTITY VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Workload Identity Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      echo "=================================="
+                      echo "OIDC ISSUER"
+                      echo "=================================="
+
+                      az aks show \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --query "oidcIssuerProfile.issuerUrl"
+
+                      echo "=================================="
+                      echo "WORKLOAD IDENTITY"
+                      echo "=================================="
+
+                      az aks show \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --query "securityProfile.workloadIdentity"
+
+                # =====================================
+                # INGRESS VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Ingress Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      kubectl get pods -A
+
+                      kubectl get svc -A
+
+                      kubectl get ingressclass
+
+                # =====================================
+                # FAILURE DIAGNOSTICS
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Failure Diagnostics
+
+                  condition: failed()
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      kubectl get all -A || true
+
+                      kubectl get events -A \
+                        --sort-by=.metadata.creationTimestamp || true
+
+                      kubectl describe nodes || true
