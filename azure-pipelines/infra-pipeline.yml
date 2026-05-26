@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v17-enterprise-disposable-final
+# VERSION: v19-enterprise-runtime-backend-final
 # =====================================
 
 trigger:
@@ -45,15 +45,6 @@ variables:
   # =====================================
   # BACKEND
   # =====================================
-
-  - name: backendResourceGroupName
-    value: $[ variables['tfBackendResourceGroup'] ]
-
-  - name: backendStorageAccountName
-    value: $[ variables['tfBackendStorageAccount'] ]
-
-  - name: backendContainerName
-    value: $[ variables['tfBackendContainer'] ]
 
   - name: backendStateKey
     value: dev.terraform.tfstate
