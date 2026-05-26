@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-cd.yml
-# VERSION: v10-enterprise-disposable-final
+# VERSION: v11-enterprise-helm-acr-fixed-final
 # =====================================
 
 trigger: none
@@ -48,6 +48,13 @@ variables:
 
   - name: imageTag
     value: $(Build.BuildId)
+
+  # =====================================
+  # ACR
+  # =====================================
+
+  - name: acrName
+    value: empprofacr2026
 
   # =====================================
   # AKS
@@ -206,14 +213,6 @@ stages:
                       echo "##vso[task.setvariable variable=WORKLOAD_CLIENT_ID]$WORKLOAD_CLIENT_ID"
                       echo "##vso[task.setvariable variable=TENANT_ID]$TENANT_ID"
 
-                      echo "=================================="
-                      echo "TERRAFORM OUTPUTS"
-                      echo "=================================="
-
-                      echo "KEYVAULT_NAME=$KEYVAULT_NAME"
-                      echo "WORKLOAD_CLIENT_ID=$WORKLOAD_CLIENT_ID"
-                      echo "TENANT_ID=$TENANT_ID"
-
                 # =====================================
                 # AKS LOGIN
                 # =====================================
@@ -265,7 +264,8 @@ stages:
 
                       set -euo pipefail
 
-                      kubectl get namespace $(namespace)
+                      kubectl create namespace $(namespace) \
+                        --dry-run=client -o yaml | kubectl apply -f -
 
                 # =====================================
                 # WORKLOAD IDENTITY VALIDATION
@@ -289,17 +289,9 @@ stages:
 
                       set -euo pipefail
 
-                      echo "=================================="
-                      echo "SERVICE ACCOUNT"
-                      echo "=================================="
-
                       kubectl get sa employee-sa \
                         -n $(namespace) \
                         -o yaml || true
-
-                      echo "=================================="
-                      echo "FEDERATED IDENTITY"
-                      echo "=================================="
 
                       az identity federated-credential list \
                         --identity-name employeeprofileapp-dev-aks-wi \
@@ -327,14 +319,57 @@ stages:
 
                       set -euo pipefail
 
+                      echo "=================================="
+                      echo "ACR LOGIN SERVER"
+                      echo "=================================="
+
+                      ACR_LOGIN_SERVER=$(az acr show \
+                        --name $(acrName) \
+                        --query loginServer \
+                        --output tsv)
+
+                      echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
+
+                      echo "=================================="
+                      echo "HELM OWNERSHIP FIX"
+                      echo "=================================="
+
+                      if kubectl get serviceaccount employee-sa -n $(namespace) >/dev/null 2>&1; then
+
+                        kubectl label serviceaccount employee-sa \
+                          -n $(namespace) \
+                          app.kubernetes.io/managed-by=Helm \
+                          --overwrite
+
+                        kubectl annotate serviceaccount employee-sa \
+                          -n $(namespace) \
+                          meta.helm.sh/release-name=$(helmReleaseName) \
+                          --overwrite
+
+                        kubectl annotate serviceaccount employee-sa \
+                          -n $(namespace) \
+                          meta.helm.sh/release-namespace=$(namespace) \
+                          --overwrite
+                      fi
+
+                      echo "=================================="
+                      echo "HELM DEPENDENCY UPDATE"
+                      echo "=================================="
+
                       helm dependency update $(helmChartPath)
 
-                      helm upgrade --install $(helmReleaseName) \
+                      echo "=================================="
+                      echo "HELM UPGRADE INSTALL"
+                      echo "=================================="
+
+                      helm upgrade \
+                        --install \
+                        $(helmReleaseName) \
                         $(helmChartPath) \
                         --namespace $(namespace) \
                         --create-namespace \
                         --values $(helmChartPath)/values-dev.yaml \
-                        --set image.repository=$(ACR_LOGIN_SERVER)/$(imageRepository) \
+                        --set image.repository=${ACR_LOGIN_SERVER}/$(imageRepository) \
                         --set image.tag=$(imageTag) \
                         --set workloadIdentity.enabled=true \
                         --set workloadIdentity.clientId=$(WORKLOAD_CLIENT_ID) \
