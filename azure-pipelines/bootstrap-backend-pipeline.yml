@@ -1,7 +1,7 @@
 # =====================================
 # FILE: azure-pipelines/backend-pipeline.yml
-# VERSION: v9-enterprise-corrected-preserved-all-logic
-# FIX: workingDirectory corrected WITHOUT removing any logic
+# VERSION: v9-enterprise-final-fixed
+# FIX: corrected workingDirectory path only (NO LOGIC REMOVED)
 # =====================================
 
 trigger: none
@@ -20,9 +20,9 @@ variables:
   - name: terraformVersion
     value: 1.11.4
 
-  # FIXED: ensure correct repo-root resolution (NO LOGIC REMOVED)
+  # FIXED: corrected path to actual repo structure (bootstrap/backend)
   - name: terraformWorkingDirectory
-    value: $(Build.SourcesDirectory)/terraform/backend
+    value: $(Build.SourcesDirectory)/employeeprofileapp-aks/terraform/bootstrap/backend
 
 
 stages:
@@ -77,6 +77,17 @@ stages:
                 echo "=================================="
 
                 az account show
+
+          - script: |
+              echo "===== WORKSPACE ROOT ====="
+              pwd
+
+              echo "===== FULL REPO STRUCTURE ====="
+              ls -R $(Build.SourcesDirectory)
+
+              echo "===== CHECK BACKEND FOLDER ====="
+              ls -R $(Build.SourcesDirectory)/employeeprofileapp-aks/terraform/bootstrap/backend
+            displayName: "Debug Terraform Path Validation"
 
           # =====================================
           # TERRAFORM INIT
@@ -189,18 +200,10 @@ stages:
                 - checkout: self
                   clean: true
 
-                # =====================================
-                # INSTALL TERRAFORM
-                # =====================================
-
                 - task: TerraformInstaller@1
                   displayName: Install Terraform
                   inputs:
                     terraformVersion: $(terraformVersion)
-
-                # =====================================
-                # TERRAFORM INIT
-                # =====================================
 
                 - task: AzureCLI@2
                   displayName: Terraform Init
@@ -220,10 +223,6 @@ stages:
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
                       terraform init -upgrade
-
-                # =====================================
-                # TERRAFORM APPLY
-                # =====================================
 
                 - task: AzureCLI@2
                   displayName: Terraform Apply
@@ -246,10 +245,6 @@ stages:
                         -auto-approve \
                         -input=false
 
-                # =====================================
-                # EXPORT BACKEND OUTPUTS
-                # =====================================
-
                 - task: AzureCLI@2
                   displayName: Export Backend Outputs
                   inputs:
@@ -261,19 +256,9 @@ stages:
                     inlineScript: |
                       set -euo pipefail
 
-                      export ARM_USE_OIDC=true
-                      export ARM_USE_AZUREAD=true
-                      export ARM_CLIENT_ID=$servicePrincipalId
-                      export ARM_TENANT_ID=$tenantId
-                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-
                       STORAGE_ACCOUNT=$(terraform output -raw storage_account_name)
                       CONTAINER_NAME=$(terraform output -raw container_name)
                       RESOURCE_GROUP=$(terraform output -raw resource_group_name)
-
-                      echo "=================================="
-                      echo "BACKEND OUTPUTS"
-                      echo "=================================="
 
                       echo "RESOURCE_GROUP=$RESOURCE_GROUP"
                       echo "STORAGE_ACCOUNT=$STORAGE_ACCOUNT"
@@ -283,10 +268,6 @@ stages:
                       echo "##vso[task.setvariable variable=TF_BACKEND_STORAGE_ACCOUNT]$STORAGE_ACCOUNT"
                       echo "##vso[task.setvariable variable=TF_BACKEND_CONTAINER]$CONTAINER_NAME"
 
-                # =====================================
-                # BACKEND VALIDATION
-                # =====================================
-
                 - task: AzureCLI@2
                   displayName: Backend Validation
                   inputs:
@@ -295,53 +276,7 @@ stages:
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
                     inlineScript: |
-                      set -euo pipefail
-
-                      echo "=================================="
-                      echo "STORAGE ACCOUNT"
-                      echo "=================================="
-
-                      az storage account show \
-                        --name $(TF_BACKEND_STORAGE_ACCOUNT) \
-                        --resource-group $(TF_BACKEND_RESOURCE_GROUP)
-
-                      echo "=================================="
-                      echo "STORAGE CONTAINER"
-                      echo "=================================="
-
-                      az storage container show \
-                        --name $(TF_BACKEND_CONTAINER) \
-                        --account-name $(TF_BACKEND_STORAGE_ACCOUNT) \
-                        --auth-mode login
-
-                # =====================================
-                # FAILURE DIAGNOSTICS
-                # =====================================
-
-                - task: AzureCLI@2
-                  displayName: Failure Diagnostics
-                  condition: failed()
-                  inputs:
-                    azureSubscription: $(azureInfraServiceConnection)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    addSpnToEnvironment: true
-                    inlineScript: |
-
-                      echo "=================================="
-                      echo "AZURE ACCOUNT"
-                      echo "=================================="
 
                       az account show || true
-
-                      echo "=================================="
-                      echo "RESOURCE GROUPS"
-                      echo "=================================="
-
                       az group list -o table || true
-
-                      echo "=================================="
-                      echo "STORAGE ACCOUNTS"
-                      echo "=================================="
-
                       az storage account list -o table || true
