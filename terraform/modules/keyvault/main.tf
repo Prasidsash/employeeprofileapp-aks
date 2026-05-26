@@ -184,13 +184,7 @@ resource "azurerm_role_assignment" "kv_admin" {
 
 resource "azurerm_role_assignment" "aks_kv_secrets_user" {
 
-  count = (
-
-    var.enable_aks_kv_rbac &&
-
-    var.aks_kubelet_object_id != null
-
-  ) ? 1 : 0
+  count = var.enable_aks_kv_rbac ? 1 : 0
 
   scope = azurerm_key_vault.kv.id
 
@@ -207,13 +201,7 @@ resource "azurerm_role_assignment" "aks_kv_secrets_user" {
 
 resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
-  count = (
-
-    var.enable_workload_identity_keyvault_access &&
-
-    var.workload_identity_principal_id != null
-
-  ) ? 1 : 0
+  count = var.enable_workload_identity_keyvault_access ? 1 : 0
 
   scope = azurerm_key_vault.kv.id
 

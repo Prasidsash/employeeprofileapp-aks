@@ -6,10 +6,8 @@
 resource "azurerm_federated_identity_credential" "workload_identity" {
 
   name = "${var.identity_name}-fic"
-
-  resource_group_name = var.identity_resource_group_name
-
-  parent_id = var.user_assigned_identity_id
+  
+  user_assigned_identity_id = var.user_assigned_identity_id
 
   audience = [
 

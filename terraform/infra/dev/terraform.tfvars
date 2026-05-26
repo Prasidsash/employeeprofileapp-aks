@@ -43,7 +43,7 @@ enable_aks = true
 
 cluster_name = "employeeprofileapp-dev-aks"
 
-kubernetes_version = "1.31"
+kubernetes_version = "1.34.6"
 
 # =====================================
 # SYSTEM NODE POOL

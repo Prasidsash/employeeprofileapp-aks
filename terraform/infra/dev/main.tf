@@ -4,12 +4,6 @@
 # =====================================
 
 # =====================================
-# CURRENT AZURE CLIENT CONFIG
-# =====================================
-
-data "azurerm_client_config" "current" {}
-
-# =====================================
 # LOCAL VALUES
 # =====================================
 
@@ -435,6 +429,8 @@ module "keyvault" {
 module "namespace" {
 
   source = "../../modules/employee_namespace"
+
+  environment = var.environment
 
   namespace_name = var.namespace_name
 

@@ -36,7 +36,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     vm_size = var.system_node_vm_size
 
     node_count = var.system_node_count
-
+   
     auto_scaling_enabled = var.enable_node_autoscaling
 
     min_count = var.system_node_min_count
@@ -50,9 +50,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     only_critical_addons_enabled = var.only_critical_addons_enabled
 
     node_labels = var.node_labels
-
-    node_taints = var.node_taints
-
+    
     upgrade_settings {
 
       max_surge = "33%"
@@ -257,11 +255,8 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
 
 resource "azurerm_role_assignment" "aks_acr_pull" {
 
-  count = (
-    var.enable_acr_pull_role_assignment &&
-    var.acr_id != null
-  ) ? 1 : 0
-
+  count = var.enable_acr_pull_role_assignment ? 1 : 0
+  
   scope = var.acr_id
 
   role_definition_name = "AcrPull"

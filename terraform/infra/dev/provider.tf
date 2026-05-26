@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/provider.tf
-# VERSION: v3-enterprise-disposable-final
+# VERSION: v4-enterprise-stable-final
 # =====================================
 
 terraform {
@@ -34,8 +34,6 @@ terraform {
       version = "~> 0.11"
     }
   }
-
-  backend "azurerm" {}
 }
 
 # =====================================
@@ -46,7 +44,6 @@ data "azurerm_client_config" "current" {}
 
 # =====================================
 # AZURE PROVIDER
-# Enterprise OIDC Authentication
 # =====================================
 
 provider "azurerm" {
@@ -65,17 +62,10 @@ provider "azurerm" {
       prevent_deletion_if_contains_resources = false
     }
   }
-
-  use_oidc = true
-
-  use_cli = false
-
-  storage_use_azuread = true
 }
 
 # =====================================
 # KUBERNETES PROVIDER
-# Enterprise Stable AKS Authentication
 # =====================================
 
 provider "kubernetes" {
@@ -97,7 +87,6 @@ provider "kubernetes" {
 
 # =====================================
 # HELM PROVIDER
-# Enterprise Stable AKS Authentication
 # =====================================
 
 provider "helm" {
@@ -122,7 +111,6 @@ provider "helm" {
 
 # =====================================
 # KUBECTL PROVIDER
-# Enterprise Stable AKS Authentication
 # =====================================
 
 provider "kubectl" {
@@ -143,22 +131,3 @@ provider "kubectl" {
 
   load_config_file = false
 }
-
-# =====================================
-# OPTIONAL FUTURE PROVIDER NOTES
-# =====================================
-
-# Future enterprise enhancements may include:
-#
-# - Workload Identity authentication
-# - OIDC federation
-# - Terraform Cloud integration
-# - Remote execution runners
-# - Multi-environment provider aliasing
-# - Dedicated provider aliases
-# - UAMI-based Terraform execution
-# - Federated credential execution model
-#
-# Current provider model intentionally
-# preserves stable AKS + Helm behavior
-# while enabling enterprise OIDC readiness.

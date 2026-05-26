@@ -11,11 +11,11 @@ terraform {
     # REMOTE TERRAFORM STATE
     # =====================================
 
-    resource_group_name  = "employeeprofileapp-tfstate-rg"
+    resource_group_name = "employeeprofileapp-tfstate-rg"
 
     storage_account_name = "empproftfstate2027"
 
-    container_name       = "tfstate"
+    container_name = "tfstate"
 
     # =====================================
     # ENVIRONMENT STATE FILE
