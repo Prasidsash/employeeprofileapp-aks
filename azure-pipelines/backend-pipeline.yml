@@ -298,13 +298,13 @@ stages:
                       terraform init \
                         -reconfigure \
                         -upgrade
-
+                  
                 # =====================================
-                # TERRAFORM APPLY
+                # TERRAFORM STATE VALIDATION
                 # =====================================
 
                 - task: AzureCLI@2
-                  displayName: Terraform Apply
+                  displayName: Terraform State Validation
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
@@ -321,10 +321,10 @@ stages:
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-                      terraform apply \
-                        -auto-approve \
-                        -input=false \
-                        
+                      terraform state list
+
+                      terraform plan -input=false
+
                 # =====================================
                 # EXPORT BACKEND OUTPUTS
                 # =====================================
