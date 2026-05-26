@@ -1,12 +1,11 @@
 # =====================================
 # FILE: azure-pipelines/app-cd.yml
-# VERSION: v11-enterprise-helm-acr-fixed-final
+# VERSION: v12-enterprise-helm-acr-workloadidentity-final
 # =====================================
 
 trigger: none
 
 pool:
-
   vmImage: ubuntu-latest
 
 variables:
@@ -109,7 +108,6 @@ stages:
               steps:
 
                 - checkout: self
-
                   clean: true
 
                 # =====================================
@@ -121,7 +119,6 @@ stages:
                   displayName: Install Terraform
 
                   inputs:
-
                     terraformVersion: $(terraformVersion)
 
                 # =====================================
@@ -133,7 +130,6 @@ stages:
                   displayName: Install Helm
 
                   inputs:
-
                     helmVersionToInstall: $(helmVersion)
 
                 # =====================================
@@ -331,32 +327,19 @@ stages:
                       echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
 
                       echo "=================================="
-                      echo "HELM OWNERSHIP FIX"
-                      echo "=================================="
-
-                      if kubectl get serviceaccount employee-sa -n $(namespace) >/dev/null 2>&1; then
-
-                        kubectl label serviceaccount employee-sa \
-                          -n $(namespace) \
-                          app.kubernetes.io/managed-by=Helm \
-                          --overwrite
-
-                        kubectl annotate serviceaccount employee-sa \
-                          -n $(namespace) \
-                          meta.helm.sh/release-name=$(helmReleaseName) \
-                          --overwrite
-
-                        kubectl annotate serviceaccount employee-sa \
-                          -n $(namespace) \
-                          meta.helm.sh/release-namespace=$(namespace) \
-                          --overwrite
-                      fi
-
-                      echo "=================================="
                       echo "HELM DEPENDENCY UPDATE"
                       echo "=================================="
 
                       helm dependency update $(helmChartPath)
+
+                      echo "=================================="
+                      echo "REMOVE EXISTING SERVICE ACCOUNT"
+                      echo "TO AVOID SERVER-SIDE APPLY CONFLICT"
+                      echo "=================================="
+
+                      kubectl delete sa employee-sa \
+                        -n $(namespace) \
+                        --ignore-not-found=true
 
                       echo "=================================="
                       echo "HELM UPGRADE INSTALL"
@@ -368,6 +351,7 @@ stages:
                         $(helmChartPath) \
                         --namespace $(namespace) \
                         --create-namespace \
+                        --values $(helmChartPath)/values.yaml \
                         --values $(helmChartPath)/values-dev.yaml \
                         --set image.repository=${ACR_LOGIN_SERVER}/$(imageRepository) \
                         --set image.tag=$(imageTag) \
@@ -375,7 +359,7 @@ stages:
                         --set workloadIdentity.clientId=$(WORKLOAD_CLIENT_ID) \
                         --set workloadIdentity.tenantId=$(TENANT_ID) \
                         --set keyVault.enabled=true \
-                        --set keyVault.keyVaultName=$(KEYVAULT_NAME) \
+                        --set keyVault.name=$(KEYVAULT_NAME) \
                         --wait \
                         --timeout 20m
 
