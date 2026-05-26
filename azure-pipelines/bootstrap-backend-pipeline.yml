@@ -324,8 +324,7 @@ stages:
                       terraform apply \
                         -auto-approve \
                         -input=false \
-                        "$(Pipeline.Workspace)/backend-tfplan/tfplan"
-
+                        
                 # =====================================
                 # EXPORT BACKEND OUTPUTS
                 # =====================================
