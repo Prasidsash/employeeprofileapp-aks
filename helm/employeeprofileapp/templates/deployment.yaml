@@ -263,7 +263,7 @@ spec:
           # AZURE KEY VAULT CSI DRIVER
           # =====================================
 
-          {{- if and .Values.keyVault.enabled .Values.secretMounts.enabled }}
+          {{- if and .Values.keyVault.enabled .Values.secretMounts (.Values.secretMounts.enabled) }}
 
           volumeMounts:
 

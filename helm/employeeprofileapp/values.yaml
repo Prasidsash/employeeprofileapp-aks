@@ -225,3 +225,8 @@ networkPolicy:
   enabled: false
 
   ingressControllerNamespace: ingress-nginx
+
+secretMounts:
+  enabled: false
+  mountPath: "/mnt/secrets-store"
+  readOnly: true
