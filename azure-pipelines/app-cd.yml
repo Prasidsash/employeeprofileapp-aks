@@ -5,6 +5,24 @@
 
 trigger: none
 
+pr: none
+
+resources:
+
+  pipelines:
+
+    - pipeline: employeeprofileapp-ci
+
+      source: CI
+
+      trigger:
+
+        branches:
+
+          include:
+
+            - main
+
 pool:
   vmImage: ubuntu-latest
 
