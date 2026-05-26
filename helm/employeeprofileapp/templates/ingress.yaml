@@ -1,6 +1,6 @@
 # =====================================
 # FILE: helm/employeeprofileapp/templates/ingress.yaml
-# VERSION: v7-enterprise-ingress-conflict-fixed-final
+# VERSION: v8-enterprise-public-ip-direct-access-final
 # =====================================
 
 {{- if and .Values.ingress .Values.ingress.enabled }}
@@ -91,11 +91,7 @@ spec:
 
   tls:
 
-    - hosts:
-
-        - {{ .Values.ingress.host }}
-
-      secretName: {{ .Values.ingress.tls.secretName }}
+    - secretName: {{ .Values.ingress.tls.secretName }}
 
   {{- end }}
 
@@ -105,35 +101,11 @@ spec:
 
   rules:
 
-    {{- if .Values.ingress.host }}
-
-    - host: {{ .Values.ingress.host }}
-
-      http:
-
-        paths:
-
-          - path: /{{ .Release.Name }}
-
-            pathType: Prefix
-
-            backend:
-
-              service:
-
-                name: {{ default "employeeprofileapp" .Values.app.name }}
-
-                port:
-
-                  number: {{ .Values.service.port }}
-
-    {{- else }}
-
     - http:
 
         paths:
 
-          - path: /{{ .Release.Name }}
+          - path: /
 
             pathType: Prefix
 
@@ -146,7 +118,5 @@ spec:
                 port:
 
                   number: {{ .Values.service.port }}
-
-    {{- end }}
 
 {{- end }}
