@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/backend/main.tf
-# VERSION: v5-enterprise-disposable-final
+# VERSION: v6-enterprise-bootstrap-final-stable
 # =====================================
 
 # =====================================
@@ -101,6 +101,5 @@ resource "azurerm_role_assignment" "tfstate_blob_contributor" {
   role_definition_name = "Storage Blob Data Contributor"
 
   principal_id = data.azurerm_client_config.current.object_id
-
-  skip_service_principal_aad_check = true
+  
 }
