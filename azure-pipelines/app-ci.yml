@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-ci.yml
-# VERSION: v9-enterprise-disposable-final
+# VERSION: v10-enterprise-path-fixed-final
 # =====================================
 
 trigger:
@@ -91,62 +91,106 @@ stages:
               version: $(dotnetSdkVersion)
 
           # =====================================
-          # RESTORE
+          # REPOSITORY VALIDATION
           # =====================================
 
           - script: |
 
               set -euo pipefail
 
-              dotnet restore src/EmployeeProfileApp/EmployeeProfileApp.csproj
+              echo "=================================="
+              echo "CURRENT WORKING DIRECTORY"
+              echo "=================================="
+
+              pwd
+
+              echo "=================================="
+              echo "REPOSITORY CONTENTS"
+              echo "=================================="
+
+              find . -type f | sort
+
+            displayName: Repository Validation
+
+          # =====================================
+          # RESTORE
+          # =====================================
+
+          - task: DotNetCoreCLI@2
 
             displayName: DotNet Restore
+
+            inputs:
+
+              command: restore
+
+              projects: |
+                src/**/*.csproj
 
           # =====================================
           # BUILD
           # =====================================
 
-          - script: |
-
-              set -euo pipefail
-
-              dotnet build \
-                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
-                --configuration Release \
-                --no-restore
+          - task: DotNetCoreCLI@2
 
             displayName: DotNet Build
+
+            inputs:
+
+              command: build
+
+              projects: |
+                src/**/*.csproj
+
+              arguments: >
+                --configuration Release
+                --no-restore
 
           # =====================================
           # TEST
           # =====================================
 
-          - script: |
-
-              set -euo pipefail
-
-              dotnet test \
-                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
-                --configuration Release \
-                --no-build \
-                --verbosity normal || true
+          - task: DotNetCoreCLI@2
 
             displayName: DotNet Test
+
+            continueOnError: true
+
+            inputs:
+
+              command: test
+
+              projects: |
+                src/**/*.csproj
+
+              arguments: >
+                --configuration Release
+                --no-build
+                --verbosity normal
 
           # =====================================
           # PUBLISH
           # =====================================
 
-          - script: |
-
-              set -euo pipefail
-
-              dotnet publish \
-                src/EmployeeProfileApp/EmployeeProfileApp.csproj \
-                --configuration Release \
-                --output $(Build.ArtifactStagingDirectory)/publish
+          - task: DotNetCoreCLI@2
 
             displayName: DotNet Publish
+
+            inputs:
+
+              command: publish
+
+              publishWebProjects: false
+
+              projects: |
+                src/**/*.csproj
+
+              arguments: >
+                --configuration Release
+                --output $(Build.ArtifactStagingDirectory)/publish
+                --no-build
+
+              zipAfterPublish: false
 
           # =====================================
           # PUBLISH ARTIFACTS
