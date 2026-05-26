@@ -147,9 +147,9 @@ stages:
                 terraform init \
                   -upgrade \
                   -reconfigure \
-                  -backend-config="resource_group_name=$(backendResourceGroupName)" \
-                  -backend-config="storage_account_name=$(backendStorageAccountName)" \
-                  -backend-config="container_name=$(backendContainerName)" \
+                  -backend-config="resource_group_name=$(tfBackendResourceGroup)" \
+                  -backend-config="storage_account_name=$(tfBackendStorageAccount)" \
+                  -backend-config="container_name=$(tfBackendContainer)" \
                   -backend-config="key=$(backendStateKey)" \
                   -backend-config="use_azuread_auth=true"
 
@@ -282,9 +282,9 @@ stages:
                       terraform init \
                         -upgrade \
                         -reconfigure \
-                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
-                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
-                        -backend-config="container_name=$(backendContainerName)" \
+                        -backend-config="resource_group_name=$(tfBackendResourceGroup)" \
+                        -backend-config="storage_account_name=$(tfBackendStorageAccount)" \
+                        -backend-config="container_name=$(tfBackendContainer)" \
                         -backend-config="key=$(backendStateKey)" \
                         -backend-config="use_azuread_auth=true"
 
