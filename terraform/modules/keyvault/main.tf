@@ -174,8 +174,7 @@ resource "azurerm_role_assignment" "kv_admin" {
   role_definition_name = "Key Vault Administrator"
 
   principal_id = local.effective_admin_object_id
-
-  skip_service_principal_aad_check = true
+  
 }
 
 # =====================================
@@ -208,8 +207,7 @@ resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
   role_definition_name = "Key Vault Secrets User"
 
   principal_id = var.workload_identity_principal_id
-
-  skip_service_principal_aad_check = true
+  
 }
 
 # =====================================
