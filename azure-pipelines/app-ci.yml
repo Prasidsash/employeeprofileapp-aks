@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-ci.yml
-# VERSION: v10-enterprise-path-fixed-final
+# VERSION: v11-enterprise-acr-image-validation-final
 # =====================================
 
 trigger:
@@ -264,12 +264,25 @@ stages:
               set -euo pipefail
 
               docker build \
+                --pull \
                 -f $(dockerfilePath) \
                 -t $(acrName).azurecr.io/$(imageRepository):$(imageTag) \
                 -t $(acrName).azurecr.io/$(imageRepository):latest \
                 .
 
             displayName: Docker Build
+
+          # =====================================
+          # DOCKER IMAGE VALIDATION
+          # =====================================
+
+          - script: |
+
+              set -euo pipefail
+
+              docker images | grep $(imageRepository)
+
+            displayName: Docker Image Validation
 
           # =====================================
           # DOCKER PUSH
@@ -307,10 +320,30 @@ stages:
 
                 set -euo pipefail
 
+                echo "=================================="
+                echo "ACR TAGS"
+                echo "=================================="
+
                 az acr repository show-tags \
                   --name $(acrName) \
                   --repository $(imageRepository) \
+                  --orderby time_desc \
                   --output table
+
+                echo "=================================="
+                echo "VALIDATE BUILD IMAGE TAG"
+                echo "=================================="
+
+                IMAGE_EXISTS=$(az acr repository show-tags \
+                  --name $(acrName) \
+                  --repository $(imageRepository) \
+                  --query "[?@=='$(imageTag)'] | length(@)" \
+                  --output tsv)
+
+                if [ "${IMAGE_EXISTS}" = "0" ]; then
+                  echo "ERROR: IMAGE TAG $(imageTag) NOT FOUND"
+                  exit 1
+                fi
 
           # =====================================
           # EXPORT IMAGE VARIABLES
@@ -352,6 +385,15 @@ stages:
 
                 az acr repository list \
                   --name $(acrName) \
+                  --output table || true
+
+                echo "=================================="
+                echo "ACR TAGS"
+                echo "=================================="
+
+                az acr repository show-tags \
+                  --name $(acrName) \
+                  --repository $(imageRepository) \
                   --output table || true
 
                 echo "=================================="

@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-cd.yml
-# VERSION: v12-enterprise-helm-acr-workloadidentity-final
+# VERSION: v13-enterprise-helm-rollout-stabilized-final
 # =====================================
 
 trigger: none
@@ -38,6 +38,9 @@ variables:
   - name: namespace
     value: employeeprofileapp-dev
 
+  - name: deploymentName
+    value: employeeprofileapp
+
   # =====================================
   # IMAGE
   # =====================================
@@ -46,7 +49,7 @@ variables:
     value: employeeprofileapp-aks
 
   - name: imageTag
-    value: $(Build.BuildId)
+    value: latest
 
   # =====================================
   # ACR
@@ -239,6 +242,86 @@ stages:
                       kubectl get nodes -o wide
 
                 # =====================================
+                # ACR VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: ACR Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      echo "=================================="
+                      echo "ACR LOGIN SERVER"
+                      echo "=================================="
+
+                      ACR_LOGIN_SERVER=$(az acr show \
+                        --name $(acrName) \
+                        --query loginServer \
+                        --output tsv)
+
+                      echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
+
+                      echo "=================================="
+                      echo "VALIDATE IMAGE EXISTS"
+                      echo "=================================="
+
+                      az acr repository show-tags \
+                        --name $(acrName) \
+                        --repository $(imageRepository) \
+                        --output table
+
+                      IMAGE_EXISTS=$(az acr repository show-tags \
+                        --name $(acrName) \
+                        --repository $(imageRepository) \
+                        --query "[?@=='$(imageTag)'] | length(@)" \
+                        --output tsv)
+
+                      if [ "${IMAGE_EXISTS}" = "0" ]; then
+                        echo "ERROR: IMAGE TAG $(imageTag) NOT FOUND IN ACR"
+                        exit 1
+                      fi
+
+                # =====================================
+                # AKS ACR ACCESS VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: AKS ACR Access Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      az aks check-acr \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --acr $(acrName).azurecr.io
+
+                # =====================================
                 # NAMESPACE VALIDATION
                 # =====================================
 
@@ -261,7 +344,8 @@ stages:
                       set -euo pipefail
 
                       kubectl create namespace $(namespace) \
-                        --dry-run=client -o yaml | kubectl apply -f -
+                        --dry-run=client \
+                        -o yaml | kubectl apply -f -
 
                 # =====================================
                 # WORKLOAD IDENTITY VALIDATION
@@ -334,12 +418,30 @@ stages:
 
                       echo "=================================="
                       echo "REMOVE EXISTING SERVICE ACCOUNT"
-                      echo "TO AVOID SERVER-SIDE APPLY CONFLICT"
                       echo "=================================="
 
                       kubectl delete sa employee-sa \
                         -n $(namespace) \
                         --ignore-not-found=true
+
+                      echo "=================================="
+                      echo "HELM TEMPLATE VALIDATION"
+                      echo "=================================="
+
+                      helm template \
+                        $(helmReleaseName) \
+                        $(helmChartPath) \
+                        --namespace $(namespace) \
+                        --values $(helmChartPath)/values.yaml \
+                        --values $(helmChartPath)/values-dev.yaml \
+                        --set image.repository=${ACR_LOGIN_SERVER}/$(imageRepository) \
+                        --set image.tag=$(imageTag) \
+                        --set workloadIdentity.enabled=true \
+                        --set workloadIdentity.clientId=$(WORKLOAD_CLIENT_ID) \
+                        --set workloadIdentity.tenantId=$(TENANT_ID) \
+                        --set keyVault.enabled=true \
+                        --set keyVault.name=$(KEYVAULT_NAME) \
+                        > /tmp/rendered-manifest.yaml
 
                       echo "=================================="
                       echo "HELM UPGRADE INSTALL"
@@ -360,16 +462,17 @@ stages:
                         --set workloadIdentity.tenantId=$(TENANT_ID) \
                         --set keyVault.enabled=true \
                         --set keyVault.name=$(KEYVAULT_NAME) \
-                        --wait \
-                        --timeout 20m
+                        --wait=false \
+                        --timeout 20m \
+                        --debug
 
                 # =====================================
-                # HELM RELEASE VALIDATION
+                # DEPLOYMENT VALIDATION
                 # =====================================
 
                 - task: AzureCLI@2
 
-                  displayName: Helm Validation
+                  displayName: Deployment Validation
 
                   inputs:
 
@@ -385,9 +488,28 @@ stages:
 
                       set -euo pipefail
 
-                      helm list -n $(namespace)
+                      echo "=================================="
+                      echo "DEPLOYMENT STATUS"
+                      echo "=================================="
 
-                      kubectl get all -n $(namespace)
+                      kubectl get deployment \
+                        $(deploymentName) \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "PODS"
+                      echo "=================================="
+
+                      kubectl get pods \
+                        -n $(namespace) \
+                        -o wide
+
+                      echo "=================================="
+                      echo "SERVICES"
+                      echo "=================================="
+
+                      kubectl get svc \
+                        -n $(namespace)
 
                 # =====================================
                 # ROLLOUT VALIDATION
@@ -411,11 +533,47 @@ stages:
 
                       set -euo pipefail
 
-                      kubectl rollout status deployment/employeeprofileapp \
+                      kubectl rollout status \
+                        deployment/$(deploymentName) \
                         -n $(namespace) \
                         --timeout=1200s
 
-                      kubectl get pods -n $(namespace)
+                # =====================================
+                # POD HEALTH VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Pod Health Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      kubectl get pods \
+                        -n $(namespace)
+
+                      kubectl describe deployment \
+                        $(deploymentName) \
+                        -n $(namespace)
+
+                      kubectl describe pods \
+                        -n $(namespace)
+
+                      kubectl logs \
+                        -n $(namespace) \
+                        -l app=employeeprofileapp \
+                        --tail=200 || true
 
                 # =====================================
                 # CSI SECRET VALIDATION
@@ -442,11 +600,8 @@ stages:
                       kubectl get secretproviderclass \
                         -n $(namespace)
 
-                      kubectl describe pod \
-                        -n $(namespace) \
-                        -l app=employeeprofileapp || true
-
-                      kubectl get secret -n $(namespace)
+                      kubectl get secret \
+                        -n $(namespace)
 
                 # =====================================
                 # INGRESS VALIDATION
@@ -470,7 +625,8 @@ stages:
 
                       set -euo pipefail
 
-                      kubectl get ingress -n $(namespace)
+                      kubectl get ingress \
+                        -n $(namespace)
 
                       kubectl get svc -A
 
@@ -496,19 +652,53 @@ stages:
 
                     inlineScript: |
 
+                      echo "=================================="
+                      echo "ALL RESOURCES"
+                      echo "=================================="
+
                       kubectl get all -A || true
 
-                      kubectl get ingress -A || true
-
-                      kubectl get secretproviderclass -A || true
+                      echo "=================================="
+                      echo "EVENTS"
+                      echo "=================================="
 
                       kubectl get events -A \
                         --sort-by=.metadata.creationTimestamp || true
 
+                      echo "=================================="
+                      echo "DESCRIBE DEPLOYMENT"
+                      echo "=================================="
+
+                      kubectl describe deployment \
+                        $(deploymentName) \
+                        -n $(namespace) || true
+
+                      echo "=================================="
+                      echo "DESCRIBE PODS"
+                      echo "=================================="
+
                       kubectl describe pods \
                         -n $(namespace) || true
+
+                      echo "=================================="
+                      echo "POD LOGS"
+                      echo "=================================="
 
                       kubectl logs \
                         -n $(namespace) \
                         -l app=employeeprofileapp \
-                        --tail=200 || true
+                        --all-containers=true \
+                        --tail=500 || true
+
+                      echo "=================================="
+                      echo "REPLICASETS"
+                      echo "=================================="
+
+                      kubectl get rs \
+                        -n $(namespace) || true
+
+                      echo "=================================="
+                      echo "SECRET PROVIDER CLASS"
+                      echo "=================================="
+
+                      kubectl get secretproviderclass -A || true
