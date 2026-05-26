@@ -86,7 +86,7 @@ stages:
               ls -R $(Build.SourcesDirectory)
 
               echo "===== CHECK BACKEND FOLDER ====="
-              ls -R $(Build.SourcesDirectory)/employeeprofileapp-aks/terraform/bootstrap/backend
+              ls -R $(Build.SourcesDirectory)/terraform/bootstrap/backend
             displayName: "Debug Terraform Path Validation"
 
           # =====================================
