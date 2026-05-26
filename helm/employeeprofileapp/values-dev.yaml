@@ -1,6 +1,6 @@
 # =====================================
 # FILE: helm/employeeprofileapp/values-dev.yaml
-# VERSION: v10-enterprise-disposable-final
+# VERSION: v12-enterprise-full-preserved-final
 # =====================================
 
 # =====================================
@@ -22,6 +22,8 @@ namespaceOverride: employeeprofileapp-dev
 # =====================================
 
 replicaCount: 1
+
+revisionHistoryLimit: 3
 
 # =====================================
 # IMAGE
@@ -84,7 +86,7 @@ podAnnotations:
   azure.workload.identity/use: "true"
 
 # =====================================
-# SECURITY CONTEXT
+# POD SECURITY CONTEXT
 # =====================================
 
 podSecurityContext:
@@ -92,6 +94,14 @@ podSecurityContext:
   runAsNonRoot: true
 
   fsGroup: 2000
+
+  seccompProfile:
+
+    type: RuntimeDefault
+
+# =====================================
+# CONTAINER SECURITY CONTEXT
+# =====================================
 
 securityContext:
 
@@ -108,6 +118,34 @@ securityContext:
     drop:
 
       - ALL
+
+# =====================================
+# CONTAINER PORTS
+# =====================================
+
+containerPorts:
+
+  http: 8080
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
+
+env:
+
+  ASPNETCORE_ENVIRONMENT: Development
+
+  ASPNETCORE_URLS: http://+:8080
+
+# =====================================
+# ENV FROM SECRET
+# =====================================
+
+envFromSecrets:
+
+  enabled: true
+
+  secretName: employeeprofileapp-kv-secret
 
 # =====================================
 # SERVICE
@@ -135,7 +173,7 @@ ingress:
 
   host: dev.employee.local
 
-  path: /
+  path: /employeeprofileapp-dev-release
 
   pathType: Prefix
 
@@ -147,7 +185,7 @@ ingress:
 
     enabled: false
 
-    secretName: null
+    secretName: ""
 
 # =====================================
 # RESOURCES
@@ -168,7 +206,7 @@ resources:
     memory: 512Mi
 
 # =====================================
-# AUTOSCALING
+# HORIZONTAL POD AUTOSCALER
 # =====================================
 
 hpa:
@@ -222,6 +260,120 @@ networkPolicy:
   ingressControllerNamespace: ingress-nginx
 
 # =====================================
+# PROBES
+# =====================================
+
+livenessProbe:
+
+  enabled: true
+
+  path: /
+
+  initialDelaySeconds: 30
+
+  periodSeconds: 15
+
+  timeoutSeconds: 5
+
+  failureThreshold: 5
+
+readinessProbe:
+
+  enabled: true
+
+  path: /
+
+  initialDelaySeconds: 15
+
+  periodSeconds: 10
+
+  timeoutSeconds: 5
+
+  failureThreshold: 3
+
+startupProbe:
+
+  enabled: false
+
+  path: /
+
+  initialDelaySeconds: 10
+
+  periodSeconds: 10
+
+  timeoutSeconds: 5
+
+  failureThreshold: 30
+
+# =====================================
+# TOPOLOGY SPREAD CONSTRAINTS
+# =====================================
+
+topologySpreadConstraints: []
+
+# =====================================
+# PRIORITY CLASS
+# =====================================
+
+priorityClassName: ""
+
+# =====================================
+# TERMINATION
+# =====================================
+
+terminationGracePeriodSeconds: 30
+
+# =====================================
+# VOLUMES
+# =====================================
+
+extraVolumes: []
+
+extraVolumeMounts: []
+
+# =====================================
+# INIT CONTAINERS
+# =====================================
+
+initContainers: []
+
+# =====================================
+# SIDECARS
+# =====================================
+
+sidecars: []
+
+# =====================================
+# SERVICE MONITOR
+# =====================================
+
+serviceMonitor:
+
+  enabled: false
+
+  interval: 30s
+
+  scrapeTimeout: 10s
+
+# =====================================
+# PROMETHEUS RULES
+# =====================================
+
+prometheusRule:
+
+  enabled: false
+
+# =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+podDisruptionBudget:
+
+  enabled: false
+
+  minAvailable: 1
+
+# =====================================
 # KEY VAULT
 # =====================================
 
@@ -256,79 +408,85 @@ secretProviderClass:
   enabled: true
 
 # =====================================
-# SECRET MOUNT
+# TLS SETTINGS
 # =====================================
 
-secretMounts:
+enable_tls: false
 
-  enabled: true
-
-  mountPath: /mnt/secrets-store
+cluster_issuer: ""
 
 # =====================================
-# ENVIRONMENT VARIABLES
+# OPTIONAL NGINX SETTINGS
 # =====================================
 
-env:
+enable_rewrite_target: false
 
-  ASPNETCORE_ENVIRONMENT: Development
+enable_proxy_body_size: false
 
-  KEYVAULT_NAME: ""
-
-# =====================================
-# PROBES
-# =====================================
-
-livenessProbe:
-
-  enabled: true
-
-  path: /
-
-  initialDelaySeconds: 30
-
-  periodSeconds: 10
-
-readinessProbe:
-
-  enabled: true
-
-  path: /
-
-  initialDelaySeconds: 20
-
-  periodSeconds: 10
-
-startupProbe:
-
-  enabled: true
-
-  path: /
-
-  failureThreshold: 30
-
-  periodSeconds: 10
+proxy_body_size: 20m
 
 # =====================================
-# RBAC
+# EXTRA ANNOTATIONS
 # =====================================
 
-rbac:
+deploymentAnnotations: {}
 
-  create: true
-
-# =====================================
-# PDB
-# =====================================
-
-pdb:
-
-  enabled: false
+serviceAnnotations: {}
 
 # =====================================
-# OPTIONAL EXTRA VOLUMES
+# EXTRA LABELS
 # =====================================
 
-extraVolumes: []
+commonLabels: {}
 
-extraVolumeMounts: []
+# =====================================
+# EXTRA POD LABELS
+# =====================================
+
+extraPodLabels: {}
+
+# =====================================
+# EXTRA POD ANNOTATIONS
+# =====================================
+
+extraPodAnnotations: {}
+
+# =====================================
+# ROLLOUT STRATEGY
+# =====================================
+
+strategy:
+
+  type: RollingUpdate
+
+  rollingUpdate:
+
+    maxSurge: 1
+
+    maxUnavailable: 0
+
+# =====================================
+# DNS CONFIG
+# =====================================
+
+dnsPolicy: ClusterFirst
+
+dnsConfig: {}
+
+# =====================================
+# HOST ALIASES
+# =====================================
+
+hostAliases: []
+
+# =====================================
+# RUNTIME CLASS
+# =====================================
+
+runtimeClassName: ""
+
+# =====================================
+# SCHEDULER
+# =====================================
+
+schedulerName: default-scheduler

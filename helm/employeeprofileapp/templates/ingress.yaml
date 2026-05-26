@@ -1,6 +1,6 @@
 # =====================================
 # FILE: helm/employeeprofileapp/templates/ingress.yaml
-# VERSION: v6-enterprise-disposable-final
+# VERSION: v7-enterprise-ingress-conflict-fixed-final
 # =====================================
 
 {{- if and .Values.ingress .Values.ingress.enabled }}
@@ -18,6 +18,12 @@ metadata:
   labels:
 
     app: {{ default "employeeprofileapp" .Values.app.name }}
+
+    app.kubernetes.io/name: {{ default "employeeprofileapp" .Values.app.name }}
+
+    app.kubernetes.io/instance: {{ .Release.Name }}
+
+    app.kubernetes.io/managed-by: Helm
 
   annotations:
 
@@ -107,9 +113,9 @@ spec:
 
         paths:
 
-          - path: {{ .Values.ingress.path }}
+          - path: /{{ .Release.Name }}
 
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Prefix
 
             backend:
 
@@ -127,9 +133,9 @@ spec:
 
         paths:
 
-          - path: {{ .Values.ingress.path }}
+          - path: /{{ .Release.Name }}
 
-            pathType: {{ .Values.ingress.pathType }}
+            pathType: Prefix
 
             backend:
 
