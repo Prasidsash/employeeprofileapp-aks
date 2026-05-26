@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v12-enterprise-disposable-final
+# VERSION: v14-enterprise-disposable-final
 # =====================================
 
 trigger:
@@ -25,7 +25,6 @@ trigger:
       - helm/**
 
 pool:
-
   vmImage: ubuntu-latest
 
 variables:
@@ -86,6 +85,10 @@ stages:
 
         steps:
 
+          # =====================================
+          # CHECKOUT
+          # =====================================
+
           - checkout: self
             clean: true
 
@@ -116,10 +119,6 @@ stages:
                 export ARM_USE_OIDC=true
                 export ARM_USE_AZUREAD=true
 
-                echo "=================================="
-                echo "AZURE ACCOUNT"
-                echo "=================================="
-
                 az account show
 
           # =====================================
@@ -144,17 +143,21 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
+                export TF_BACKEND_RESOURCE_GROUP="$(backendResourceGroupName)"
+                export TF_BACKEND_STORAGE_ACCOUNT="$(backendStorageAccountName)"
+                export TF_BACKEND_CONTAINER="$(backendContainerName)"
+
                 terraform init \
                   -upgrade \
                   -reconfigure \
-                  -backend-config="resource_group_name=$(backendResourceGroupName)" \
-                  -backend-config="storage_account_name=$(backendStorageAccountName)" \
-                  -backend-config="container_name=$(backendContainerName)" \
+                  -backend-config="resource_group_name=${TF_BACKEND_RESOURCE_GROUP}" \
+                  -backend-config="storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
+                  -backend-config="container_name=${TF_BACKEND_CONTAINER}" \
                   -backend-config="key=$(backendStateKey)" \
                   -backend-config="use_azuread_auth=true"
 
           # =====================================
-          # TERRAFORM FORMAT
+          # TERRAFORM FORMAT CHECK
           # =====================================
 
           - script: |
@@ -241,6 +244,10 @@ stages:
 
               steps:
 
+                # =====================================
+                # CHECKOUT
+                # =====================================
+
                 - checkout: self
                   clean: true
 
@@ -275,12 +282,16 @@ stages:
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
+                      export TF_BACKEND_RESOURCE_GROUP="$(backendResourceGroupName)"
+                      export TF_BACKEND_STORAGE_ACCOUNT="$(backendStorageAccountName)"
+                      export TF_BACKEND_CONTAINER="$(backendContainerName)"
+
                       terraform init \
                         -upgrade \
                         -reconfigure \
-                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
-                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
-                        -backend-config="container_name=$(backendContainerName)" \
+                        -backend-config="resource_group_name=${TF_BACKEND_RESOURCE_GROUP}" \
+                        -backend-config="storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
+                        -backend-config="container_name=${TF_BACKEND_CONTAINER}" \
                         -backend-config="key=$(backendStateKey)" \
                         -backend-config="use_azuread_auth=true"
 
