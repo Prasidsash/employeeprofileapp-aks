@@ -22,7 +22,7 @@ variables:
 
   # FIXED: corrected path to actual repo structure (bootstrap/backend)
   - name: terraformWorkingDirectory
-    value: $(Build.SourcesDirectory)/employeeprofileapp-aks/terraform/bootstrap/backend
+    value: $(Build.SourcesDirectory)/terraform/bootstrap/backend
 
 
 stages:
