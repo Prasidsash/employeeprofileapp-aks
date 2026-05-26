@@ -1,18 +1,14 @@
 # =====================================
 # FILE: terraform/backend/provider.tf
-# VERSION: v5-enterprise-disposable-final
+# VERSION: v6-final-fixed-auth-stable
 # =====================================
 
 terraform {
-
   required_version = ">= 1.5.0"
 
   required_providers {
-
     azurerm = {
-
-      source = "hashicorp/azurerm"
-
+      source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
   }
@@ -21,27 +17,21 @@ terraform {
 # =====================================
 # CURRENT AZURE CLIENT INFO
 # =====================================
-
 data "azurerm_client_config" "current" {}
 
 # =====================================
 # AZURE PROVIDER
-# ENTERPRISE OIDC AUTHENTICATION
+# FIXED: Azure DevOps compatible authentication
 # =====================================
 
 provider "azurerm" {
-
   features {
-
     resource_group {
-
       prevent_deletion_if_contains_resources = false
     }
   }
 
-  use_oidc = true
-
-  use_cli = false
-
-  storage_use_azuread = true
+  # IMPORTANT:
+  # DO NOT use use_oidc or CLI flags here in Azure DevOps pipelines
+  # Authentication is handled by AzureCLI@2 + service connection + ARM env vars
 }
