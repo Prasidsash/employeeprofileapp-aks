@@ -1,16 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/backend-pipeline.yml
-# VERSION: v10-enterprise-remote-state-final
-# FIXES:
-# - retained all original reusable logic
-# - retained validation/deployment stages
-# - retained debug validation
-# - retained export outputs
-# - retained OIDC/AzureAD authentication
-# - upgraded backend initialization stability
-# - fixed ephemeral Azure DevOps backend reconfiguration
-# - fixed backend state consistency handling
-# - fixed formatting validation stability
+# VERSION: v11-enterprise-remote-state-final
 # =====================================
 
 trigger: none
@@ -202,6 +192,8 @@ stages:
                   -input=false \
                   -out=tfplan
 
+                ls -l
+
           # =====================================
           # PUBLISH TFPLAN
           # =====================================
@@ -261,6 +253,28 @@ stages:
 
                 - download: current
                   artifact: backend-tfplan
+
+                # =====================================
+                # DEBUG DOWNLOADED ARTIFACTS
+                # =====================================
+
+                - script: |
+
+                    set -euo pipefail
+
+                    echo "=================================="
+                    echo "PIPELINE WORKSPACE"
+                    echo "=================================="
+
+                    ls -R "$(Pipeline.Workspace)"
+
+                    echo "=================================="
+                    echo "DOWNLOADED TFPLAN"
+                    echo "=================================="
+
+                    ls -l "$(Pipeline.Workspace)/backend-tfplan"
+
+                  displayName: Debug Downloaded TFPlan
 
                 # =====================================
                 # TERRAFORM INIT
