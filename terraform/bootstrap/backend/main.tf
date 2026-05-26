@@ -56,7 +56,7 @@ resource "azurerm_storage_account" "tfstate" {
 
   allow_nested_items_to_be_public = false
 
-  shared_access_key_enabled = false
+  shared_access_key_enabled = true
 
   public_network_access_enabled = true
 
