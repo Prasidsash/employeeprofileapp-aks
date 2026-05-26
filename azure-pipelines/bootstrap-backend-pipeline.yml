@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/backend-pipeline.yml
-# VERSION: v11-enterprise-remote-state-final
+# VERSION: v12-enterprise-remote-state-stable-final
 # =====================================
 
 trigger: none
@@ -13,7 +13,7 @@ variables:
   - group: employeeprofileapp-dev-vars
 
   # =====================================
-  # TERRAFORM
+  # TERRAFORM VERSION
   # =====================================
 
   - name: terraformVersion
@@ -78,27 +78,20 @@ stages:
                 export ARM_USE_OIDC=true
                 export ARM_USE_AZUREAD=true
 
-                echo "=================================="
-                echo "AZURE ACCOUNT"
-                echo "=================================="
-
                 az account show
 
           # =====================================
-          # DEBUG PATH VALIDATION
+          # DEBUG TERRAFORM PATH
           # =====================================
 
           - script: |
 
               set -euo pipefail
 
-              echo "===== WORKSPACE ROOT ====="
               pwd
 
-              echo "===== FULL REPO STRUCTURE ====="
               ls -R $(Build.SourcesDirectory)
 
-              echo "===== CHECK BACKEND FOLDER ====="
               ls -R $(terraformWorkingDirectory)
 
             displayName: Debug Terraform Path Validation
@@ -124,6 +117,10 @@ stages:
                 export ARM_CLIENT_ID=$servicePrincipalId
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                rm -rf .terraform
+                rm -f terraform.tfstate
+                rm -f terraform.tfstate.backup
 
                 terraform init \
                   -reconfigure \
@@ -255,22 +252,18 @@ stages:
                   artifact: backend-tfplan
 
                 # =====================================
-                # DEBUG DOWNLOADED ARTIFACTS
+                # DEBUG TFPLAN
                 # =====================================
 
                 - script: |
 
                     set -euo pipefail
 
-                    echo "=================================="
-                    echo "PIPELINE WORKSPACE"
-                    echo "=================================="
+                    echo "===== PIPELINE WORKSPACE ====="
 
                     ls -R "$(Pipeline.Workspace)"
 
-                    echo "=================================="
-                    echo "DOWNLOADED TFPLAN"
-                    echo "=================================="
+                    echo "===== TFPLAN LOCATION ====="
 
                     ls -l "$(Pipeline.Workspace)/backend-tfplan"
 
@@ -297,6 +290,10 @@ stages:
                       export ARM_CLIENT_ID=$servicePrincipalId
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      rm -rf .terraform
+                      rm -f terraform.tfstate
+                      rm -f terraform.tfstate.backup
 
                       terraform init \
                         -reconfigure \
@@ -349,10 +346,6 @@ stages:
                       CONTAINER_NAME=$(terraform output -raw container_name)
                       RESOURCE_GROUP=$(terraform output -raw resource_group_name)
 
-                      echo "RESOURCE_GROUP=$RESOURCE_GROUP"
-                      echo "STORAGE_ACCOUNT=$STORAGE_ACCOUNT"
-                      echo "CONTAINER_NAME=$CONTAINER_NAME"
-
                       echo "##vso[task.setvariable variable=TF_BACKEND_RESOURCE_GROUP]$RESOURCE_GROUP"
                       echo "##vso[task.setvariable variable=TF_BACKEND_STORAGE_ACCOUNT]$STORAGE_ACCOUNT"
                       echo "##vso[task.setvariable variable=TF_BACKEND_CONTAINER]$CONTAINER_NAME"
@@ -372,20 +365,8 @@ stages:
 
                       set -euo pipefail
 
-                      echo "=================================="
-                      echo "AZURE ACCOUNT"
-                      echo "=================================="
-
                       az account show || true
 
-                      echo "=================================="
-                      echo "RESOURCE GROUPS"
-                      echo "=================================="
-
                       az group list -o table || true
-
-                      echo "=================================="
-                      echo "STORAGE ACCOUNTS"
-                      echo "=================================="
 
                       az storage account list -o table || true
