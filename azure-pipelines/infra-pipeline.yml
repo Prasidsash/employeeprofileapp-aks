@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v14-enterprise-disposable-final
+# VERSION: v17-enterprise-disposable-final
 # =====================================
 
 trigger:
@@ -25,6 +25,7 @@ trigger:
       - helm/**
 
 pool:
+
   vmImage: ubuntu-latest
 
 variables:
@@ -46,13 +47,13 @@ variables:
   # =====================================
 
   - name: backendResourceGroupName
-    value: $(tfBackendResourceGroup)
+    value: $[ variables['tfBackendResourceGroup'] ]
 
   - name: backendStorageAccountName
-    value: $(tfBackendStorageAccount)
+    value: $[ variables['tfBackendStorageAccount'] ]
 
   - name: backendContainerName
-    value: $(tfBackendContainer)
+    value: $[ variables['tfBackendContainer'] ]
 
   - name: backendStateKey
     value: dev.terraform.tfstate
@@ -143,16 +144,12 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-                export TF_BACKEND_RESOURCE_GROUP="$(backendResourceGroupName)"
-                export TF_BACKEND_STORAGE_ACCOUNT="$(backendStorageAccountName)"
-                export TF_BACKEND_CONTAINER="$(backendContainerName)"
-
                 terraform init \
                   -upgrade \
                   -reconfigure \
-                  -backend-config="resource_group_name=${TF_BACKEND_RESOURCE_GROUP}" \
-                  -backend-config="storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
-                  -backend-config="container_name=${TF_BACKEND_CONTAINER}" \
+                  -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                  -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                  -backend-config="container_name=$(backendContainerName)" \
                   -backend-config="key=$(backendStateKey)" \
                   -backend-config="use_azuread_auth=true"
 
@@ -282,16 +279,12 @@ stages:
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-                      export TF_BACKEND_RESOURCE_GROUP="$(backendResourceGroupName)"
-                      export TF_BACKEND_STORAGE_ACCOUNT="$(backendStorageAccountName)"
-                      export TF_BACKEND_CONTAINER="$(backendContainerName)"
-
                       terraform init \
                         -upgrade \
                         -reconfigure \
-                        -backend-config="resource_group_name=${TF_BACKEND_RESOURCE_GROUP}" \
-                        -backend-config="storage_account_name=${TF_BACKEND_STORAGE_ACCOUNT}" \
-                        -backend-config="container_name=${TF_BACKEND_CONTAINER}" \
+                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                        -backend-config="container_name=$(backendContainerName)" \
                         -backend-config="key=$(backendStateKey)" \
                         -backend-config="use_azuread_auth=true"
 
