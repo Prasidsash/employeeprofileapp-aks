@@ -1,6 +1,6 @@
 # =====================================
 # FILE: helm/employeeprofileapp/templates/deployment.yaml
-# VERSION: v8-enterprise-disposable-final
+# VERSION: v9-enterprise-csi-bootstrap-fix-final
 # =====================================
 
 apiVersion: apps/v1
@@ -221,7 +221,7 @@ spec:
 
             - name: KEYVAULT_NAME
 
-              value: {{ .Values.keyVault.keyVaultName | quote }}
+              value: {{ .Values.keyVault.name | quote }}
 
             # =====================================
             # WORKLOAD IDENTITY ENV VARIABLES
@@ -244,26 +244,10 @@ spec:
             {{- end }}
 
           # =====================================
-          # KEY VAULT SECRET SYNC
-          # =====================================
-
-          {{- if .Values.keyVault.enabled }}
-
-          envFrom:
-
-            - secretRef:
-
-                name: {{ .Values.keyVault.k8sSecretName }}
-
-                optional: false
-
-          {{- end }}
-
-          # =====================================
           # AZURE KEY VAULT CSI DRIVER
           # =====================================
 
-          {{- if and .Values.keyVault.enabled .Values.secretMounts (.Values.secretMounts.enabled) }}
+          {{- if and .Values.keyVault.enabled .Values.secretMounts.enabled }}
 
           volumeMounts:
 
