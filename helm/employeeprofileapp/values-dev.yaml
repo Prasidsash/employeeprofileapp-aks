@@ -1,6 +1,8 @@
 # =====================================
-# FILE: helm/employeeprofileapp/values-dev.yaml
-# VERSION: v12-enterprise-full-preserved-final
+# FILE:
+# helm/employeeprofileapp/values-dev.yaml
+# VERSION:
+# v13-enterprise-secretproviderclass-fixed-final
 # =====================================
 
 # =====================================
@@ -391,14 +393,6 @@ keyVault:
 
   k8sSecretName: employeeprofileapp-kv-secret
 
-  secrets:
-
-    - objectName: db-username
-      objectType: secret
-
-    - objectName: db-password
-      objectType: secret
-
 # =====================================
 # SECRET PROVIDER CLASS
 # =====================================
@@ -406,6 +400,14 @@ keyVault:
 secretProviderClass:
 
   enabled: true
+
+  objects:
+
+    - objectName: db-username
+      objectType: secret
+
+    - objectName: db-password
+      objectType: secret
 
 # =====================================
 # TLS SETTINGS
