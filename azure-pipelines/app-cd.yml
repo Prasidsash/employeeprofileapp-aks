@@ -67,7 +67,7 @@ variables:
     value: employeeprofileapp-aks
 
   - name: imageTag
-    value: latest
+    value: $(resources.pipeline.employeeprofileapp-ci.runID)
 
   # =====================================
   # ACR
