@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v11-enterprise-disposable-final
+# VERSION: v12-enterprise-disposable-final
 # =====================================
 
 trigger:
@@ -87,7 +87,6 @@ stages:
         steps:
 
           - checkout: self
-
             clean: true
 
           # =====================================
@@ -95,11 +94,8 @@ stages:
           # =====================================
 
           - task: TerraformInstaller@1
-
             displayName: Install Terraform
-
             inputs:
-
               terraformVersion: $(terraformVersion)
 
           # =====================================
@@ -107,19 +103,12 @@ stages:
           # =====================================
 
           - task: AzureCLI@2
-
             displayName: Azure Login Validation
-
             inputs:
-
               azureSubscription: $(azureInfraServiceConnection)
-
               scriptType: bash
-
               scriptLocation: inlineScript
-
               addSpnToEnvironment: true
-
               inlineScript: |
 
                 set -euo pipefail
@@ -138,21 +127,13 @@ stages:
           # =====================================
 
           - task: AzureCLI@2
-
             displayName: Terraform Init
-
             inputs:
-
               azureSubscription: $(azureInfraServiceConnection)
-
               scriptType: bash
-
               scriptLocation: inlineScript
-
               addSpnToEnvironment: true
-
               workingDirectory: $(terraformWorkingDirectory)
-
               inlineScript: |
 
                 set -euo pipefail
@@ -183,7 +164,6 @@ stages:
               terraform fmt -recursive -check
 
             displayName: Terraform Format Check
-
             workingDirectory: $(terraformWorkingDirectory)
 
           # =====================================
@@ -191,21 +171,13 @@ stages:
           # =====================================
 
           - task: AzureCLI@2
-
             displayName: Terraform Validate
-
             inputs:
-
               azureSubscription: $(azureInfraServiceConnection)
-
               scriptType: bash
-
               scriptLocation: inlineScript
-
               addSpnToEnvironment: true
-
               workingDirectory: $(terraformWorkingDirectory)
-
               inlineScript: |
 
                 set -euo pipefail
@@ -223,21 +195,13 @@ stages:
           # =====================================
 
           - task: AzureCLI@2
-
             displayName: Terraform Plan
-
             inputs:
-
               azureSubscription: $(azureInfraServiceConnection)
-
               scriptType: bash
-
               scriptLocation: inlineScript
-
               addSpnToEnvironment: true
-
               workingDirectory: $(terraformWorkingDirectory)
-
               inlineScript: |
 
                 set -euo pipefail
@@ -249,8 +213,7 @@ stages:
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
                 terraform plan \
-                  -input=false \
-                  -out=tfplan
+                  -input=false
 
   # =====================================
   # DEPLOYMENT STAGE
@@ -279,7 +242,6 @@ stages:
               steps:
 
                 - checkout: self
-
                   clean: true
 
                 # =====================================
@@ -287,11 +249,8 @@ stages:
                 # =====================================
 
                 - task: TerraformInstaller@1
-
                   displayName: Install Terraform
-
                   inputs:
-
                     terraformVersion: $(terraformVersion)
 
                 # =====================================
@@ -299,21 +258,13 @@ stages:
                 # =====================================
 
                 - task: AzureCLI@2
-
                   displayName: Terraform Init
-
                   inputs:
-
                     azureSubscription: $(azureInfraServiceConnection)
-
                     scriptType: bash
-
                     scriptLocation: inlineScript
-
                     addSpnToEnvironment: true
-
                     workingDirectory: $(terraformWorkingDirectory)
-
                     inlineScript: |
 
                       set -euo pipefail
@@ -338,21 +289,13 @@ stages:
                 # =====================================
 
                 - task: AzureCLI@2
-
                   displayName: Terraform Apply
-
                   inputs:
-
                     azureSubscription: $(azureInfraServiceConnection)
-
                     scriptType: bash
-
                     scriptLocation: inlineScript
-
                     addSpnToEnvironment: true
-
                     workingDirectory: $(terraformWorkingDirectory)
-
                     inlineScript: |
 
                       set -euo pipefail
@@ -372,21 +315,13 @@ stages:
                 # =====================================
 
                 - task: AzureCLI@2
-
                   displayName: Export Terraform Outputs
-
                   inputs:
-
                     azureSubscription: $(azureInfraServiceConnection)
-
                     scriptType: bash
-
                     scriptLocation: inlineScript
-
                     addSpnToEnvironment: true
-
                     workingDirectory: $(terraformWorkingDirectory)
-
                     inlineScript: |
 
                       set -euo pipefail
@@ -410,19 +345,12 @@ stages:
                 # =====================================
 
                 - task: AzureCLI@2
-
                   displayName: AKS Login
-
                   inputs:
-
                     azureSubscription: $(azureInfraServiceConnection)
-
                     scriptType: bash
-
                     scriptLocation: inlineScript
-
                     addSpnToEnvironment: true
-
                     inlineScript: |
 
                       set -euo pipefail
@@ -439,120 +367,14 @@ stages:
                 # =====================================
 
                 - task: AzureCLI@2
-
                   displayName: AKS CSI Validation
-
                   inputs:
-
                     azureSubscription: $(azureInfraServiceConnection)
-
                     scriptType: bash
-
                     scriptLocation: inlineScript
-
                     addSpnToEnvironment: true
-
-                    inlineScript: |
-
-                      set -euo pipefail
-
-                      kubectl get pods -A | grep csi || true
-
-                      kubectl get daemonset -A | grep secrets-store || true
-
-                # =====================================
-                # WORKLOAD IDENTITY VALIDATION
-                # =====================================
-
-                - task: AzureCLI@2
-
-                  displayName: Workload Identity Validation
-
-                  inputs:
-
-                    azureSubscription: $(azureInfraServiceConnection)
-
-                    scriptType: bash
-
-                    scriptLocation: inlineScript
-
-                    addSpnToEnvironment: true
-
-                    inlineScript: |
-
-                      set -euo pipefail
-
-                      echo "=================================="
-                      echo "OIDC ISSUER"
-                      echo "=================================="
-
-                      az aks show \
-                        --resource-group $(aksResourceGroup) \
-                        --name $(aksClusterName) \
-                        --query "oidcIssuerProfile.issuerUrl"
-
-                      echo "=================================="
-                      echo "WORKLOAD IDENTITY"
-                      echo "=================================="
-
-                      az aks show \
-                        --resource-group $(aksResourceGroup) \
-                        --name $(aksClusterName) \
-                        --query "securityProfile.workloadIdentity"
-
-                # =====================================
-                # INGRESS VALIDATION
-                # =====================================
-
-                - task: AzureCLI@2
-
-                  displayName: Ingress Validation
-
-                  inputs:
-
-                    azureSubscription: $(azureInfraServiceConnection)
-
-                    scriptType: bash
-
-                    scriptLocation: inlineScript
-
-                    addSpnToEnvironment: true
-
                     inlineScript: |
 
                       set -euo pipefail
 
                       kubectl get pods -A
-
-                      kubectl get svc -A
-
-                      kubectl get ingressclass
-
-                # =====================================
-                # FAILURE DIAGNOSTICS
-                # =====================================
-
-                - task: AzureCLI@2
-
-                  displayName: Failure Diagnostics
-
-                  condition: failed()
-
-                  inputs:
-
-                    azureSubscription: $(azureInfraServiceConnection)
-
-                    scriptType: bash
-
-                    scriptLocation: inlineScript
-
-                    addSpnToEnvironment: true
-
-                    inlineScript: |
-
-                      kubectl get all -A || true
-
-                      kubectl get events -A \
-                        --sort-by=.metadata.creationTimestamp || true
-
-                      kubectl describe nodes || true
