@@ -205,8 +205,10 @@ stages:
                       echo "=================================="
 
                       KEYVAULT_NAME=$(terraform output -raw key_vault_name)
+
                       WORKLOAD_CLIENT_ID=$(terraform output -raw workload_identity_client_id)
-                      TENANT_ID=$(terraform output -raw tenant_id)
+
+                      TENANT_ID=$(az account show --query tenantId -o tsv)
 
                       if [ -z "$KEYVAULT_NAME" ]; then
                         echo "ERROR: key_vault_name output is empty"
