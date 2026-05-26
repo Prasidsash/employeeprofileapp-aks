@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/main.tf
-# VERSION: v7-enterprise-disposable-stable
+# VERSION: v8-enterprise-stable-rbac-final
 # =====================================
 
 # =====================================
@@ -20,13 +20,9 @@ locals {
   # =====================================
 
   key_vault_base_name = lower(
-
     replace(
-
       replace(var.resource_group_name, "-rg", ""),
-
       "_",
-
       "-"
     )
   )
@@ -36,16 +32,11 @@ locals {
   # =====================================
 
   generated_key_vault_name = trim(
-
     substr(
-
       "${local.key_vault_base_name}kv",
-
       0,
-
       24
     ),
-
     "-"
   )
 
@@ -54,11 +45,8 @@ locals {
   # =====================================
 
   key_vault_name = (
-
     var.key_vault_name != null &&
-
     var.key_vault_name != ""
-
   ) ? var.key_vault_name : local.generated_key_vault_name
 
   # =====================================
@@ -75,15 +63,13 @@ locals {
   }
 
   # =====================================
-  # ENTERPRISE ADMIN OBJECT ID
+  # STABLE ADMIN OBJECT ID
   # =====================================
 
-  effective_admin_object_id = coalesce(
-
-    var.keyvault_admin_object_id,
-
-    data.azurerm_client_config.current.object_id
-  )
+  effective_admin_object_id = (
+    var.keyvault_admin_object_id != null &&
+    var.keyvault_admin_object_id != ""
+  ) ? var.keyvault_admin_object_id : data.azurerm_client_config.current.object_id
 }
 
 # =====================================
@@ -92,13 +78,10 @@ locals {
 
 resource "azurerm_key_vault" "kv" {
 
-  name = local.key_vault_name
-
-  location = var.location
-
+  name                = local.key_vault_name
+  location            = var.location
   resource_group_name = var.resource_group_name
-
-  tenant_id = data.azurerm_client_config.current.tenant_id
+  tenant_id           = data.azurerm_client_config.current.tenant_id
 
   sku_name = "standard"
 
@@ -175,6 +158,12 @@ resource "azurerm_role_assignment" "kv_admin" {
 
   principal_id = local.effective_admin_object_id
 
+  lifecycle {
+
+    ignore_changes = [
+      principal_id
+    ]
+  }
 }
 
 # =====================================
@@ -192,6 +181,13 @@ resource "azurerm_role_assignment" "aks_kv_secrets_user" {
   principal_id = var.aks_kubelet_object_id
 
   skip_service_principal_aad_check = true
+
+  lifecycle {
+
+    ignore_changes = [
+      principal_id
+    ]
+  }
 }
 
 # =====================================
@@ -208,6 +204,12 @@ resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
   principal_id = var.workload_identity_principal_id
 
+  lifecycle {
+
+    ignore_changes = [
+      principal_id
+    ]
+  }
 }
 
 # =====================================
@@ -236,8 +238,7 @@ resource "azurerm_key_vault_secret" "default_secrets" {
 
   for_each = var.enable_default_key_vault_secrets ? local.default_key_vault_secrets : {}
 
-  name = each.key
-
+  name  = each.key
   value = each.value
 
   key_vault_id = azurerm_key_vault.kv.id
