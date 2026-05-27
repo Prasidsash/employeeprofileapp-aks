@@ -1,5 +1,5 @@
 # =====================================
-# FILE: terraform/infra/dev/main.tf
+# FILE: terraform/infra/uat/main.tf
 # VERSION: v7-enterprise-disposable-final
 # =====================================
 
