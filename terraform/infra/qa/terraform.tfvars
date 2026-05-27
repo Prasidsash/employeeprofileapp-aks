@@ -1,4 +1,9 @@
 # =====================================
+# FILE: terraform/infra/qa/terraform.tfvars
+# VERSION: v9-enterprise-disposable-final
+# =====================================
+
+# =====================================
 # ENVIRONMENT
 # =====================================
 
@@ -50,14 +55,18 @@ only_critical_addons_enabled = false
 
 system_node_count = 1
 
-#system_node_vm_size = "Standard_D2s_v5"
 system_node_vm_size = "Standard_B2s"
 
 system_node_min_count = 1
 
 system_node_max_count = 2
 
-node_labels = {}
+node_labels = {
+
+  environment = "qa"
+
+  workload = "system"
+}
 
 node_taints = []
 
@@ -73,7 +82,7 @@ spot_node_vm_size = "Standard_D2s_v5"
 
 spot_max_price = -1
 
-spot_node_min_count = 1
+spot_node_min_count = 0
 
 spot_node_max_count = 2
 
@@ -90,12 +99,44 @@ spot_node_taints = [
 ]
 
 # =====================================
-# OPTIONAL AKS FEATURES
+# ENTERPRISE OIDC
+# =====================================
+
+enable_oidc_issuer = true
+
+# =====================================
+# WORKLOAD IDENTITY
 # =====================================
 
 enable_workload_identity = true
 
-enable_oidc_issuer = true
+# =====================================
+# ENTERPRISE UAMI
+# =====================================
+
+enable_user_assigned_identity = true
+
+user_assigned_identity_name = "employeeprofileapp-qa-uami"
+
+user_assigned_identity_ids = []
+
+# =====================================
+# FEDERATED IDENTITY
+# =====================================
+
+enable_federated_identity_credentials = true
+
+# =====================================
+# DISPOSABLE ENVIRONMENT MODE
+# =====================================
+
+enable_disposable_environment_mode = true
+
+enable_stale_identity_cleanup = true
+
+# =====================================
+# OPTIONAL AKS FEATURES
+# =====================================
 
 enable_image_cleaner = false
 
@@ -116,12 +157,14 @@ enable_key_vault_secrets_provider = true
 secret_rotation_enabled = true
 
 # =====================================
-# OPTIONAL USER ASSIGNED IDENTITY
+# ACR
 # =====================================
 
-enable_user_assigned_identity = false
+enable_acr = true
 
-user_assigned_identity_ids = []
+acr_name = "empprofacr2027"
+
+acr_sku = "Basic"
 
 # =====================================
 # MONITORING
@@ -224,6 +267,7 @@ pod_disruption_budget_name = "employeeprofileapp-qa-pdb"
 pdb_max_unavailable = "1"
 
 pdb_match_labels = {
+
   app = "employeeprofileapp"
 }
 
@@ -265,40 +309,29 @@ rbac_additional_labels = {}
 rbac_additional_annotations = {}
 
 # =====================================
-# WORKLOAD IDENTITY
-# =====================================
-
-enable_workload_identity_resources = true
-
-# =====================================
-# SECRETS
-# =====================================
-
-enable_secret = false
-
-secret_name = "employee-db-secret"
-
-secret_data = {}
-
-secret_annotations = {}
-
-secret_type = "Opaque"
-
-secret_immutable = false
-
-secret_additional_labels = {}
-
-secret_additional_annotations = {}
-
-# =====================================
 # KEY VAULT
 # =====================================
 
-enable_network_acls = true
+enable_network_acls = false
 
-keyvault_admin_object_id = "b77f8b73-2b9a-43e9-8ce6-10546c8c328a"
+keyvault_admin_object_id = null
 
 keyvault_additional_tags = {}
+
+# =====================================
+# OPTIONAL DEFAULT KEY VAULT SECRETS
+# =====================================
+
+enable_default_key_vault_secrets = true
+
+# =====================================
+# DATABASE SECRETS
+# PIPELINE VARIABLE GROUPS
+# =====================================
+
+db_username = "REPLACE_FROM_PIPELINE_SECRET"
+
+db_password = "REPLACE_FROM_PIPELINE_SECRET"
 
 # =====================================
 # INGRESS CONTROLLER
@@ -332,7 +365,7 @@ ingress_path = "/"
 
 ingress_path_type = "Prefix"
 
-service_name = "employeeprofileapp-service-qa"
+service_name = "employeeprofileapp"
 
 ingress_class_name = "nginx"
 
@@ -361,30 +394,6 @@ release_name = "employeeprofileapp-qa-release"
 enable_loadbalancer = true
 
 enable_hpa = false
-
-# =====================================
-# AKS BACKUP
-# =====================================
-
-enable_aks_backup = false
-
-backup_vault_name = "employeeprofileapp-qa-backup-vault"
-
-backup_storage_account_name = "empprofqabackup2026"
-
-backup_container_name = "aks-backups"
-
-backup_policy_name = "employeeprofileapp-qa-backup-policy"
-
-backup_schedule_repeating_time_intervals = [
-  "R/2026-01-01T02:00:00+00:00/PT24H"
-]
-
-backup_retention_duration_count = 30
-
-backup_retention_duration_type = "D"
-
-backup_additional_tags = {}
 
 # =====================================
 # CERT MANAGER

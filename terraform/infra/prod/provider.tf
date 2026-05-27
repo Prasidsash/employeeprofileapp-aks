@@ -1,3 +1,8 @@
+# =====================================
+# FILE: terraform/infra/dev/provider.tf
+# VERSION: v4-enterprise-stable-final
+# =====================================
+
 terraform {
 
   required_version = ">= 1.5.0"
@@ -32,6 +37,12 @@ terraform {
 }
 
 # =====================================
+# CURRENT AZURE CLIENT CONFIG
+# =====================================
+
+data "azurerm_client_config" "current" {}
+
+# =====================================
 # AZURE PROVIDER
 # =====================================
 
@@ -42,13 +53,19 @@ provider "azurerm" {
     key_vault {
 
       purge_soft_delete_on_destroy = true
+
+      recover_soft_deleted_key_vaults = true
+    }
+
+    resource_group {
+
+      prevent_deletion_if_contains_resources = false
     }
   }
 }
 
 # =====================================
 # KUBERNETES PROVIDER
-# Stable AKS Provider Authentication
 # =====================================
 
 provider "kubernetes" {
@@ -70,7 +87,6 @@ provider "kubernetes" {
 
 # =====================================
 # HELM PROVIDER
-# Stable AKS Provider Authentication
 # =====================================
 
 provider "helm" {
@@ -95,7 +111,6 @@ provider "helm" {
 
 # =====================================
 # KUBECTL PROVIDER
-# Stable AKS Provider Authentication
 # =====================================
 
 provider "kubectl" {
@@ -116,18 +131,3 @@ provider "kubectl" {
 
   load_config_file = false
 }
-
-# =====================================
-# OPTIONAL FUTURE PROVIDER NOTES
-# =====================================
-
-# Future enterprise enhancements may include:
-#
-# - Workload Identity authentication
-# - OIDC federation
-# - Terraform Cloud integration
-# - Remote execution runners
-# - Multi-environment provider aliasing
-#
-# Current provider model intentionally
-# preserves stable AKS + Helm behavior.

@@ -33,7 +33,7 @@ revisionHistoryLimit: 3
 
 image:
 
-  repository: empprofacr2026.azurecr.io/employeeprofileapp-aks
+  repository: empprofacr2027.azurecr.io/employeeprofileapp-aks
 
   tag: latest
 
