@@ -1,24 +1,49 @@
 # =====================================
-# REPLICAS
+# FILE:
+# helm/employeeprofileapp/values-qa.yaml
+# VERSION:
+# v13-enterprise-secretproviderclass-fixed-final
 # =====================================
-
-replicaCount: 1
 
 # =====================================
 # APPLICATION
 # =====================================
 
 app:
-  name: employeeprofileapp-qa
+
+  name: employeeprofileapp
+
+# =====================================
+# NAMESPACE
+# =====================================
+
+namespaceOverride: employeeprofileapp-qa
+
+# =====================================
+# REPLICA CONFIGURATION
+# =====================================
+
+replicaCount: 1
+
+revisionHistoryLimit: 3
 
 # =====================================
 # IMAGE
 # =====================================
 
 image:
-  repository: prasidsash/employeeprofileapp-aks
+
+  repository: empprofacr2027.azurecr.io/employeeprofileapp-aks
+
   tag: latest
+
   pullPolicy: Always
+
+# =====================================
+# IMAGE PULL SECRETS
+# =====================================
+
+imagePullSecrets: []
 
 # =====================================
 # SERVICE ACCOUNT
@@ -26,7 +51,7 @@ image:
 
 serviceAccount:
 
-  create: false
+  create: true
 
   name: employee-sa
 
@@ -35,12 +60,100 @@ serviceAccount:
     azure.workload.identity/client-id: ""
 
 # =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+workloadIdentity:
+
+  enabled: true
+
+  clientId: ""
+
+  tenantId: ""
+
+# =====================================
+# POD LABELS
+# =====================================
+
+podLabels:
+
+  app: employeeprofileapp
+
+# =====================================
+# POD ANNOTATIONS
+# =====================================
+
+podAnnotations:
+
+  azure.workload.identity/use: "true"
+
+# =====================================
+# POD SECURITY CONTEXT
+# =====================================
+
+podSecurityContext:
+
+  runAsNonRoot: true
+
+  fsGroup: 2000
+
+  seccompProfile:
+
+    type: RuntimeDefault
+
+# =====================================
+# CONTAINER SECURITY CONTEXT
+# =====================================
+
+securityContext:
+
+  allowPrivilegeEscalation: false
+
+  readOnlyRootFilesystem: false
+
+  runAsNonRoot: true
+
+  runAsUser: 1000
+
+  capabilities:
+
+    drop:
+
+      - ALL
+
+# =====================================
+# CONTAINER PORTS
+# =====================================
+
+containerPorts:
+
+  http: 8080
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
+
+env:
+
+  ASPNETCORE_ENVIRONMENT: QA
+
+  ASPNETCORE_URLS: http://+:8080
+
+# =====================================
+# ENV FROM SECRET
+# =====================================
+
+envFromSecrets:
+
+  enabled: true
+
+  secretName: employeeprofileapp-kv-secret
+
+# =====================================
 # SERVICE
 # =====================================
 
 service:
-
-  enabled: true
 
   type: ClusterIP
 
@@ -50,35 +163,220 @@ service:
 
   annotations: {}
 
-  externalTrafficPolicy: ""
-
-  sessionAffinity: ""
-
-  loadBalancerIP: ""
-
 # =====================================
-# ENVIRONMENT VARIABLES
+# INGRESS
 # =====================================
 
-env:
-  ASPNETCORE_ENVIRONMENT: qa
+ingress:
+
+  enabled: true
+
+  className: nginx
+
+  host: qa.employee.local
+
+  path: /employeeprofileapp-qa-release
+
+  pathType: Prefix
+
+  annotations:
+
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+  tls:
+
+    enabled: false
+
+    secretName: ""
 
 # =====================================
-# RESOURCE SETTINGS
+# RESOURCES
 # =====================================
 
 resources:
 
   requests:
-    cpu: "100m"
-    memory: "256Mi"
+
+    cpu: 100m
+
+    memory: 128Mi
 
   limits:
-    cpu: "500m"
-    memory: "512Mi"
+
+    cpu: 500m
+
+    memory: 512Mi
 
 # =====================================
-# AZURE KEY VAULT
+# HORIZONTAL POD AUTOSCALER
+# =====================================
+
+hpa:
+
+  enabled: false
+
+  minReplicas: 1
+
+  maxReplicas: 2
+
+  averageUtilization: 70
+
+  memoryAverageUtilization: 80
+
+  stabilizationWindowSeconds: 300
+
+# =====================================
+# NODE SELECTOR
+# =====================================
+
+nodeSelector: {}
+
+# =====================================
+# TOLERATIONS
+# =====================================
+
+tolerations: []
+
+# =====================================
+# AFFINITY
+# =====================================
+
+affinity: {}
+
+# =====================================
+# CONFIGMAP
+# =====================================
+
+extraConfig: {}
+
+configMapAnnotations: {}
+
+# =====================================
+# NETWORK POLICY
+# =====================================
+
+networkPolicy:
+
+  enabled: true
+
+  ingressControllerNamespace: ingress-nginx
+
+# =====================================
+# PROBES
+# =====================================
+
+livenessProbe:
+
+  enabled: true
+
+  path: /
+
+  initialDelaySeconds: 30
+
+  periodSeconds: 15
+
+  timeoutSeconds: 5
+
+  failureThreshold: 5
+
+readinessProbe:
+
+  enabled: true
+
+  path: /
+
+  initialDelaySeconds: 15
+
+  periodSeconds: 10
+
+  timeoutSeconds: 5
+
+  failureThreshold: 3
+
+startupProbe:
+
+  enabled: false
+
+  path: /
+
+  initialDelaySeconds: 10
+
+  periodSeconds: 10
+
+  timeoutSeconds: 5
+
+  failureThreshold: 30
+
+# =====================================
+# TOPOLOGY SPREAD CONSTRAINTS
+# =====================================
+
+topologySpreadConstraints: []
+
+# =====================================
+# PRIORITY CLASS
+# =====================================
+
+priorityClassName: ""
+
+# =====================================
+# TERMINATION
+# =====================================
+
+terminationGracePeriodSeconds: 30
+
+# =====================================
+# VOLUMES
+# =====================================
+
+extraVolumes: []
+
+extraVolumeMounts: []
+
+# =====================================
+# INIT CONTAINERS
+# =====================================
+
+initContainers: []
+
+# =====================================
+# SIDECARS
+# =====================================
+
+sidecars: []
+
+# =====================================
+# SERVICE MONITOR
+# =====================================
+
+serviceMonitor:
+
+  enabled: false
+
+  interval: 30s
+
+  scrapeTimeout: 10s
+
+# =====================================
+# PROMETHEUS RULES
+# =====================================
+
+prometheusRule:
+
+  enabled: false
+
+# =====================================
+# POD DISRUPTION BUDGET
+# =====================================
+
+podDisruptionBudget:
+
+  enabled: false
+
+  minAvailable: 1
+
+# =====================================
+# KEY VAULT
 # =====================================
 
 keyVault:
@@ -89,13 +387,21 @@ keyVault:
 
   tenantId: ""
 
-  clientId: ""
+  cloudName: AzurePublicCloud
 
   secretProviderClass: employeeprofileapp-spc
 
-  mountPath: "/mnt/secrets-store"
+  k8sSecretName: employeeprofileapp-kv-secret
 
-  secrets:
+# =====================================
+# SECRET PROVIDER CLASS
+# =====================================
+
+secretProviderClass:
+
+  enabled: true
+
+  objects:
 
     - objectName: db-username
       objectType: secret
@@ -104,119 +410,85 @@ keyVault:
       objectType: secret
 
 # =====================================
-# INGRESS
+# TLS SETTINGS
 # =====================================
 
-ingress:
-  enabled: true
+enable_tls: false
 
-  className: nginx
-
-  host: ""
-
-  path: /
-
-  pathType: Prefix
-
-  annotations: {}
-
-  tls:
-    enabled: false
-
-    secretName: ""
+cluster_issuer: ""
 
 # =====================================
-# HPA
+# OPTIONAL NGINX SETTINGS
 # =====================================
 
-hpa:
-  enabled: true
+enable_rewrite_target: false
 
-  minReplicas: 1
+enable_proxy_body_size: false
 
-  maxReplicas: 3
-
-  averageUtilization: 70
-
-  memoryAverageUtilization: 80
-
-  stabilizationWindowSeconds: 300
+proxy_body_size: 20m
 
 # =====================================
-# NAMESPACE
+# EXTRA ANNOTATIONS
 # =====================================
 
-namespace: employeeprofileapp-qa
+deploymentAnnotations: {}
+
+serviceAnnotations: {}
 
 # =====================================
-# IMAGE PULL SECRETS
+# EXTRA LABELS
 # =====================================
 
-imagePullSecrets:
-  - name: dockerhub-secret
+commonLabels: {}
 
 # =====================================
-# POD ANNOTATIONS
+# EXTRA POD LABELS
 # =====================================
 
-podAnnotations: {}
+extraPodLabels: {}
 
 # =====================================
-# CONFIGMAP ANNOTATIONS
+# EXTRA POD ANNOTATIONS
 # =====================================
 
-configMapAnnotations: {}
+extraPodAnnotations: {}
 
 # =====================================
-# OPTIONAL EXTRA CONFIGURATION
+# ROLLOUT STRATEGY
 # =====================================
 
-extraConfig: {}
+strategy:
+
+  type: RollingUpdate
+
+  rollingUpdate:
+
+    maxSurge: 1
+
+    maxUnavailable: 0
 
 # =====================================
-# AFFINITY
+# DNS CONFIG
 # =====================================
 
-affinity: {}
+dnsPolicy: ClusterFirst
+
+dnsConfig: {}
 
 # =====================================
-# SECURITY CONTEXT
+# HOST ALIASES
 # =====================================
 
-securityContext: {}
+hostAliases: []
 
 # =====================================
-# PROBES
+# RUNTIME CLASS
 # =====================================
 
-readinessProbe:
-  enabled: true
+runtimeClassName: ""
 
-  path: /
+# =====================================
+# SCHEDULER
+# =====================================
 
-  port: 8080
-
-  initialDelaySeconds: 10
-
-  periodSeconds: 10
-
-  timeoutSeconds: 5
-
-  successThreshold: 1
-
-  failureThreshold: 3
-
-livenessProbe:
-  enabled: true
-
-  path: /
-
-  port: 8080
-
-  initialDelaySeconds: 15
-
-  periodSeconds: 20
-
-  timeoutSeconds: 5
-
-  failureThreshold: 3
+schedulerName: default-scheduler
