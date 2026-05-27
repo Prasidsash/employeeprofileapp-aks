@@ -1,6 +1,6 @@
 # =====================================
 # FILE:
-# helm/employeeprofileapp/values-prod.yaml
+# helm/employeeprofileapp/values-dev.yaml
 # VERSION:
 # v13-enterprise-secretproviderclass-fixed-final
 # =====================================
