@@ -162,7 +162,7 @@ secret_rotation_enabled = true
 
 enable_acr = true
 
-acr_name = "empprofacr2026"
+acr_name = "empprofacr2027"
 
 acr_sku = "Basic"
 
