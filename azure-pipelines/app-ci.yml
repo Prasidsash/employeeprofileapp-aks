@@ -45,7 +45,7 @@ variables:
   # =====================================
 
   - name: acrName
-    value: empprofacr2026
+    value: empprofacr2027
 
   # =====================================
   # DOTNET
