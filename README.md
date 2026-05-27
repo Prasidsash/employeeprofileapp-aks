@@ -23,7 +23,7 @@ Enterprise AKS Platform Engineering Repository
 * Namespace Isolation
 * Enterprise Monitoring & Operational Validation
 
-The repository follows a reusable environment-first deployment model aligned with enterprise AKS platform engineering practices. 
+The repository follows a reusable environment-first deployment model aligned with enterprise AKS platform engineering practices.
 
 ---
 
@@ -55,8 +55,11 @@ employeeprofileapp-aks/
 │
 ├── terraform/
 │   ├── bootstrap/
+│   │   └── backend/
+│   │
 │   ├── infra/
 │   │   └── dev/
+│   │
 │   └── modules/
 │       ├── acr/
 │       ├── aks/
@@ -152,23 +155,6 @@ The repository follows an enterprise reusable modular Terraform architecture.
 
 ---
 
-# Enterprise Modular Architecture Benefits
-
-The modular architecture provides:
-
-* Reusable infrastructure components
-* Environment isolation
-* Simplified AKS lifecycle management
-* Independent module maintenance
-* Enterprise scalability
-* Infrastructure consistency
-* Easier troubleshooting
-* Standardized deployments
-* Better CI/CD integration
-* Governance alignment
-
----
-
 # Infrastructure Components Provisioned
 
 The platform provisions:
@@ -194,124 +180,282 @@ The platform provisions:
 
 ---
 
-# Azure DevOps Pipeline Architecture
+# Azure DevOps SPN and Service Connections
 
-## Backend Pipeline
-
-Pipeline Purpose:
-
-* Deploy Terraform backend resources
-* Configure remote state management
-
-Pipeline Activities:
-
-* Terraform Init
-* Terraform Validate
-* Terraform Plan
-* Backend deployment
-* Backend state validation
-
----
-
-## Infrastructure Pipeline
-
-Pipeline Purpose:
-
-* Provision AKS infrastructure using Terraform
-
-Pipeline Activities:
-
-* Terraform Init
-* Terraform Validate
-* Terraform Plan
-* Terraform Apply
-* AKS login validation
-* CSI validation
-* Runtime backend configuration
-
----
-
-## Application CI Pipeline
-
-Pipeline Purpose:
-
-* Build .NET application
-* Build Docker image
-* Push image to ACR
-
-Pipeline Activities:
-
-* Install .NET SDK
-* DotNet Restore
-* DotNet Build
-* DotNet Test
-* DotNet Publish
-* Docker Build
-* Docker Push
-* ACR image validation
-
-Pipeline Features:
-
-* Immutable image tagging
-* Build ID image versioning
-* Enterprise image lifecycle management
-* Docker validation
-
----
-
-## Application CD Pipeline
-
-Pipeline Purpose:
-
-* Deploy application into AKS using Helm
-
-Pipeline Activities:
-
-* Terraform output export
-* AKS authentication
-* Helm dependency update
-* Helm template validation
-* Helm upgrade/install
-* Deployment validation
-* Rollout validation
-
-Pipeline Features:
-
-* Runtime variable injection
-* Workload identity integration
-* Key Vault integration
-* Immutable deployment strategy
-* Runtime Helm value injection
-
----
-
-# CI/CD Deployment Flow
+## Azure DevOps Service Principal
 
 ```text
-Developer Commit
-        │
-        ▼
-Azure DevOps Repository
-        │
-        ▼
-Application CI Pipeline
-        │
-        ├── Build .NET Application
-        ├── Docker Build
-        ├── Push Image to ACR
-        └── Publish Image Tag
-        │
-        ▼
-Application CD Pipeline
-        │
-        ├── AKS Authentication
-        ├── Helm Deployment
-        ├── Runtime Variable Injection
-        └── Rollout Validation
-        │
-        ▼
-AKS Cluster
+azure-devops-sp
 ```
+
+This SPN is used for:
+
+* Terraform backend authentication
+* Azure DevOps pipeline authentication
+* AKS authentication
+* ACR authentication
+* Key Vault access
+* Terraform infrastructure deployment
+
+---
+
+## Azure DevOps Service Connections
+
+Validated Service Connections:
+
+* ACR-SC
+* AKS SCN
+* AzureAKS-SCN
+* Docker-SC
+
+All Service Connections were reauthenticated and validated before infrastructure deployment and pipeline execution.
+
+---
+
+# IAM Role Assignments
+
+## Storage Account IAM
+
+Assigned Role:
+
+```text
+Storage Blob Data Contributor
+```
+
+Assigned To:
+
+```text
+azure-devops-sp
+```
+
+Purpose:
+
+* Terraform remote backend state read/write
+* Terraform state locking
+
+---
+
+## Resource Group IAM
+
+Assigned Role:
+
+```text
+Contributor
+```
+
+Assigned To:
+
+```text
+azure-devops-sp
+```
+
+Purpose:
+
+* Terraform infrastructure provisioning
+* Azure resource management
+
+---
+
+## Key Vault IAM
+
+Assigned Role:
+
+```text
+Key Vault Administrator
+```
+
+Assigned To:
+
+```text
+azure-devops-sp
+```
+
+Purpose:
+
+* Key Vault secret creation
+* Secret retrieval
+* Secret update
+* Secret management
+
+---
+
+## Azure Container Registry IAM
+
+Assigned Roles:
+
+```text
+AcrPush
+AcrPull
+```
+
+Assigned To:
+
+```text
+azure-devops-sp
+```
+
+Purpose:
+
+* Docker image push from Azure DevOps
+* AKS image pull authentication
+
+---
+
+# Terraform Backend Architecture
+
+Terraform remote state is configured using Azure Storage Account backend.
+
+## Backend Components
+
+| Component                  | Purpose                  |
+| -------------------------- | ------------------------ |
+| Resource Group             | Stores backend resources |
+| Storage Account            | Stores Terraform state   |
+| Blob Container (`tfstate`) | Stores `.tfstate` files  |
+
+---
+
+# Terraform Cleanup and Reinitialization
+
+## Backend Folder Cleanup
+
+Delete below files/folders from:
+
+```text
+terraform\bootstrap\backend
+```
+
+Files/Folders:
+
+* `.terraform`
+* `.terraform.lock.hcl`
+* `terraform.tfstate`
+* `terraform.tfstate.backup`
+
+---
+
+## Infrastructure Folder Cleanup
+
+Delete below files/folders from:
+
+```text
+terraform\infra\dev
+```
+
+Files/Folders:
+
+* `.terraform`
+* `.terraform.lock.hcl`
+* `terraform.tfstate`
+* `terraform.tfstate.backup`
+
+---
+
+## Backend Reinitialization
+
+```powershell
+terraform init -reconfigure
+```
+
+---
+
+# Enterprise Deployment Workflow
+
+## Deployment Order
+
+```text
+1. Backend Pipeline
+2. Infrastructure Pipeline
+3. Application CI Pipeline
+4. Application CD Pipeline
+```
+
+---
+
+# Infrastructure Deployment Flow
+
+## Step 1 - Reauthenticate Service Connections
+
+Revalidate and reauthenticate all Azure DevOps Service Connections before pipeline execution.
+
+---
+
+## Step 2 - Configure IAM Permissions
+
+Validate all required IAM role assignments for:
+
+* Storage Account
+* Resource Group
+* Key Vault
+* ACR
+
+---
+
+## Step 3 - Initialize Terraform Backend
+
+```powershell
+terraform init -reconfigure
+```
+
+---
+
+## Step 4 - Deploy Backend Resources
+
+Run backend Terraform deployment manually.
+
+---
+
+## Step 5 - Deploy Infrastructure
+
+Run infrastructure Terraform deployment manually.
+
+This provisions:
+
+* AKS
+* ACR
+* Key Vault
+* Networking
+* Monitoring
+* RBAC
+* Ingress
+* Governance
+* Namespaces
+* Diagnostics
+
+---
+
+## Step 6 - Connect to AKS Cluster
+
+```powershell
+az aks get-credentials --resource-group employeeprofileapp-dev-rg --name employeeprofileapp-dev-aks --overwrite-existing
+```
+
+---
+
+## Step 7 - Validate AKS Connectivity
+
+```powershell
+kubectl get nodes
+kubectl get pods -A
+kubectl get namespaces
+```
+
+---
+
+# Key Vault Secret Conflict Troubleshooting
+
+Issue:
+
+Azure Key Vault secrets already existed in Azure but corresponding Terraform state entries were missing.
+
+## Resolution
+
+* Cleanup stale Terraform local state
+* Reinitialize Terraform backend
+* Import existing Azure resources into Terraform state
+* Re-run Terraform plan/apply
+
+This resolved Terraform duplicate secret creation conflicts.
 
 ---
 
@@ -332,47 +476,49 @@ The repository uses Helm for Kubernetes application packaging and deployment.
 
 ---
 
-# Environment Strategy
+# CI/CD Pipeline Architecture
 
-Supported environments:
+## Backend Pipeline
 
-* DEV
-* QA
-* UAT
-* PROD
+Responsible for:
 
-Each environment contains:
-
-* Dedicated namespace
-* Environment-specific values file
-* Isolated configuration
-* Reusable deployment pattern
+* Terraform backend provisioning
+* Remote state setup
+* Backend validation
 
 ---
 
-# Security Architecture
+## Infrastructure Pipeline
 
-## Identity & Authentication
+Responsible for:
 
-Implemented Security Features:
-
-* Azure Workload Identity
-* OIDC Federation
-* Managed Identity Authentication
-* Azure DevOps Service Connections
-* Kubernetes RBAC
-* Namespace isolation
+* AKS provisioning
+* Azure resource deployment
+* IAM validation
+* Monitoring deployment
+* Runtime validation
 
 ---
 
-## Container Security
+## Application CI Pipeline
 
-Security Controls:
+Responsible for:
 
-* Private Azure Container Registry
-* Controlled AKS image pull access
-* Immutable image deployment
-* Runtime deployment validation
+* .NET application build
+* Docker image creation
+* Docker image push to ACR
+* Immutable image tagging
+
+---
+
+## Application CD Pipeline
+
+Responsible for:
+
+* AKS authentication
+* Helm deployment
+* Rollout validation
+* Runtime deployment verification
 
 ---
 
@@ -399,31 +545,6 @@ Includes:
 * Metrics visualization
 * Deployment diagnostics
 * AKS troubleshooting support
-
----
-
-# Platform Operations
-
-The repository includes a dedicated `platform-operations` layer for operational support activities including:
-
-* AKS operational validation
-* Cluster troubleshooting
-* Deployment verification
-* Namespace validation
-* Rollout validation
-* Monitoring verification
-* Operational scripts and utilities
-
----
-
-# Docker Architecture
-
-The repository uses Docker for:
-
-* .NET 8 application containerization
-* Enterprise image lifecycle management
-* Immutable deployment strategy
-* CI/CD packaging
 
 ---
 
@@ -459,140 +580,17 @@ Includes:
 
 ---
 
-# Enterprise Deployment Workflow
+# Platform Operations
 
-## Deployment Order
+The repository includes a dedicated `platform-operations` layer for operational support activities including:
 
-```text
-1. Backend Pipeline
-2. Infrastructure Pipeline
-3. Application CI Pipeline
-4. Application CD Pipeline
-```
-
----
-
-# Terraform State Management
-
-Terraform backend uses:
-
-* Azure Storage Account
-* Blob Container
-* Environment-specific tfstate files
-* Centralized backend management
-
-Benefits:
-
-* Secure state persistence
-* Team collaboration
-* State locking
-* Consistent infrastructure deployments
-
----
-
-# Azure DevOps Variable Groups
-
-The solution uses centralized variable groups for:
-
-* Backend configuration
-* AKS configuration
-* ACR configuration
-* Namespace configuration
-* Service connection references
-* Terraform backend variables
-
----
-
-# Image Deployment Strategy
-
-The repository follows immutable image deployment strategy:
-
-* Docker images tagged using Build ID
-* Runtime image injection into Helm deployments
-* Rollback support using Helm revisions
-* Enterprise image lifecycle management
-
----
-
-# Platform Engineering Capabilities
-
-This repository demonstrates:
-
-* Enterprise AKS platform engineering
-* Terraform Infrastructure as Code
-* Azure DevOps CI/CD automation
-* Kubernetes deployment automation
-* Enterprise observability implementation
-* Secure workload identity integration
-* Reusable Helm packaging
-* Modular Terraform architecture
-
----
-
-# Typical Operational Activities
-
-## Infrastructure Activities
-
-* Terraform validation
-* Terraform planning
-* Terraform deployment
-* Backend validation
-* Namespace management
-* RBAC management
-* Monitoring validation
-
----
-
-## Kubernetes Activities
-
-* Pod troubleshooting
-* Helm deployments
-* Rollout verification
+* AKS operational validation
+* Cluster troubleshooting
+* Deployment verification
 * Namespace validation
-* AKS authentication validation
-* Image pull troubleshooting
-* Kubernetes event analysis
-
----
-
-## Monitoring Activities
-
-* Azure Monitor validation
-* Pod log analysis
-* Grafana dashboard verification
-* AKS diagnostics review
-* Prometheus monitoring validation
-
----
-
-# Enterprise Best Practices Implemented
-
-* Modular Terraform structure
-* Environment isolation
-* Namespace isolation
-* Immutable image deployment
-* Runtime deployment validation
-* Centralized backend management
-* OIDC authentication
-* Managed identity integration
-* Monitoring-first operational model
-* Infrastructure disposability
-
----
-
-# Deployment Prerequisites
-
-Required Components:
-
-* Azure Subscription
-* Azure DevOps Organization
-* Azure DevOps Service Connections
-* Terraform CLI
-* Azure CLI
-* Kubectl
-* Helm CLI
-* Docker Desktop
-* .NET 8 SDK
+* Rollout validation
+* Monitoring verification
+* Operational scripts and utilities
 
 ---
 
@@ -635,6 +633,23 @@ az acr repository list --name <acr-name> --output table
 
 ---
 
+# Security Architecture
+
+Implemented Security Features:
+
+* Azure Workload Identity
+* OIDC Federation
+* Managed Identity Authentication
+* Azure DevOps Service Connections
+* Kubernetes RBAC
+* Namespace isolation
+* Azure RBAC
+* Key Vault integration
+* Secure Terraform backend
+* Immutable image deployment
+
+---
+
 # Common Troubleshooting Areas
 
 * Terraform backend initialization issues
@@ -646,6 +661,37 @@ az acr repository list --name <acr-name> --output table
 * Workload identity validation issues
 * Monitoring integration issues
 * Azure DevOps permission validation
+
+---
+
+# Enterprise Best Practices Implemented
+
+* Modular Terraform structure
+* Environment isolation
+* Namespace isolation
+* Immutable image deployment
+* Runtime deployment validation
+* Centralized backend management
+* OIDC authentication
+* Managed identity integration
+* Monitoring-first operational model
+* Infrastructure disposability
+
+---
+
+# Deployment Prerequisites
+
+Required Components:
+
+* Azure Subscription
+* Azure DevOps Organization
+* Azure DevOps Service Connections
+* Terraform CLI
+* Azure CLI
+* Kubectl
+* Helm CLI
+* Docker Desktop
+* .NET 8 SDK
 
 ---
 
