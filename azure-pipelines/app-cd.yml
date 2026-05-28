@@ -1,250 +1,501 @@
 # =====================================
-# FILE:
-# azure-pipelines/app-cd.yml
-# VERSION:
-# v25-enterprise-workloadidentity-keyvault-runtime-complete-final
+# FILE: azure-pipelines/app-cd.yml
+# VERSION: v26-enterprise-workloadidentity-runtime-corrected-final
 # =====================================
 
 trigger: none
 
 pr: none
 
+resources:
+
+  pipelines:
+
+    - pipeline: employeeprofileapp-ci
+
+      source: CI
+
+      trigger:
+
+        branches:
+
+          include:
+
+            - main
+
 pool:
+
   vmImage: ubuntu-latest
 
 variables:
+
   - group: employeeprofileapp-dev-vars
 
-  - name: namespace
-    value: employeeprofileapp-dev
+  # =====================================
+  # TERRAFORM
+  # =====================================
 
-  - name: helmReleaseName
-    value: employeeprofileapp-dev-release
+  - name: terraformVersion
+    value: 1.11.4
+
+  - name: terraformWorkingDirectory
+    value: terraform/infra/dev
+
+  # =====================================
+  # HELM
+  # =====================================
+
+  - name: helmVersion
+    value: latest
 
   - name: helmChartPath
     value: helm/employeeprofileapp
 
+  - name: helmReleaseName
+    value: employeeprofileapp-dev-release
+
+  - name: namespace
+    value: employeeprofileapp-dev
+
   - name: deploymentName
     value: employeeprofileapp
+
+  # =====================================
+  # IMAGE
+  # =====================================
 
   - name: imageRepository
     value: employeeprofileapp-aks
 
   - name: imageTag
-    value: $(Build.BuildId)
+    value: $(resources.pipeline.employeeprofileapp-ci.runID)
+
+  # =====================================
+  # ACR
+  # =====================================
+
+  - name: acrName
+    value: empprofacr2027
+
+  # =====================================
+  # AKS
+  # =====================================
+
+  - name: aksClusterName
+    value: employeeprofileapp-dev-aks
+
+  - name: aksResourceGroup
+    value: employeeprofileapp-dev-rg
+
+  # =====================================
+  # TERRAFORM BACKEND
+  # =====================================
+
+  - name: backendResourceGroupName
+    value: $(tfBackendResourceGroup)
+
+  - name: backendStorageAccountName
+    value: $(tfBackendStorageAccount)
+
+  - name: backendContainerName
+    value: $(tfBackendContainer)
+
+  - name: backendStateKey
+    value: dev.terraform.tfstate
 
 stages:
+
   - stage: Deploy
 
-    displayName: Deploy EmployeeProfileApp
+    displayName: Deploy Application
 
     jobs:
-      - job: HelmDeploy
 
-        displayName: Helm Upgrade Install
+      - deployment: HelmDeployment
 
-        steps:
-          - checkout: self
+        displayName: Helm Deployment
 
-          # =====================================
-          # AKS LOGIN
-          # =====================================
+        environment: dev
 
-          - task: AzureCLI@2
+        strategy:
 
-            displayName: AKS Get Credentials
+          runOnce:
 
-            inputs:
-              azureSubscription: $(azureInfraServiceConnection)
+            deploy:
 
-              scriptType: bash
+              steps:
 
-              scriptLocation: inlineScript
+                # =====================================
+                # CHECKOUT
+                # =====================================
 
-              addSpnToEnvironment: true
+                - checkout: self
+                  clean: true
 
-              inlineScript: |
+                # =====================================
+                # INSTALL TERRAFORM
+                # =====================================
 
-                set -euo pipefail
+                - task: TerraformInstaller@1
 
-                az aks get-credentials \
-                  --resource-group $(aksResourceGroup) \
-                  --name $(aksClusterName) \
-                  --overwrite-existing
+                  displayName: Install Terraform
 
-          # =====================================
-          # HELM DEPLOYMENT
-          # =====================================
+                  inputs:
 
-          - task: AzureCLI@2
+                    terraformVersion: $(terraformVersion)
 
-            displayName: Helm Upgrade Install
+                # =====================================
+                # INSTALL HELM
+                # =====================================
 
-            inputs:
-              azureSubscription: $(azureInfraServiceConnection)
+                - task: HelmInstaller@1
 
-              scriptType: bash
+                  displayName: Install Helm
 
-              scriptLocation: inlineScript
+                  inputs:
 
-              addSpnToEnvironment: true
+                    helmVersionToInstall: $(helmVersion)
 
-              inlineScript: |
+                # =====================================
+                # TERRAFORM INIT
+                # =====================================
 
-                set -euo pipefail
+                - task: AzureCLI@2
 
-                echo "=================================="
-                echo "VALIDATE VARIABLES"
-                echo "=================================="
+                  displayName: Terraform Init
 
-                if [ -z "$(WORKLOAD_CLIENT_ID)" ]; then
-                  echo "ERROR: WORKLOAD_CLIENT_ID is empty"
-                  exit 1
-                fi
+                  inputs:
 
-                if [ -z "$(AZURE_TENANT_ID)" ]; then
-                  echo "ERROR: AZURE_TENANT_ID is empty"
-                  exit 1
-                fi
+                    azureSubscription: $(azureInfraServiceConnection)
 
-                if [ -z "$(KEYVAULT_NAME)" ]; then
-                  echo "ERROR: KEYVAULT_NAME is empty"
-                  exit 1
-                fi
+                    scriptType: bash
 
-                echo "=================================="
-                echo "VARIABLE VALUES"
-                echo "=================================="
+                    scriptLocation: inlineScript
 
-                echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
-                echo "AZURE_TENANT_ID=$(AZURE_TENANT_ID)"
-                echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
+                    addSpnToEnvironment: true
 
-                echo "=================================="
-                echo "ACR LOGIN SERVER"
-                echo "=================================="
+                    workingDirectory: $(terraformWorkingDirectory)
 
-                ACR_LOGIN_SERVER=$(az acr show \
-                  --name $(acrName) \
-                  --query loginServer \
-                  --output tsv)
+                    inlineScript: |
 
-                echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
+                      set -euo pipefail
 
-                echo "=================================="
-                echo "HELM DEPENDENCY UPDATE"
-                echo "=================================="
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-                helm dependency update $(helmChartPath)
+                      terraform init \
+                        -upgrade \
+                        -reconfigure \
+                        -backend-config="resource_group_name=$(backendResourceGroupName)" \
+                        -backend-config="storage_account_name=$(backendStorageAccountName)" \
+                        -backend-config="container_name=$(backendContainerName)" \
+                        -backend-config="key=$(backendStateKey)" \
+                        -backend-config="use_azuread_auth=true"
 
-                echo "=================================="
-                echo "REMOVE EXISTING SERVICE ACCOUNT"
-                echo "=================================="
+                # =====================================
+                # EXPORT TERRAFORM OUTPUTS
+                # =====================================
 
-                kubectl delete sa employee-sa \
-                  -n $(namespace) \
-                  --ignore-not-found=true
+                - task: AzureCLI@2
 
-                echo "=================================="
-                echo "HELM TEMPLATE VALIDATION"
-                echo "=================================="
+                  displayName: Export Terraform Outputs
 
-                helm template \
-                  $(helmReleaseName) \
-                  $(helmChartPath) \
-                  --namespace $(namespace) \
-                  --values $(helmChartPath)/values.yaml \
-                  --values $(helmChartPath)/values-dev.yaml \
-                  --set image.repository="${ACR_LOGIN_SERVER}/$(imageRepository)" \
-                  --set image.tag="$(imageTag)" \
-                  --set workloadIdentity.enabled=true \
-                  --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
-                  --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
-                  --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
-                  --set keyVault.enabled=true \
-                  > /tmp/rendered-manifest.yaml
+                  inputs:
 
-                echo "=================================="
-                echo "VERIFY WORKLOAD IDENTITY"
-                echo "=================================="
+                    azureSubscription: $(azureInfraServiceConnection)
 
-                CLIENT_ID_COUNT=$(grep -c 'azure.workload.identity/client-id:' /tmp/rendered-manifest.yaml || true)
+                    scriptType: bash
 
-                if [ "${CLIENT_ID_COUNT}" -gt 1 ]; then
-                  echo "ERROR: duplicate workload identity annotation found"
-                  exit 1
-                fi
+                    scriptLocation: inlineScript
 
-                echo "=================================="
-                echo "HELM UPGRADE INSTALL"
-                echo "=================================="
+                    addSpnToEnvironment: true
 
-                helm upgrade --install \
-                  $(helmReleaseName) \
-                  $(helmChartPath) \
-                  --namespace $(namespace) \
-                  --create-namespace \
-                  --values $(helmChartPath)/values.yaml \
-                  --values $(helmChartPath)/values-dev.yaml \
-                  --set image.repository="${ACR_LOGIN_SERVER}/$(imageRepository)" \
-                  --set image.tag="$(imageTag)" \
-                  --set workloadIdentity.enabled=true \
-                  --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
-                  --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
-                  --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
-                  --set keyVault.enabled=true \
-                  --wait \
-                  --timeout 15m
+                    workingDirectory: $(terraformWorkingDirectory)
 
-                echo "=================================="
-                echo "ROLLING RESTART"
-                echo "=================================="
+                    inlineScript: |
 
-                kubectl rollout restart deployment $(deploymentName) \
-                  -n $(namespace)
+                      set -euo pipefail
 
-                echo "=================================="
-                echo "ROLLOUT STATUS"
-                echo "=================================="
+                      export ARM_USE_OIDC=true
+                      export ARM_USE_AZUREAD=true
+                      export ARM_CLIENT_ID=$servicePrincipalId
+                      export ARM_TENANT_ID=$tenantId
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-                kubectl rollout status deployment $(deploymentName) \
-                  -n $(namespace) \
-                  --timeout=900s
+                      echo "=================================="
+                      echo "EXPORT TERRAFORM OUTPUTS"
+                      echo "=================================="
 
-          # =====================================
-          # POD STATUS
-          # =====================================
+                      terraform output
 
-          - task: AzureCLI@2
+                      KEYVAULT_NAME=$(terraform output -raw key_vault_name)
 
-            displayName: Verify Pods
+                      WORKLOAD_CLIENT_ID=$(terraform output -raw workload_identity_client_id)
 
-            inputs:
-              azureSubscription: $(azureInfraServiceConnection)
+                      TENANT_ID=$(az account show --query tenantId -o tsv)
 
-              scriptType: bash
+                      if [ -z "${KEYVAULT_NAME}" ]; then
+                        echo "ERROR: key_vault_name output is empty"
+                        exit 1
+                      fi
 
-              scriptLocation: inlineScript
+                      if [ -z "${WORKLOAD_CLIENT_ID}" ]; then
+                        echo "ERROR: workload_identity_client_id output is empty"
+                        exit 1
+                      fi
 
-              inlineScript: |
+                      if [ -z "${TENANT_ID}" ]; then
+                        echo "ERROR: tenant_id output is empty"
+                        exit 1
+                      fi
 
-                set -euo pipefail
+                      echo "=================================="
+                      echo "OUTPUT VALUES"
+                      echo "=================================="
 
-                echo "=================================="
-                echo "POD STATUS"
-                echo "=================================="
+                      echo "KEYVAULT_NAME=${KEYVAULT_NAME}"
+                      echo "WORKLOAD_CLIENT_ID=${WORKLOAD_CLIENT_ID}"
+                      echo "TENANT_ID=${TENANT_ID}"
 
-                kubectl get pods -n $(namespace)
+                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]${KEYVAULT_NAME}"
+                      echo "##vso[task.setvariable variable=WORKLOAD_CLIENT_ID]${WORKLOAD_CLIENT_ID}"
+                      echo "##vso[task.setvariable variable=AZURE_TENANT_ID]${TENANT_ID}"
 
-                echo "=================================="
-                echo "DEPLOYMENT STATUS"
-                echo "=================================="
+                # =====================================
+                # AKS LOGIN
+                # =====================================
 
-                kubectl get deployment $(deploymentName) \
-                  -n $(namespace)
+                - task: AzureCLI@2
 
-                echo "=================================="
-                echo "SERVICE STATUS"
-                echo "=================================="
+                  displayName: AKS Login
 
-                kubectl get svc -n $(namespace)
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      az aks get-credentials \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --overwrite-existing
+
+                      kubectl get nodes -o wide
+
+                # =====================================
+                # HELM DEPLOYMENT
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Helm Upgrade Install
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      echo "=================================="
+                      echo "VALIDATE VARIABLES"
+                      echo "=================================="
+
+                      if [ -z "$(WORKLOAD_CLIENT_ID)" ]; then
+                        echo "ERROR: WORKLOAD_CLIENT_ID is empty"
+                        exit 1
+                      fi
+
+                      if [ -z "$(AZURE_TENANT_ID)" ]; then
+                        echo "ERROR: AZURE_TENANT_ID is empty"
+                        exit 1
+                      fi
+
+                      if [ -z "$(KEYVAULT_NAME)" ]; then
+                        echo "ERROR: KEYVAULT_NAME is empty"
+                        exit 1
+                      fi
+
+                      echo "=================================="
+                      echo "VARIABLE VALUES"
+                      echo "=================================="
+
+                      echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
+                      echo "AZURE_TENANT_ID=$(AZURE_TENANT_ID)"
+                      echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
+
+                      echo "=================================="
+                      echo "ACR LOGIN SERVER"
+                      echo "=================================="
+
+                      ACR_LOGIN_SERVER=$(az acr show \
+                        --name $(acrName) \
+                        --query loginServer \
+                        --output tsv)
+
+                      echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
+
+                      echo "=================================="
+                      echo "HELM DEPENDENCY UPDATE"
+                      echo "=================================="
+
+                      helm dependency update $(helmChartPath)
+
+                      echo "=================================="
+                      echo "REMOVE EXISTING SERVICE ACCOUNT"
+                      echo "=================================="
+
+                      kubectl delete sa employee-sa \
+                        -n $(namespace) \
+                        --ignore-not-found=true
+
+                      echo "=================================="
+                      echo "HELM TEMPLATE VALIDATION"
+                      echo "=================================="
+
+                      helm template \
+                        $(helmReleaseName) \
+                        $(helmChartPath) \
+                        --namespace $(namespace) \
+                        --values $(helmChartPath)/values.yaml \
+                        --values $(helmChartPath)/values-dev.yaml \
+                        --set image.repository="${ACR_LOGIN_SERVER}/$(imageRepository)" \
+                        --set image.tag="$(imageTag)" \
+                        --set workloadIdentity.enabled=true \
+                        --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
+                        --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
+                        --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
+                        --set keyVault.enabled=true \
+                        > rendered-manifest.yaml
+
+                      echo "=================================="
+                      echo "VERIFY WORKLOAD IDENTITY"
+                      echo "=================================="
+
+                      CLIENT_ID_COUNT=$(grep -c "azure.workload.identity/client-id" rendered-manifest.yaml || true)
+
+                      if [ "${CLIENT_ID_COUNT}" -gt 1 ]; then
+                        echo "ERROR: duplicate workload identity annotation found"
+                        exit 1
+                      fi
+
+                      echo "=================================="
+                      echo "HELM UPGRADE INSTALL"
+                      echo "=================================="
+
+                      helm upgrade \
+                        --install \
+                        $(helmReleaseName) \
+                        $(helmChartPath) \
+                        --namespace $(namespace) \
+                        --create-namespace \
+                        --values $(helmChartPath)/values.yaml \
+                        --values $(helmChartPath)/values-dev.yaml \
+                        --set image.repository="${ACR_LOGIN_SERVER}/$(imageRepository)" \
+                        --set image.tag="$(imageTag)" \
+                        --set workloadIdentity.enabled=true \
+                        --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
+                        --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
+                        --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
+                        --set keyVault.enabled=true \
+                        --wait=false \
+                        --timeout 20m \
+                        --debug
+
+                # =====================================
+                # ROLLOUT VALIDATION
+                # =====================================
+
+                - task: AzureCLI@2
+
+                  displayName: Rollout Validation
+
+                  inputs:
+
+                    azureSubscription: $(azureInfraServiceConnection)
+
+                    scriptType: bash
+
+                    scriptLocation: inlineScript
+
+                    addSpnToEnvironment: true
+
+                    inlineScript: |
+
+                      set -euo pipefail
+
+                      echo "=================================="
+                      echo "DEPLOYMENTS"
+                      echo "=================================="
+
+                      kubectl get deployment \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "PODS"
+                      echo "=================================="
+
+                      kubectl get pods \
+                        -n $(namespace) \
+                        -o wide
+
+                      POD_NAME=$(kubectl get pods \
+                        -n $(namespace) \
+                        -l app=$(deploymentName) \
+                        -o jsonpath='{.items[0].metadata.name}')
+
+                      echo "=================================="
+                      echo "SECRET PROVIDER CLASS"
+                      echo "=================================="
+
+                      kubectl get secretproviderclass \
+                        -n $(namespace)
+
+                      kubectl describe secretproviderclass \
+                        employeeprofileapp-spc \
+                        -n $(namespace) || true
+
+                      echo "=================================="
+                      echo "POD DETAILS"
+                      echo "=================================="
+
+                      kubectl describe pod \
+                        ${POD_NAME} \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "POD LOGS"
+                      echo "=================================="
+
+                      kubectl logs \
+                        ${POD_NAME} \
+                        -n $(namespace) \
+                        --all-containers=true \
+                        --tail=200 || true
+
+                      echo "=================================="
+                      echo "ROLLOUT STATUS"
+                      echo "=================================="
+
+                      kubectl rollout status \
+                        deployment/$(deploymentName) \
+                        -n $(namespace) \
+                        --timeout=900s
