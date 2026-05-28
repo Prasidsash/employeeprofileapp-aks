@@ -2,7 +2,7 @@
 # FILE:
 # terraform/modules/uami/main.tf
 # VERSION:
-# v3-enterprise-workloadidentity-federated-runtime-final
+# v4-enterprise-workloadidentity-federated-runtime-final
 # =====================================
 
 # =====================================
@@ -95,23 +95,4 @@ resource "time_sleep" "wait_for_workload_identity" {
   ]
 
   create_duration = "180s"
-}
-
-# =====================================
-# OUTPUTS
-# =====================================
-
-output "identity_id" {
-
-  value = azurerm_user_assigned_identity.uami.id
-}
-
-output "client_id" {
-
-  value = azurerm_user_assigned_identity.uami.client_id
-}
-
-output "principal_id" {
-
-  value = azurerm_user_assigned_identity.uami.principal_id
 }
