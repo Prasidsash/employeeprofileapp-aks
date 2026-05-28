@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/main.tf
-# VERSION: v9-enterprise-sql-phase1-final
+# VERSION: v12-enterprise-null-safe-final
 # =====================================
 
 # =====================================
@@ -61,44 +61,25 @@ locals {
   ) ? "Server=tcp:${var.sql_server_fqdn},1433;Initial Catalog=${var.sql_database_name};Persist Security Info=False;User ID=${var.db_username};Password=${var.db_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" : null
 
   # =====================================
-  # ENTERPRISE DEFAULT SECRETS
+  # NON-SENSITIVE SECRET METADATA
   # =====================================
 
-  default_key_vault_secrets = merge(
+  secret_metadata = {
 
-    {
+    "db-username" = true
 
-      db-username = var.db_username
+    "db-password" = true
 
-      db-password = var.db_password
+    "keyvault-name" = true
 
-      keyvault-name = local.key_vault_name
-    },
+    "sql-server-name" = true
 
-    var.sql_server_name != null ? {
+    "sql-database-name" = true
 
-      sql-server-name = var.sql_server_name
+    "sql-server-fqdn" = true
 
-    } : {},
-
-    var.sql_database_name != null ? {
-
-      sql-database-name = var.sql_database_name
-
-    } : {},
-
-    var.sql_server_fqdn != null ? {
-
-      sql-server-fqdn = var.sql_server_fqdn
-
-    } : {},
-
-    local.sql_connection_string != null ? {
-
-      sql-connection-string = local.sql_connection_string
-
-    } : {}
-  )
+    "sql-connection-string" = true
+  }
 
   # =====================================
   # STABLE ADMIN OBJECT ID
@@ -123,23 +104,11 @@ resource "azurerm_key_vault" "kv" {
 
   sku_name = "standard"
 
-  # =====================================
-  # LAB / NON-PROD SETTINGS
-  # =====================================
-
   soft_delete_retention_days = var.soft_delete_retention_days
 
   purge_protection_enabled = var.enable_purge_protection
 
-  # =====================================
-  # RBAC AUTHORIZATION
-  # =====================================
-
   rbac_authorization_enabled = true
-
-  # =====================================
-  # OPTIONAL NETWORK ACLS
-  # =====================================
 
   dynamic "network_acls" {
 
@@ -153,20 +122,12 @@ resource "azurerm_key_vault" "kv" {
     }
   }
 
-  # =====================================
-  # LIFECYCLE
-  # =====================================
-
   lifecycle {
 
     ignore_changes = [
       tags
     ]
   }
-
-  # =====================================
-  # TAGS
-  # =====================================
 
   tags = merge(
 
@@ -274,10 +235,35 @@ resource "time_sleep" "wait_for_kv_rbac" {
 
 resource "azurerm_key_vault_secret" "default_secrets" {
 
-  for_each = var.enable_default_key_vault_secrets ? local.default_key_vault_secrets : {}
+  for_each = var.enable_default_key_vault_secrets ? local.secret_metadata : {}
 
-  name  = each.key
-  value = each.value
+  name = each.key
+
+  value = (
+    each.key == "db-username" ? var.db_username :
+
+    each.key == "db-password" ? var.db_password :
+
+    each.key == "keyvault-name" ? local.key_vault_name :
+
+    each.key == "sql-server-name" ? (
+      var.sql_server_name != null ? var.sql_server_name : ""
+    ) :
+
+    each.key == "sql-database-name" ? (
+      var.sql_database_name != null ? var.sql_database_name : ""
+    ) :
+
+    each.key == "sql-server-fqdn" ? (
+      var.sql_server_fqdn != null ? var.sql_server_fqdn : ""
+    ) :
+
+    each.key == "sql-connection-string" ? (
+      local.sql_connection_string != null ? local.sql_connection_string : ""
+    ) :
+
+    ""
+  )
 
   key_vault_id = azurerm_key_vault.kv.id
 

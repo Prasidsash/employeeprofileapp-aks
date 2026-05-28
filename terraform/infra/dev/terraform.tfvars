@@ -337,7 +337,7 @@ db_password = "REPLACE_FROM_PIPELINE_SECRET"
 # AZURE SQL DATABASE
 # =====================================
 
-enable_sql_database = false
+enable_sql_database = true
 
 # =====================================
 # SQL SERVER
