@@ -12,14 +12,14 @@ string GetEnv() =>
 
 (string bgColor, string envEmoji) EnvStyle(string env) => env.ToLower() switch
 {
-    "dev"         => ("#8e44ad", "💻"),
-    "qa"          => ("#f39c12", "🧪"),
-    "uat"         => ("#2980b9", "🔧"),
-    "prod"        => ("#27ae60", "🏭"),
+    "dev" => ("#8e44ad", "💻"),
+    "qa" => ("#f39c12", "🧪"),
+    "uat" => ("#2980b9", "🔧"),
+    "prod" => ("#27ae60", "🏭"),
     "development" => ("#8e44ad", "💻"),
-    "staging"     => ("#f39c12", "🧪"),
-    "production"  => ("#27ae60", "🏭"),
-    _             => ("#7f8c8d", "❓")
+    "staging" => ("#f39c12", "🧪"),
+    "production" => ("#27ae60", "🏭"),
+    _ => ("#7f8c8d", "❓")
 };
 
 string Page(string title, string emoji, string message)
@@ -98,7 +98,7 @@ string Page(string title, string emoji, string message)
 
 app.MapGet("/", async context =>
 {
-    await context.Response.WriteAsync(Page("Home", "🏠", "Welcome to 27/05/2026 @ 04:09 PM"));
+    await context.Response.WriteAsync(Page("Home", "🏠", "Welcome to 28/05/2026 @ 08:57 PM"));
 });
 
 app.MapGet("/employee", async context =>
