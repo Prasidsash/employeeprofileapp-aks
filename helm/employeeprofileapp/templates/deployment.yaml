@@ -2,129 +2,109 @@
 # FILE:
 # helm/employeeprofileapp/templates/deployment.yaml
 # VERSION:
-# v14-enterprise-keyvault-runtime-final
+# v16-enterprise-keyvault-runtime-complete-final
 # =====================================
 
 apiVersion: apps/v1
-
 kind: Deployment
 
 metadata:
-
   name: {{ include "employeeprofileapp.fullname" . }}
-
   namespace: {{ .Values.namespaceOverride }}
-
   labels:
-
     app.kubernetes.io/name: {{ .Values.app.name }}
-
+    helm.sh/chart: {{ include "employeeprofileapp.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
 
 spec:
-
   replicas: {{ .Values.replicaCount }}
 
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
 
   selector:
-
     matchLabels:
-
       app.kubernetes.io/name: {{ .Values.app.name }}
-
       app.kubernetes.io/instance: {{ .Release.Name }}
 
   strategy:
-
     type: {{ .Values.strategy.type }}
 
     rollingUpdate:
-
       maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
-
       maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
 
   template:
-
     metadata:
-
       labels:
-
         app.kubernetes.io/name: {{ .Values.app.name }}
-
         app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- with .Values.podLabels }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.extraPodLabels }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
       annotations:
 
 {{- with .Values.podAnnotations }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.extraPodAnnotations }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
     spec:
-
       serviceAccountName: {{ .Values.serviceAccount.name }}
 
       automountServiceAccountToken: true
 
-{{- if .Values.runtimeClassName }}
-
-      runtimeClassName: {{ .Values.runtimeClassName }}
-
+{{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
 {{- end }}
+
+{{- if .Values.runtimeClassName }}
+      runtimeClassName: {{ .Values.runtimeClassName }}
+{{- end }}
+
+      restartPolicy: Always
 
       dnsPolicy: {{ .Values.dnsPolicy }}
 
 {{- with .Values.dnsConfig }}
-
       dnsConfig:
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.hostAliases }}
-
       hostAliases:
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.imagePullSecrets }}
-
       imagePullSecrets:
-
 {{ toYaml . | indent 8 }}
+{{- end }}
 
+{{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+{{ toYaml .Values.topologySpreadConstraints | indent 8 }}
 {{- end }}
 
       securityContext:
-
 {{ toYaml .Values.podSecurityContext | indent 8 }}
 
-      containers:
+{{- if .Values.initContainers }}
+      initContainers:
+{{ toYaml .Values.initContainers | indent 8 }}
+{{- end }}
 
+      containers:
         - name: {{ .Chart.Name }}
 
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -132,221 +112,169 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           securityContext:
-
 {{ toYaml .Values.securityContext | indent 12 }}
 
           ports:
-
             - name: http
-
-              containerPort: {{ .Values.containerPorts.http }}
-
+              containerPort: {{ required "containerPorts.http is required" .Values.containerPorts.http }}
               protocol: TCP
 
+{{- if .Values.containerPorts.https }}
+            - name: https
+              containerPort: {{ .Values.containerPorts.https }}
+              protocol: TCP
+{{- end }}
+
           env:
-
             - name: APP_ENV
-
               value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
 
             - name: ASPNETCORE_ENVIRONMENT
-
               value: {{ .Values.env.ASPNETCORE_ENVIRONMENT | quote }}
 
             - name: ASPNETCORE_URLS
-
               value: {{ .Values.env.ASPNETCORE_URLS | quote }}
 
-            # =====================================
-            # KEY VAULT SECRET ENV VARS
-            # =====================================
+            - name: DOTNET_RUNNING_IN_CONTAINER
+              value: "true"
+
+            - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+              value: "false"
 
             - name: DB_USERNAME
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: DB_USERNAME
 
             - name: DB_PASSWORD
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: DB_PASSWORD
 
             - name: SQL_SERVER_NAME
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: SQL_SERVER_NAME
 
             - name: SQL_SERVER_FQDN
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: SQL_SERVER_FQDN
 
             - name: SQL_DATABASE_NAME
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: SQL_DATABASE_NAME
 
             - name: SQL_CONNECTION_STRING
-
               valueFrom:
-
                 secretKeyRef:
-
                   name: {{ .Values.keyVault.k8sSecretName }}
-
                   key: SQL_CONNECTION_STRING
 
-          resources:
+{{- with .Values.env.extraEnv }}
+{{ toYaml . | indent 12 }}
+{{- end }}
 
+{{- with .Values.envFrom }}
+          envFrom:
+{{ toYaml . | indent 12 }}
+{{- end }}
+
+          resources:
 {{ toYaml .Values.resources | indent 12 }}
 
+{{- if .Values.lifecycle }}
+          lifecycle:
+{{ toYaml .Values.lifecycle | indent 12 }}
+{{- end }}
+
 {{- if .Values.livenessProbe.enabled }}
-
           livenessProbe:
-
             httpGet:
-
               path: {{ .Values.livenessProbe.path }}
-
               port: http
+              scheme: HTTP
 
             initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-
             periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-
             timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-
+            successThreshold: {{ .Values.livenessProbe.successThreshold }}
             failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-
 {{- end }}
 
 {{- if .Values.readinessProbe.enabled }}
-
           readinessProbe:
-
             httpGet:
-
               path: {{ .Values.readinessProbe.path }}
-
               port: http
+              scheme: HTTP
 
             initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-
             periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-
             timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
             failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-
 {{- end }}
 
 {{- if .Values.startupProbe.enabled }}
-
           startupProbe:
-
             httpGet:
-
               path: {{ .Values.startupProbe.path }}
-
               port: http
+              scheme: HTTP
 
             initialDelaySeconds: {{ .Values.startupProbe.initialDelaySeconds }}
-
             periodSeconds: {{ .Values.startupProbe.periodSeconds }}
-
             timeoutSeconds: {{ .Values.startupProbe.timeoutSeconds }}
-
+            successThreshold: {{ .Values.startupProbe.successThreshold }}
             failureThreshold: {{ .Values.startupProbe.failureThreshold }}
-
 {{- end }}
 
           volumeMounts:
-
             - name: secrets-store-inline
-
-              mountPath: "/mnt/secrets-store"
-
+              mountPath: /mnt/secrets-store
               readOnly: true
 
 {{- with .Values.extraVolumeMounts }}
-
 {{ toYaml . | indent 12 }}
-
 {{- end }}
 
 {{- with .Values.sidecars }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
       volumes:
-
         - name: secrets-store-inline
-
           csi:
-
             driver: secrets-store.csi.k8s.io
-
             readOnly: true
 
             volumeAttributes:
-
               secretProviderClass: {{ .Values.keyVault.secretProviderClass }}
 
 {{- with .Values.extraVolumes }}
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.nodeSelector }}
-
       nodeSelector:
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.affinity }}
-
       affinity:
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
 {{- with .Values.tolerations }}
-
       tolerations:
-
 {{ toYaml . | indent 8 }}
-
 {{- end }}
 
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}

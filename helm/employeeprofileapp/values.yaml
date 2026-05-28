@@ -2,19 +2,32 @@
 # FILE:
 # helm/employeeprofileapp/values.yaml
 # VERSION:
-# v21-enterprise-workloadidentity-runtime-consolidated-final
+# v22-enterprise-workloadidentity-runtime-complete-final
 # =====================================
 
 replicaCount: 1
 
 revisionHistoryLimit: 3
 
+namespaceOverride: ""
+
+terminationGracePeriodSeconds: 30
+
+runtimeClassName: ""
+
+priorityClassName: ""
+
+dnsPolicy: ClusterFirst
+
+dnsConfig: {}
+
+hostAliases: []
+
 # =====================================
 # APPLICATION
 # =====================================
 
 app:
-
   name: ""
 
 # =====================================
@@ -22,11 +35,8 @@ app:
 # =====================================
 
 image:
-
   repository: ""
-
   tag: ""
-
   pullPolicy: IfNotPresent
 
 # =====================================
@@ -34,7 +44,6 @@ image:
 # =====================================
 
 acr:
-
   enabled: false
 
 # =====================================
@@ -48,9 +57,7 @@ imagePullSecrets: []
 # =====================================
 
 serviceAccount:
-
   create: true
-
   name: employee-sa
 
   annotations: {}
@@ -60,11 +67,8 @@ serviceAccount:
 # =====================================
 
 workloadIdentity:
-
   enabled: true
-
   clientId: ""
-
   tenantId: ""
 
 # =====================================
@@ -72,7 +76,6 @@ workloadIdentity:
 # =====================================
 
 service:
-
   type: ClusterIP
 
   port: 80
@@ -92,7 +95,6 @@ service:
 # =====================================
 
 serviceSettings:
-
   enableLoadBalancer: false
 
 # =====================================
@@ -100,17 +102,12 @@ serviceSettings:
 # =====================================
 
 resources:
-
   requests:
-
     cpu: ""
-
     memory: ""
 
   limits:
-
     cpu: ""
-
     memory: ""
 
 # =====================================
@@ -118,7 +115,6 @@ resources:
 # =====================================
 
 ingress:
-
   enabled: false
 
   className: nginx
@@ -132,9 +128,7 @@ ingress:
   annotations: {}
 
   tls:
-
     enabled: false
-
     secretName: ""
 
 # =====================================
@@ -142,7 +136,6 @@ ingress:
 # =====================================
 
 hpa:
-
   enabled: false
 
   minReplicas: 1
@@ -160,19 +153,24 @@ hpa:
 # =====================================
 
 env:
-
   ASPNETCORE_ENVIRONMENT: Development
 
   ASPNETCORE_URLS: http://+:8080
+
+  extraEnv: []
+
+# =====================================
+# ENV FROM
+# =====================================
+
+envFrom: []
 
 # =====================================
 # ENV FROM SECRET
 # =====================================
 
 envFromSecrets:
-
   enabled: true
-
   secretName: employeeprofileapp-kv-secret
 
 # =====================================
@@ -180,7 +178,6 @@ envFromSecrets:
 # =====================================
 
 keyVault:
-
   enabled: true
 
   secretProviderClass: employeeprofileapp-spc
@@ -196,29 +193,22 @@ keyVault:
   cloudName: AzurePublicCloud
 
   objects:
-
     - objectName: db-username
-
       objectType: secret
 
     - objectName: db-password
-
       objectType: secret
 
     - objectName: sql-server-name
-
       objectType: secret
 
     - objectName: sql-server-fqdn
-
       objectType: secret
 
     - objectName: sql-database-name
-
       objectType: secret
 
     - objectName: sql-connection-string
-
       objectType: secret
 
 # =====================================
@@ -226,33 +216,25 @@ keyVault:
 # =====================================
 
 secretProviderClass:
-
   enabled: true
 
   objects:
-
     - objectName: db-username
-
       objectType: secret
 
     - objectName: db-password
-
       objectType: secret
 
     - objectName: sql-server-name
-
       objectType: secret
 
     - objectName: sql-server-fqdn
-
       objectType: secret
 
     - objectName: sql-database-name
-
       objectType: secret
 
     - objectName: sql-connection-string
-
       objectType: secret
 
 # =====================================
@@ -261,38 +243,31 @@ secretProviderClass:
 
 podLabels: {}
 
+extraPodLabels: {}
+
 # =====================================
 # POD ANNOTATIONS
 # =====================================
 
 podAnnotations:
-
   azure.workload.identity/use: "true"
 
-# =====================================
-# NODE SELECTOR
-# =====================================
-
-nodeSelector: {}
+extraPodAnnotations: {}
 
 # =====================================
-# TOLERATIONS
+# POD SECURITY CONTEXT
 # =====================================
 
-tolerations: []
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
 
 # =====================================
-# AFFINITY
-# =====================================
-
-affinity: {}
-
-# =====================================
-# SECURITY CONTEXT
+# CONTAINER SECURITY CONTEXT
 # =====================================
 
 securityContext:
-
   allowPrivilegeEscalation: false
 
   readOnlyRootFilesystem: false
@@ -302,106 +277,120 @@ securityContext:
   runAsUser: 1000
 
   capabilities:
-
     drop:
-
       - ALL
 
 # =====================================
-# POD SECURITY CONTEXT
+# CONTAINER PORTS
 # =====================================
 
-podSecurityContext:
-
-  runAsNonRoot: true
-
-  fsGroup: 2000
-
-  seccompProfile:
-
-    type: RuntimeDefault
+containerPorts:
+  http: 8080
+  https: 8443
 
 # =====================================
-# PROBES
+# LIVENESS PROBE
 # =====================================
 
-readinessProbe:
-
-  enabled: false
+livenessProbe:
+  enabled: true
 
   path: /
 
-  port: 8080
-
-  initialDelaySeconds: 10
+  initialDelaySeconds: 30
 
   periodSeconds: 10
 
   timeoutSeconds: 5
+
+  successThreshold: 1
 
   failureThreshold: 3
 
-livenessProbe:
+# =====================================
+# READINESS PROBE
+# =====================================
 
-  enabled: false
+readinessProbe:
+  enabled: true
 
   path: /
-
-  port: 8080
 
   initialDelaySeconds: 15
 
-  periodSeconds: 20
+  periodSeconds: 10
 
   timeoutSeconds: 5
 
-  failureThreshold: 5
+  successThreshold: 1
+
+  failureThreshold: 3
+
+# =====================================
+# STARTUP PROBE
+# =====================================
 
 startupProbe:
-
   enabled: false
 
   path: /
-
-  port: 8080
 
   initialDelaySeconds: 10
 
   periodSeconds: 10
 
   timeoutSeconds: 5
+
+  successThreshold: 1
 
   failureThreshold: 30
 
 # =====================================
-# CONFIGMAP AUTO RELOAD
+# STRATEGY
 # =====================================
 
-configMapAutoReload:
+strategy:
+  type: RollingUpdate
 
-  enabled: false
-
-# =====================================
-# NETWORK POLICY
-# =====================================
-
-networkPolicy:
-
-  enabled: false
-
-  ingressControllerNamespace: ingress-nginx
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
 
 # =====================================
-# SECRET MOUNTS
+# NODE SELECTOR
 # =====================================
 
-secretMounts:
+nodeSelector: {}
 
-  enabled: true
+# =====================================
+# AFFINITY
+# =====================================
 
-  mountPath: /mnt/secrets-store
+affinity: {}
 
-  readOnly: true
+# =====================================
+# TOLERATIONS
+# =====================================
+
+tolerations: []
+
+# =====================================
+# TOPOLOGY SPREAD CONSTRAINTS
+# =====================================
+
+topologySpreadConstraints: []
+
+# =====================================
+# INIT CONTAINERS
+# =====================================
+
+initContainers: []
+
+# =====================================
+# SIDECARS
+# =====================================
+
+sidecars: []
 
 # =====================================
 # EXTRA VOLUMES
@@ -416,47 +405,57 @@ extraVolumes: []
 extraVolumeMounts: []
 
 # =====================================
-# SIDECARS
+# LIFECYCLE
 # =====================================
 
-sidecars: []
+lifecycle: {}
 
 # =====================================
-# HOST ALIASES
+# SERVICE MONITOR
 # =====================================
 
-hostAliases: []
+serviceMonitor:
+  enabled: false
+
+  interval: 30s
+
+  scrapeTimeout: 10s
+
+  labels: {}
 
 # =====================================
-# DNS CONFIG
+# NETWORK POLICY
 # =====================================
 
-dnsConfig: {}
-
-dnsPolicy: ClusterFirst
-
-# =====================================
-# RUNTIME CLASS
-# =====================================
-
-runtimeClassName: ""
+networkPolicy:
+  enabled: false
 
 # =====================================
-# TERMINATION
+# PDB
 # =====================================
 
-terminationGracePeriodSeconds: 30
+podDisruptionBudget:
+  enabled: false
+
+  minAvailable: 1
 
 # =====================================
-# STRATEGY
+# LOGGING
 # =====================================
 
-strategy:
+logging:
+  enabled: true
 
-  type: RollingUpdate
+# =====================================
+# METRICS
+# =====================================
 
-  rollingUpdate:
+metrics:
+  enabled: false
 
-    maxSurge: 1
+# =====================================
+# TESTS
+# =====================================
 
-    maxUnavailable: 0
+tests:
+  enabled: false

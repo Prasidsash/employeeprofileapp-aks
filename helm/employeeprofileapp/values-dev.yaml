@@ -2,33 +2,41 @@
 # FILE:
 # helm/employeeprofileapp/values-dev.yaml
 # VERSION:
-# v20-enterprise-workloadidentity-dev-final
+# v21-enterprise-workloadidentity-dev-complete-final
 # =====================================
 
 replicaCount: 1
 
 revisionHistoryLimit: 3
 
+terminationGracePeriodSeconds: 30
+
+runtimeClassName: ""
+
+priorityClassName: ""
+
+dnsPolicy: ClusterFirst
+
+dnsConfig: {}
+
+hostAliases: []
+
+namespaceOverride: employeeprofileapp-dev
+
 # =====================================
 # APPLICATION
 # =====================================
 
 app:
-
   name: employeeprofileapp
-
-namespaceOverride: employeeprofileapp-dev
 
 # =====================================
 # IMAGE
 # =====================================
 
 image:
-
   repository: empprofacr2027.azurecr.io/employeeprofileapp-aks
-
   tag: latest
-
   pullPolicy: Always
 
 # =====================================
@@ -36,7 +44,6 @@ image:
 # =====================================
 
 acr:
-
   enabled: true
 
 # =====================================
@@ -50,9 +57,7 @@ imagePullSecrets: []
 # =====================================
 
 serviceAccount:
-
   create: true
-
   name: employee-sa
 
   annotations: {}
@@ -62,7 +67,6 @@ serviceAccount:
 # =====================================
 
 workloadIdentity:
-
   enabled: true
 
   clientId: ""
@@ -74,7 +78,6 @@ workloadIdentity:
 # =====================================
 
 service:
-
   type: ClusterIP
 
   port: 80
@@ -94,7 +97,6 @@ service:
 # =====================================
 
 serviceSettings:
-
   enableLoadBalancer: false
 
 # =====================================
@@ -102,17 +104,12 @@ serviceSettings:
 # =====================================
 
 resources:
-
   requests:
-
     cpu: 100m
-
     memory: 128Mi
 
   limits:
-
     cpu: 500m
-
     memory: 512Mi
 
 # =====================================
@@ -120,7 +117,6 @@ resources:
 # =====================================
 
 ingress:
-
   enabled: true
 
   className: nginx
@@ -132,13 +128,10 @@ ingress:
   pathType: Prefix
 
   annotations:
-
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
   tls:
-
     enabled: false
-
     secretName: ""
 
 # =====================================
@@ -146,7 +139,6 @@ ingress:
 # =====================================
 
 hpa:
-
   enabled: false
 
   minReplicas: 1
@@ -164,17 +156,23 @@ hpa:
 # =====================================
 
 env:
-
   ASPNETCORE_ENVIRONMENT: Development
 
   ASPNETCORE_URLS: http://+:8080
+
+  extraEnv: []
+
+# =====================================
+# ENV FROM
+# =====================================
+
+envFrom: []
 
 # =====================================
 # ENV FROM SECRET
 # =====================================
 
 envFromSecrets:
-
   enabled: true
 
   secretName: employeeprofileapp-kv-secret
@@ -184,7 +182,6 @@ envFromSecrets:
 # =====================================
 
 keyVault:
-
   enabled: true
 
   secretProviderClass: employeeprofileapp-spc
@@ -200,29 +197,22 @@ keyVault:
   cloudName: AzurePublicCloud
 
   objects:
-
     - objectName: db-username
-
       objectType: secret
 
     - objectName: db-password
-
       objectType: secret
 
     - objectName: sql-server-name
-
       objectType: secret
 
     - objectName: sql-server-fqdn
-
       objectType: secret
 
     - objectName: sql-database-name
-
       objectType: secret
 
     - objectName: sql-connection-string
-
       objectType: secret
 
 # =====================================
@@ -230,33 +220,25 @@ keyVault:
 # =====================================
 
 secretProviderClass:
-
   enabled: true
 
   objects:
-
     - objectName: db-username
-
       objectType: secret
 
     - objectName: db-password
-
       objectType: secret
 
     - objectName: sql-server-name
-
       objectType: secret
 
     - objectName: sql-server-fqdn
-
       objectType: secret
 
     - objectName: sql-database-name
-
       objectType: secret
 
     - objectName: sql-connection-string
-
       objectType: secret
 
 # =====================================
@@ -264,16 +246,18 @@ secretProviderClass:
 # =====================================
 
 podLabels:
-
   app: employeeprofileapp
+
+extraPodLabels: {}
 
 # =====================================
 # POD ANNOTATIONS
 # =====================================
 
 podAnnotations:
-
   azure.workload.identity/use: "true"
+
+extraPodAnnotations: {}
 
 # =====================================
 # NODE SELECTOR
@@ -294,11 +278,16 @@ tolerations: []
 affinity: {}
 
 # =====================================
+# TOPOLOGY SPREAD CONSTRAINTS
+# =====================================
+
+topologySpreadConstraints: []
+
+# =====================================
 # SECURITY CONTEXT
 # =====================================
 
 securityContext:
-
   allowPrivilegeEscalation: false
 
   readOnlyRootFilesystem: false
@@ -308,9 +297,7 @@ securityContext:
   runAsUser: 1000
 
   capabilities:
-
     drop:
-
       - ALL
 
 # =====================================
@@ -318,21 +305,28 @@ securityContext:
 # =====================================
 
 podSecurityContext:
-
   runAsNonRoot: true
+
+  runAsUser: 1000
 
   fsGroup: 2000
 
   seccompProfile:
-
     type: RuntimeDefault
+
+# =====================================
+# CONTAINER PORTS
+# =====================================
+
+containerPorts:
+  http: 8080
+  https: 8443
 
 # =====================================
 # PROBES
 # =====================================
 
 readinessProbe:
-
   enabled: false
 
   path: /
@@ -345,10 +339,11 @@ readinessProbe:
 
   timeoutSeconds: 5
 
+  successThreshold: 1
+
   failureThreshold: 3
 
 livenessProbe:
-
   enabled: false
 
   path: /
@@ -361,10 +356,11 @@ livenessProbe:
 
   timeoutSeconds: 5
 
+  successThreshold: 1
+
   failureThreshold: 5
 
 startupProbe:
-
   enabled: false
 
   path: /
@@ -377,6 +373,8 @@ startupProbe:
 
   timeoutSeconds: 5
 
+  successThreshold: 1
+
   failureThreshold: 30
 
 # =====================================
@@ -384,7 +382,6 @@ startupProbe:
 # =====================================
 
 configMapAutoReload:
-
   enabled: false
 
 # =====================================
@@ -392,7 +389,6 @@ configMapAutoReload:
 # =====================================
 
 networkPolicy:
-
   enabled: false
 
   ingressControllerNamespace: ingress-nginx
@@ -402,12 +398,17 @@ networkPolicy:
 # =====================================
 
 secretMounts:
-
   enabled: true
 
   mountPath: /mnt/secrets-store
 
   readOnly: true
+
+# =====================================
+# INIT CONTAINERS
+# =====================================
+
+initContainers: []
 
 # =====================================
 # EXTRA VOLUMES
@@ -439,30 +440,62 @@ hostAliases: []
 
 dnsConfig: {}
 
-dnsPolicy: ClusterFirst
-
 # =====================================
-# RUNTIME CLASS
+# LIFECYCLE
 # =====================================
 
-runtimeClassName: ""
+lifecycle: {}
 
 # =====================================
-# TERMINATION
+# SERVICE MONITOR
 # =====================================
 
-terminationGracePeriodSeconds: 30
+serviceMonitor:
+  enabled: false
+
+  interval: 30s
+
+  scrapeTimeout: 10s
+
+  labels: {}
+
+# =====================================
+# PDB
+# =====================================
+
+podDisruptionBudget:
+  enabled: false
+
+  minAvailable: 1
+
+# =====================================
+# LOGGING
+# =====================================
+
+logging:
+  enabled: true
+
+# =====================================
+# METRICS
+# =====================================
+
+metrics:
+  enabled: false
+
+# =====================================
+# TESTS
+# =====================================
+
+tests:
+  enabled: false
 
 # =====================================
 # STRATEGY
 # =====================================
 
 strategy:
-
   type: RollingUpdate
 
   rollingUpdate:
-
     maxSurge: 1
-
     maxUnavailable: 0
