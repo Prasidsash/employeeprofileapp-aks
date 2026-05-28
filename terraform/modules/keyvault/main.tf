@@ -209,16 +209,9 @@ resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
   principal_type = "ServicePrincipal"
 
-  skip_service_principal_aad_check = true
-
-  lifecycle {
-
-    create_before_destroy = true
-
-    ignore_changes = [
-      principal_id
-    ]
-  }
+  depends_on = [
+    azurerm_key_vault.kv
+  ]
 }
 
 # =====================================
