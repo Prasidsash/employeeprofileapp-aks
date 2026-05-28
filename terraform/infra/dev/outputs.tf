@@ -232,20 +232,6 @@ output "workload_identity_id" {
 }
 
 # =====================================
-# FEDERATED IDENTITY
-# =====================================
-
-output "federated_identity_credential_id" {
-
-  description = "Federated Identity Credential ID"
-
-  value = try(
-    module.federated_identity[0].federated_identity_credential_id,
-    null
-  )
-}
-
-# =====================================
 # NAMESPACE
 # =====================================
 

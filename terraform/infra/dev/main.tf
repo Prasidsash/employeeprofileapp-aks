@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/main.tf
-# VERSION: v8-enterprise-sql-phase1-final
+# VERSION: v9-enterprise-platform-infra-final
 # =====================================
 
 # =====================================
@@ -123,7 +123,6 @@ module "acr" {
 
 # =====================================
 # ENTERPRISE UAMI MODULE
-# PHASE-2 IDENTITY LIFECYCLE
 # =====================================
 
 module "aks_workload_identity" {
@@ -163,19 +162,11 @@ module "sql" {
 
   environment = var.environment
 
-  # =====================================
-  # SQL SERVER
-  # =====================================
-
   enable_sql_database = var.enable_sql_database
 
   sql_server_name = var.sql_server_name
 
   sql_server_version = var.sql_server_version
-
-  # =====================================
-  # SQL DATABASE
-  # =====================================
 
   sql_database_name = var.sql_database_name
 
@@ -183,27 +174,15 @@ module "sql" {
 
   sql_max_size_gb = var.sql_max_size_gb
 
-  # =====================================
-  # SQL ADMINISTRATION
-  # =====================================
-
   sql_admin_username = var.sql_admin_username
 
   sql_admin_password = var.sql_admin_password
-
-  # =====================================
-  # SQL NETWORKING
-  # =====================================
 
   enable_sql_public_network_access = var.enable_sql_public_network_access
 
   enable_sql_firewall_rules = var.enable_sql_firewall_rules
 
   sql_firewall_rules = var.sql_firewall_rules
-
-  # =====================================
-  # TAGS
-  # =====================================
 
   additional_tags = local.common_tags
 
@@ -276,9 +255,7 @@ module "aks" {
   enable_user_assigned_identity = var.enable_user_assigned_identity
 
   user_assigned_identity_ids = var.enable_user_assigned_identity ? [
-
     module.aks_workload_identity[0].identity_id
-
   ] : var.user_assigned_identity_ids
 
   # =====================================
@@ -346,9 +323,7 @@ module "aks" {
   # =====================================
 
   additional_tags = merge(
-
     local.common_tags,
-
     var.aks_additional_tags
   )
 
@@ -446,17 +421,14 @@ module "keyvault" {
   enable_network_acls = var.enable_network_acls
 
   additional_tags = merge(
-
     local.common_tags,
-
     var.keyvault_additional_tags
   )
 
   depends_on = [
     module.aks,
     module.aks_workload_identity,
-    module.sql,
-    time_sleep.wait_for_aks
+    module.sql
   ]
 }
 
@@ -477,8 +449,7 @@ module "namespace" {
   namespace_annotations = var.namespace_annotations
 
   depends_on = [
-    module.aks,
-    time_sleep.wait_for_aks
+    module.aks
   ]
 }
 
@@ -517,8 +488,7 @@ module "rbac" {
   additional_annotations = var.rbac_additional_annotations
 
   depends_on = [
-    module.namespace,
-    module.federated_identity
+    module.namespace
   ]
 }
 
@@ -542,8 +512,7 @@ module "ingress_nginx" {
 
   depends_on = [
     module.aks,
-    module.namespace,
-    time_sleep.wait_for_aks
+    module.namespace
   ]
 }
 
@@ -573,8 +542,7 @@ module "cert_manager" {
 
   depends_on = [
     module.aks,
-    module.ingress_nginx,
-    time_sleep.wait_for_aks
+    module.ingress_nginx
   ]
 }
 
@@ -615,8 +583,7 @@ module "ingress" {
   cluster_issuer = var.cluster_issuer
 
   depends_on = [
-    module.namespace,
-    time_sleep.wait_for_aks
+    module.namespace
   ]
 }
 
