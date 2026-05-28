@@ -13,7 +13,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: employeeprofileapp-dev-variable-group
+  - group: employeeprofileapp-dev-vars
 
   - name: namespace
     value: employeeprofileapp-dev
@@ -102,8 +102,8 @@ stages:
                   exit 1
                 fi
 
-                if [ -z "$(TENANT_ID)" ]; then
-                  echo "ERROR: TENANT_ID is empty"
+                if [ -z "$(AZURE_TENANT_ID)" ]; then
+                  echo "ERROR: AZURE_TENANT_ID is empty"
                   exit 1
                 fi
 
@@ -117,7 +117,7 @@ stages:
                 echo "=================================="
 
                 echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
-                echo "TENANT_ID=$(TENANT_ID)"
+                echo "AZURE_TENANT_ID=$(AZURE_TENANT_ID)"
                 echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
 
                 echo "=================================="
@@ -159,7 +159,7 @@ stages:
                   --set image.tag="$(imageTag)" \
                   --set workloadIdentity.enabled=true \
                   --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
-                  --set-string keyVault.tenantId="$(TENANT_ID)" \
+                  --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
                   --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
                   --set keyVault.enabled=true \
                   > /tmp/rendered-manifest.yaml
@@ -190,7 +190,7 @@ stages:
                   --set image.tag="$(imageTag)" \
                   --set workloadIdentity.enabled=true \
                   --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
-                  --set-string keyVault.tenantId="$(TENANT_ID)" \
+                  --set-string keyVault.tenantId="$(AZURE_TENANT_ID)" \
                   --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
                   --set keyVault.enabled=true \
                   --wait \
