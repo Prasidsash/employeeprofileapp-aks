@@ -133,27 +133,18 @@ module "aks_workload_identity" {
 
   source = "../../modules/uami"
 
-  enable_workload_identity_resources = true
-
   resource_group_name = azurerm_resource_group.main.name
 
   location = azurerm_resource_group.main.location
 
   environment = var.environment
 
-  namespace_name = var.namespace_name
-
-  service_account_name = var.service_account_name
-
-  oidc_issuer_url = module.aks.oidc_issuer_url
-
-  key_vault_id = module.keyvault.key_vault_id
+  identity_name = "${var.cluster_name}-wi"
 
   additional_tags = local.common_tags
 
   depends_on = [
-    azurerm_resource_group.main,
-    module.aks
+    azurerm_resource_group.main
   ]
 }
 
