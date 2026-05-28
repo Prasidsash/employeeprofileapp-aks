@@ -325,15 +325,6 @@ keyvault_additional_tags = {}
 enable_default_key_vault_secrets = true
 
 # =====================================
-# DATABASE SECRETS
-# PIPELINE VARIABLE GROUPS
-# =====================================
-
-db_username = "REPLACE_FROM_PIPELINE_SECRET"
-
-db_password = "REPLACE_FROM_PIPELINE_SECRET"
-
-# =====================================
 # AZURE SQL DATABASE
 # =====================================
 
@@ -356,15 +347,6 @@ sql_database_name = "employeeprofileapp-dev-db"
 sql_database_sku_name = "Basic"
 
 sql_max_size_gb = 2
-
-# =====================================
-# SQL ADMINISTRATION
-# PIPELINE VARIABLE GROUPS
-# =====================================
-
-sql_admin_username = "REPLACE_FROM_PIPELINE_SECRET"
-
-sql_admin_password = "REPLACE_FROM_PIPELINE_SECRET"
 
 # =====================================
 # SQL NETWORKING

@@ -190,13 +190,26 @@ stages:
                 # =====================================
                 # TF VAR EXPORTS
                 # =====================================
+                
+                echo "DEBUG SQL USERNAME:"
+                echo "$(sql_admin_username)"
+
+                echo "DEBUG DB USERNAME:"
+                echo "$(db_username)"
 
                 export TF_VAR_sql_admin_username="$(sql_admin_username)"
                 export TF_VAR_sql_admin_password="$(sql_admin_password)"
                 export TF_VAR_db_username="$(db_username)"
                 export TF_VAR_db_password="$(db_password)"
 
-                terraform validate
+                echo "TF_VAR_sql_admin_username exported"
+
+                if [ -z "$TF_VAR_sql_admin_password" ]; then
+                  echo "SQL PASSWORD EMPTY"
+                  exit 1
+                fi
+
+                echo "SQL PASSWORD RECEIVED"
 
           # =====================================
           # TERRAFORM PLAN
