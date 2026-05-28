@@ -2,7 +2,7 @@
 # FILE:
 # terraform/modules/uami/main.tf
 # VERSION:
-# v4-enterprise-workloadidentity-federated-runtime-final
+# v5-enterprise-workloadidentity-federated-runtime-final
 # =====================================
 
 # =====================================
@@ -42,8 +42,6 @@ resource "azurerm_federated_identity_credential" "uami" {
   count = var.enable_federated_identity ? 1 : 0
 
   name = "${var.identity_name}-fic"
-
-  resource_group_name = var.resource_group_name
 
   audience = [
     "api://AzureADTokenExchange"

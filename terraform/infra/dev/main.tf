@@ -141,10 +141,21 @@ module "aks_workload_identity" {
 
   identity_name = "${var.cluster_name}-wi"
 
+  enable_federated_identity = true
+
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
+
   additional_tags = local.common_tags
 
   depends_on = [
-    azurerm_resource_group.main
+    azurerm_resource_group.main,
+    module.aks
   ]
 }
 
