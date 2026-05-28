@@ -2,7 +2,7 @@
 # FILE:
 # terraform/modules/uami/main.tf
 # VERSION:
-# v6-enterprise-workloadidentity-federated-runtime-final
+# v7-enterprise-workloadidentity-federated-runtime-final
 # =====================================
 
 # =====================================
@@ -49,7 +49,7 @@ resource "azurerm_federated_identity_credential" "uami" {
 
   issuer = var.oidc_issuer_url
 
-  parent_id = azurerm_user_assigned_identity.uami.id
+  user_assigned_identity_id = azurerm_user_assigned_identity.uami.id
 
   subject = "system:serviceaccount:${var.namespace_name}:${var.service_account_name}"
 
