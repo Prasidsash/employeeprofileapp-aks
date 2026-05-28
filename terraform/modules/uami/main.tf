@@ -2,7 +2,7 @@
 # FILE:
 # terraform/modules/uami/main.tf
 # VERSION:
-# v7-enterprise-workloadidentity-federated-runtime-final
+# v10-enterprise-workloadidentity-keyvault-optional-final
 # =====================================
 
 # =====================================
@@ -58,12 +58,16 @@ resource "azurerm_federated_identity_credential" "uami" {
 }
 
 # =====================================
-# KEY VAULT RBAC
+# OPTIONAL KEY VAULT RBAC
 # =====================================
 
 resource "azurerm_role_assignment" "keyvault_secrets_user" {
 
-  count = var.enable_federated_identity ? 1 : 0
+  count = (
+    var.enable_federated_identity &&
+    var.key_vault_id != null &&
+    var.key_vault_id != ""
+  ) ? 1 : 0
 
   scope = var.key_vault_id
 
@@ -72,6 +76,8 @@ resource "azurerm_role_assignment" "keyvault_secrets_user" {
   principal_id = azurerm_user_assigned_identity.uami.principal_id
 
   principal_type = "ServicePrincipal"
+
+  skip_service_principal_aad_check = true
 
   depends_on = [
     azurerm_federated_identity_credential.uami
