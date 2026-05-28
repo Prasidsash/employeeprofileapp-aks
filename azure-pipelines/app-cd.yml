@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-cd.yml
-# VERSION: v16-enterprise-workload-identity-runtime-injection-final
+# VERSION: v20-enterprise-workload-identity-runtime-stabilized-final
 # =====================================
 
 trigger: none
@@ -222,38 +222,40 @@ stages:
                       echo "EXPORT TERRAFORM OUTPUTS"
                       echo "=================================="
 
+                      terraform output
+
                       KEYVAULT_NAME=$(terraform output -raw key_vault_name)
 
                       WORKLOAD_CLIENT_ID=$(terraform output -raw workload_identity_client_id)
 
                       TENANT_ID=$(az account show --query tenantId -o tsv)
 
-                      if [ -z "$KEYVAULT_NAME" ]; then
+                      if [ -z "${KEYVAULT_NAME}" ]; then
                         echo "ERROR: key_vault_name output is empty"
                         exit 1
                       fi
 
-                      if [ -z "$WORKLOAD_CLIENT_ID" ]; then
+                      if [ -z "${WORKLOAD_CLIENT_ID}" ]; then
                         echo "ERROR: workload_identity_client_id output is empty"
                         exit 1
                       fi
 
-                      if [ -z "$TENANT_ID" ]; then
+                      if [ -z "${TENANT_ID}" ]; then
                         echo "ERROR: tenant_id output is empty"
                         exit 1
                       fi
 
-                      echo "KEYVAULT_NAME=$KEYVAULT_NAME"
-                      echo "WORKLOAD_CLIENT_ID=$WORKLOAD_CLIENT_ID"
-                      echo "TENANT_ID=$TENANT_ID"
-
-                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]$KEYVAULT_NAME"
-                      echo "##vso[task.setvariable variable=WORKLOAD_CLIENT_ID]$WORKLOAD_CLIENT_ID"
-                      echo "##vso[task.setvariable variable=TENANT_ID]$TENANT_ID"
-
                       echo "=================================="
-                      echo "TERRAFORM OUTPUT EXPORT COMPLETED"
+                      echo "OUTPUT VALUES"
                       echo "=================================="
+
+                      echo "KEYVAULT_NAME=${KEYVAULT_NAME}"
+                      echo "WORKLOAD_CLIENT_ID=${WORKLOAD_CLIENT_ID}"
+                      echo "TENANT_ID=${TENANT_ID}"
+
+                      echo "##vso[task.setvariable variable=KEYVAULT_NAME]${KEYVAULT_NAME}"
+                      echo "##vso[task.setvariable variable=WORKLOAD_CLIENT_ID]${WORKLOAD_CLIENT_ID}"
+                      echo "##vso[task.setvariable variable=TENANT_ID]${TENANT_ID}"
 
                 # =====================================
                 # AKS LOGIN
@@ -285,45 +287,6 @@ stages:
                       kubectl get nodes -o wide
 
                 # =====================================
-                # ACR VALIDATION
-                # =====================================
-
-                - task: AzureCLI@2
-
-                  displayName: ACR Validation
-
-                  inputs:
-
-                    azureSubscription: $(azureInfraServiceConnection)
-
-                    scriptType: bash
-
-                    scriptLocation: inlineScript
-
-                    addSpnToEnvironment: true
-
-                    inlineScript: |
-
-                      set -euo pipefail
-
-                      echo "=================================="
-                      echo "ACR REPOSITORIES"
-                      echo "=================================="
-
-                      az acr repository list \
-                        --name $(acrName) \
-                        --output table
-
-                      echo "=================================="
-                      echo "ACR IMAGE TAGS"
-                      echo "=================================="
-
-                      az acr repository show-tags \
-                        --name $(acrName) \
-                        --repository $(imageRepository) \
-                        --output table
-
-                # =====================================
                 # HELM DEPLOYMENT
                 # =====================================
 
@@ -346,52 +309,28 @@ stages:
                       set -euo pipefail
 
                       echo "=================================="
-                      echo "VALIDATE RUNTIME VARIABLES"
+                      echo "VALIDATE VARIABLES"
                       echo "=================================="
+
+                      echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
+                      echo "TENANT_ID=$(TENANT_ID)"
+                      echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
 
                       if [ -z "$(WORKLOAD_CLIENT_ID)" ]; then
-                        echo "ERROR: WORKLOAD_CLIENT_ID variable is empty"
+                        echo "ERROR: WORKLOAD_CLIENT_ID is empty"
                         exit 1
                       fi
-
-                      if [ -z "$(TENANT_ID)" ]; then
-                        echo "ERROR: TENANT_ID variable is empty"
-                        exit 1
-                      fi
-
-                      if [ -z "$(KEYVAULT_NAME)" ]; then
-                        echo "ERROR: KEYVAULT_NAME variable is empty"
-                        exit 1
-                      fi
-
-                      echo "=================================="
-                      echo "ACR LOGIN SERVER"
-                      echo "=================================="
 
                       ACR_LOGIN_SERVER=$(az acr show \
                         --name $(acrName) \
                         --query loginServer \
                         --output tsv)
 
-                      echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
-
-                      echo "=================================="
-                      echo "HELM DEPENDENCY UPDATE"
-                      echo "=================================="
-
                       helm dependency update $(helmChartPath)
-
-                      echo "=================================="
-                      echo "REMOVE EXISTING SERVICE ACCOUNT"
-                      echo "=================================="
 
                       kubectl delete sa employee-sa \
                         -n $(namespace) \
                         --ignore-not-found=true
-
-                      echo "=================================="
-                      echo "HELM TEMPLATE VALIDATION"
-                      echo "=================================="
 
                       helm template \
                         $(helmReleaseName) \
@@ -409,19 +348,15 @@ stages:
                         > /tmp/rendered-manifest.yaml
 
                       echo "=================================="
-                      echo "VERIFY RENDERED TENANT ID"
+                      echo "VERIFY CLIENT ID"
                       echo "=================================="
 
-                      grep -i "tenantId:" /tmp/rendered-manifest.yaml || true
+                      grep -i "azure.workload.identity/client-id" /tmp/rendered-manifest.yaml || true
 
-                      if grep -q 'tenantId: ""' /tmp/rendered-manifest.yaml; then
-                        echo "ERROR: tenantId rendered as empty"
+                      if grep -q 'azure.workload.identity/client-id: ""' /tmp/rendered-manifest.yaml; then
+                        echo "ERROR: client-id rendered as empty"
                         exit 1
                       fi
-
-                      echo "=================================="
-                      echo "HELM UPGRADE INSTALL"
-                      echo "=================================="
 
                       helm upgrade \
                         --install \
@@ -442,51 +377,6 @@ stages:
                         --timeout 20m \
                         --debug
 
-                # =====================================
-                # DEPLOYMENT VALIDATION
-                # =====================================
-
-                - task: AzureCLI@2
-
-                  displayName: Deployment Validation
-
-                  inputs:
-
-                    azureSubscription: $(azureInfraServiceConnection)
-
-                    scriptType: bash
-
-                    scriptLocation: inlineScript
-
-                    addSpnToEnvironment: true
-
-                    inlineScript: |
-
-                      set -euo pipefail
-
-                      echo "=================================="
-                      echo "DEPLOYMENT STATUS"
-                      echo "=================================="
-
-                      kubectl get deployment \
-                        $(deploymentName) \
-                        -n $(namespace)
-
-                      echo "=================================="
-                      echo "PODS"
-                      echo "=================================="
-
-                      kubectl get pods \
-                        -n $(namespace) \
-                        -o wide
-
-                      echo "=================================="
-                      echo "SERVICES"
-                      echo "=================================="
-
-                      kubectl get svc \
-                        -n $(namespace)
-                
                 # =====================================
                 # ROLLOUT VALIDATION
                 # =====================================
@@ -510,26 +400,10 @@ stages:
                       set -euo pipefail
 
                       echo "=================================="
-                      echo "AKS LOGIN"
-                      echo "=================================="
-
-                      az aks get-credentials \
-                        --resource-group $(aksResourceGroup) \
-                        --name $(aksClusterName) \
-                        --overwrite-existing
-
-                      echo "=================================="
                       echo "DEPLOYMENTS"
                       echo "=================================="
 
                       kubectl get deployment \
-                        -n $(namespace)
-
-                      echo "=================================="
-                      echo "REPLICASETS"
-                      echo "=================================="
-
-                      kubectl get rs \
                         -n $(namespace)
 
                       echo "=================================="
@@ -540,15 +414,22 @@ stages:
                         -n $(namespace) \
                         -o wide
 
-                      echo "=================================="
-                      echo "POD DETAILS"
-                      echo "=================================="
-
                       POD_NAME=$(kubectl get pods \
                         -n $(namespace) \
                         -o jsonpath='{.items[0].metadata.name}')
 
-                      echo "POD_NAME=${POD_NAME}"
+                      echo "=================================="
+                      echo "SERVICE ACCOUNT"
+                      echo "=================================="
+
+                      kubectl get sa \
+                        employee-sa \
+                        -n $(namespace) \
+                        -o yaml
+
+                      echo "=================================="
+                      echo "POD DETAILS"
+                      echo "=================================="
 
                       kubectl describe pod \
                         ${POD_NAME} \
@@ -563,35 +444,6 @@ stages:
                         -n $(namespace) \
                         --all-containers=true \
                         --tail=200 || true
-
-                      echo "=================================="
-                      echo "SECRET PROVIDER CLASS"
-                      echo "=================================="
-
-                      kubectl get secretproviderclass \
-                        -n $(namespace)
-
-                      kubectl describe secretproviderclass \
-                        employeeprofileapp-spc \
-                        -n $(namespace) || true
-
-                      echo "=================================="
-                      echo "SERVICE ACCOUNT"
-                      echo "=================================="
-
-                      kubectl get sa \
-                        employee-sa \
-                        -n $(namespace) \
-                        -o yaml
-
-                      echo "=================================="
-                      echo "WORKLOAD IDENTITY LABELS"
-                      echo "=================================="
-
-                      kubectl get pod \
-                        ${POD_NAME} \
-                        -n $(namespace) \
-                        --show-labels
 
                       echo "=================================="
                       echo "ROLLOUT STATUS"
