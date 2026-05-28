@@ -349,13 +349,13 @@ module "aks_workload_identity" {
 
   oidc_issuer_url = module.aks.oidc_issuer_url
 
-# =====================================
-# IMPORTANT:
-# REMOVE KEYVAULT DEPENDENCY
-# TO BREAK FINAL CYCLE
-# =====================================
+  # =====================================
+  # IMPORTANT:
+  # REMOVE KEYVAULT DEPENDENCY
+  # TO BREAK FINAL CYCLE
+  # =====================================
 
-   key_vault_id = null
+  key_vault_id = null
 
   additional_tags = local.common_tags
 
