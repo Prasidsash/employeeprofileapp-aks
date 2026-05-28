@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/app-cd.yml
-# VERSION: v20-enterprise-workload-identity-runtime-stabilized-final
+# VERSION: v23-enterprise-workloadidentity-consolidated-final
 # =====================================
 
 trigger: none
@@ -24,6 +24,7 @@ resources:
             - main
 
 pool:
+
   vmImage: ubuntu-latest
 
 variables:
@@ -87,7 +88,7 @@ variables:
     value: employeeprofileapp-dev-rg
 
   # =====================================
-  # BACKEND
+  # TERRAFORM BACKEND
   # =====================================
 
   - name: backendResourceGroupName
@@ -124,6 +125,10 @@ stages:
 
               steps:
 
+                # =====================================
+                # CHECKOUT
+                # =====================================
+
                 - checkout: self
                   clean: true
 
@@ -136,6 +141,7 @@ stages:
                   displayName: Install Terraform
 
                   inputs:
+
                     terraformVersion: $(terraformVersion)
 
                 # =====================================
@@ -147,6 +153,7 @@ stages:
                   displayName: Install Helm
 
                   inputs:
+
                     helmVersionToInstall: $(helmVersion)
 
                 # =====================================
@@ -312,25 +319,57 @@ stages:
                       echo "VALIDATE VARIABLES"
                       echo "=================================="
 
-                      echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
-                      echo "TENANT_ID=$(TENANT_ID)"
-                      echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
-
                       if [ -z "$(WORKLOAD_CLIENT_ID)" ]; then
                         echo "ERROR: WORKLOAD_CLIENT_ID is empty"
                         exit 1
                       fi
+
+                      if [ -z "$(TENANT_ID)" ]; then
+                        echo "ERROR: TENANT_ID is empty"
+                        exit 1
+                      fi
+
+                      if [ -z "$(KEYVAULT_NAME)" ]; then
+                        echo "ERROR: KEYVAULT_NAME is empty"
+                        exit 1
+                      fi
+
+                      echo "=================================="
+                      echo "VARIABLE VALUES"
+                      echo "=================================="
+
+                      echo "WORKLOAD_CLIENT_ID=$(WORKLOAD_CLIENT_ID)"
+                      echo "TENANT_ID=$(TENANT_ID)"
+                      echo "KEYVAULT_NAME=$(KEYVAULT_NAME)"
+
+                      echo "=================================="
+                      echo "ACR LOGIN SERVER"
+                      echo "=================================="
 
                       ACR_LOGIN_SERVER=$(az acr show \
                         --name $(acrName) \
                         --query loginServer \
                         --output tsv)
 
+                      echo "ACR_LOGIN_SERVER=${ACR_LOGIN_SERVER}"
+
+                      echo "=================================="
+                      echo "HELM DEPENDENCY UPDATE"
+                      echo "=================================="
+
                       helm dependency update $(helmChartPath)
+
+                      echo "=================================="
+                      echo "REMOVE EXISTING SERVICE ACCOUNT"
+                      echo "=================================="
 
                       kubectl delete sa employee-sa \
                         -n $(namespace) \
                         --ignore-not-found=true
+
+                      echo "=================================="
+                      echo "HELM TEMPLATE VALIDATION"
+                      echo "=================================="
 
                       helm template \
                         $(helmReleaseName) \
@@ -343,20 +382,29 @@ stages:
                         --set workloadIdentity.enabled=true \
                         --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
                         --set-string workloadIdentity.tenantId="$(TENANT_ID)" \
-                        --set-string keyVault.name="$(KEYVAULT_NAME)" \
+                        --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
                         --set keyVault.enabled=true \
                         > /tmp/rendered-manifest.yaml
 
                       echo "=================================="
-                      echo "VERIFY CLIENT ID"
+                      echo "VERIFY WORKLOAD IDENTITY"
                       echo "=================================="
 
-                      grep -i "azure.workload.identity/client-id" /tmp/rendered-manifest.yaml || true
+                      CLIENT_ID_COUNT=$(grep -c 'azure.workload.identity/client-id:' /tmp/rendered-manifest.yaml || true)
 
-                      if grep -q 'azure.workload.identity/client-id: ""' /tmp/rendered-manifest.yaml; then
-                        echo "ERROR: client-id rendered as empty"
+                      if [ "${CLIENT_ID_COUNT}" -ne 1 ]; then
+                        echo "ERROR: duplicate or missing client-id annotations detected"
                         exit 1
                       fi
+
+                      if grep -q 'azure.workload.identity/client-id: ""' /tmp/rendered-manifest.yaml; then
+                        echo "ERROR: empty client-id rendered"
+                        exit 1
+                      fi
+
+                      echo "=================================="
+                      echo "HELM UPGRADE INSTALL"
+                      echo "=================================="
 
                       helm upgrade \
                         --install \
@@ -371,7 +419,7 @@ stages:
                         --set workloadIdentity.enabled=true \
                         --set-string workloadIdentity.clientId="$(WORKLOAD_CLIENT_ID)" \
                         --set-string workloadIdentity.tenantId="$(TENANT_ID)" \
-                        --set-string keyVault.name="$(KEYVAULT_NAME)" \
+                        --set-string keyVault.keyVaultName="$(KEYVAULT_NAME)" \
                         --set keyVault.enabled=true \
                         --wait=false \
                         --timeout 20m \
@@ -426,6 +474,17 @@ stages:
                         employee-sa \
                         -n $(namespace) \
                         -o yaml
+
+                      echo "=================================="
+                      echo "SECRET PROVIDER CLASS"
+                      echo "=================================="
+
+                      kubectl get secretproviderclass \
+                        -n $(namespace)
+
+                      kubectl describe secretproviderclass \
+                        employeeprofileapp-spc \
+                        -n $(namespace) || true
 
                       echo "=================================="
                       echo "POD DETAILS"

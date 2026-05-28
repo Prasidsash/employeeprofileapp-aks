@@ -2,7 +2,7 @@
 # FILE:
 # helm/employeeprofileapp/values.yaml
 # VERSION:
-# v14-enterprise-keyvault-runtime-final
+# v16-enterprise-workloadidentity-runtime-corrected-final
 # =====================================
 
 replicaCount: 1
@@ -12,6 +12,7 @@ replicaCount: 1
 # =====================================
 
 app:
+
   name: ""
 
 # =====================================
@@ -19,8 +20,11 @@ app:
 # =====================================
 
 image:
+
   repository: ""
+
   tag: ""
+
   pullPolicy: IfNotPresent
 
 # =====================================
@@ -41,9 +45,7 @@ serviceAccount:
 
   name: employee-sa
 
-  annotations:
-
-    azure.workload.identity/client-id: ""
+  annotations: {}
 
 # =====================================
 # WORKLOAD IDENTITY
@@ -62,9 +64,11 @@ workloadIdentity:
 # =====================================
 
 service:
+
   type: LoadBalancer
 
   port: 80
+
   targetPort: 8080
 
   annotations: {}
@@ -77,10 +81,10 @@ service:
 
 # =====================================
 # OPTIONAL SERVICE SETTINGS
-# (Preserves existing behavior)
 # =====================================
 
 serviceSettings:
+
   enableLoadBalancer: false
 
 # =====================================
@@ -90,11 +94,15 @@ serviceSettings:
 resources:
 
   requests:
+
     cpu: ""
+
     memory: ""
 
   limits:
+
     cpu: ""
+
     memory: ""
 
 # =====================================
@@ -102,6 +110,7 @@ resources:
 # =====================================
 
 ingress:
+
   enabled: false
 
   className: ""
@@ -109,12 +118,15 @@ ingress:
   host: ""
 
   path: /
+
   pathType: Prefix
 
   annotations: {}
 
   tls:
+
     enabled: false
+
     secretName: ""
 
 # =====================================
@@ -122,9 +134,11 @@ ingress:
 # =====================================
 
 hpa:
+
   enabled: false
 
   minReplicas: 1
+
   maxReplicas: 1
 
   averageUtilization: 70
@@ -138,7 +152,9 @@ hpa:
 # =====================================
 
 env:
+
   ASPNETCORE_ENVIRONMENT: Development
+
   ASPNETCORE_URLS: http://+:8080
 
 # =====================================
@@ -198,21 +214,27 @@ secretProviderClass:
   objects:
 
     - objectName: db-username
+
       objectType: secret
 
     - objectName: db-password
+
       objectType: secret
 
     - objectName: sql-server-name
+
       objectType: secret
 
     - objectName: sql-server-fqdn
+
       objectType: secret
 
     - objectName: sql-database-name
+
       objectType: secret
 
     - objectName: sql-connection-string
+
       objectType: secret
 
 # =====================================
@@ -278,36 +300,51 @@ podSecurityContext: {}
 # =====================================
 
 readinessProbe:
+
   enabled: false
 
   path: /
+
   port: 8080
 
   initialDelaySeconds: 10
+
   periodSeconds: 10
+
   timeoutSeconds: 5
+
   failureThreshold: 3
 
 livenessProbe:
+
   enabled: false
 
   path: /
+
   port: 8080
 
   initialDelaySeconds: 15
+
   periodSeconds: 20
+
   timeoutSeconds: 5
+
   failureThreshold: 5
 
 startupProbe:
+
   enabled: false
 
   path: /
+
   port: 8080
 
   initialDelaySeconds: 10
+
   periodSeconds: 10
+
   timeoutSeconds: 5
+
   failureThreshold: 30
 
 # =====================================
@@ -315,6 +352,7 @@ startupProbe:
 # =====================================
 
 configMapAutoReload:
+
   enabled: false
 
 # =====================================
@@ -335,7 +373,7 @@ secretMounts:
 
   enabled: true
 
-  mountPath: "/mnt/secrets-store"
+  mountPath: /mnt/secrets-store
 
   readOnly: true
 
