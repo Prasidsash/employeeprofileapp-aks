@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/main.tf
-# VERSION: v8-enterprise-stable-rbac-final
+# VERSION: v9-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -50,17 +50,55 @@ locals {
   ) ? var.key_vault_name : local.generated_key_vault_name
 
   # =====================================
+  # SQL CONNECTION STRING
+  # =====================================
+
+  sql_connection_string = (
+    var.sql_server_fqdn != null &&
+    var.sql_database_name != null &&
+    var.db_username != null &&
+    var.db_password != null
+  ) ? "Server=tcp:${var.sql_server_fqdn},1433;Initial Catalog=${var.sql_database_name};Persist Security Info=False;User ID=${var.db_username};Password=${var.db_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" : null
+
+  # =====================================
   # ENTERPRISE DEFAULT SECRETS
   # =====================================
 
-  default_key_vault_secrets = {
+  default_key_vault_secrets = merge(
 
-    db-username = var.db_username
+    {
 
-    db-password = var.db_password
+      db-username = var.db_username
 
-    keyvault-name = local.key_vault_name
-  }
+      db-password = var.db_password
+
+      keyvault-name = local.key_vault_name
+    },
+
+    var.sql_server_name != null ? {
+
+      sql-server-name = var.sql_server_name
+
+    } : {},
+
+    var.sql_database_name != null ? {
+
+      sql-database-name = var.sql_database_name
+
+    } : {},
+
+    var.sql_server_fqdn != null ? {
+
+      sql-server-fqdn = var.sql_server_fqdn
+
+    } : {},
+
+    local.sql_connection_string != null ? {
+
+      sql-connection-string = local.sql_connection_string
+
+    } : {}
+  )
 
   # =====================================
   # STABLE ADMIN OBJECT ID

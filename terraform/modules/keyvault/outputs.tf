@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/outputs.tf
-# VERSION: v4-enterprise-disposable-final
+# VERSION: v5-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -74,4 +74,24 @@ output "aks_keyvault_secrets_user_role_assignment_id" {
     azurerm_role_assignment.aks_kv_secrets_user[0].id,
     null
   )
+}
+
+# =====================================
+# SQL SECRET METADATA
+# =====================================
+
+output "sql_secret_names" {
+
+  description = "Azure SQL Key Vault secret names"
+
+  value = {
+
+    sql_server_name_secret = "sql-server-name"
+
+    sql_database_name_secret = "sql-database-name"
+
+    sql_server_fqdn_secret = "sql-server-fqdn"
+
+    sql_connection_string_secret = "sql-connection-string"
+  }
 }

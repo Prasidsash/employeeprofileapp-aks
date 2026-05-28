@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/terraform.tfvars
-# VERSION: v9-enterprise-disposable-final
+# VERSION: v10-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -332,6 +332,56 @@ enable_default_key_vault_secrets = true
 db_username = "REPLACE_FROM_PIPELINE_SECRET"
 
 db_password = "REPLACE_FROM_PIPELINE_SECRET"
+
+# =====================================
+# AZURE SQL DATABASE
+# =====================================
+
+enable_sql_database = false
+
+# =====================================
+# SQL SERVER
+# =====================================
+
+sql_server_name = "employeeprofileapp-dev-sqlsrv"
+
+sql_server_version = "12.0"
+
+# =====================================
+# SQL DATABASE
+# =====================================
+
+sql_database_name = "employeeprofileapp-dev-db"
+
+sql_database_sku_name = "Basic"
+
+sql_max_size_gb = 2
+
+# =====================================
+# SQL ADMINISTRATION
+# PIPELINE VARIABLE GROUPS
+# =====================================
+
+sql_admin_username = "REPLACE_FROM_PIPELINE_SECRET"
+
+sql_admin_password = "REPLACE_FROM_PIPELINE_SECRET"
+
+# =====================================
+# SQL NETWORKING
+# =====================================
+
+enable_sql_public_network_access = true
+
+enable_sql_firewall_rules = true
+
+sql_firewall_rules = [
+
+  {
+    name             = "allow-azure-services"
+    start_ip_address = "0.0.0.0"
+    end_ip_address   = "0.0.0.0"
+  }
+]
 
 # =====================================
 # INGRESS CONTROLLER

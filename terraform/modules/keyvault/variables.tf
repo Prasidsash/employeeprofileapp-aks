@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/variables.tf
-# VERSION: v6-enterprise-disposable-stable
+# VERSION: v7-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -205,4 +205,35 @@ variable "db_password" {
   type = string
 
   sensitive = true
+}
+
+# =====================================
+# AZURE SQL METADATA
+# =====================================
+
+variable "sql_server_name" {
+
+  description = "Azure SQL Server name"
+
+  type = string
+
+  default = null
+}
+
+variable "sql_database_name" {
+
+  description = "Azure SQL Database name"
+
+  type = string
+
+  default = null
+}
+
+variable "sql_server_fqdn" {
+
+  description = "Azure SQL Server FQDN"
+
+  type = string
+
+  default = null
 }

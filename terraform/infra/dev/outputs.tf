@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/outputs.tf
-# VERSION: v5-enterprise-disposable-final
+# VERSION: v6-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -323,6 +323,72 @@ output "key_vault_resource_group_name" {
 }
 
 # =====================================
+# AZURE SQL
+# =====================================
+
+output "sql_server_id" {
+
+  description = "Azure SQL Server ID"
+
+  value = try(
+    module.sql[0].sql_server_id,
+    null
+  )
+}
+
+output "sql_server_name" {
+
+  description = "Azure SQL Server Name"
+
+  value = try(
+    module.sql[0].sql_server_name,
+    null
+  )
+}
+
+output "sql_server_fqdn" {
+
+  description = "Azure SQL Server FQDN"
+
+  value = try(
+    module.sql[0].sql_server_fqdn,
+    null
+  )
+}
+
+output "sql_database_id" {
+
+  description = "Azure SQL Database ID"
+
+  value = try(
+    module.sql[0].sql_database_id,
+    null
+  )
+}
+
+output "sql_database_name" {
+
+  description = "Azure SQL Database Name"
+
+  value = try(
+    module.sql[0].sql_database_name,
+    null
+  )
+}
+
+output "sql_connection_metadata" {
+
+  description = "Azure SQL Connection Metadata"
+
+  value = try(
+    module.sql[0].sql_connection_metadata,
+    null
+  )
+
+  sensitive = true
+}
+
+# =====================================
 # INGRESS
 # =====================================
 
@@ -481,5 +547,20 @@ output "platform_runtime_configuration" {
     keyvault_name = module.keyvault.key_vault_name
 
     ingress_host = var.ingress_host
+
+    sql_server_name = try(
+      module.sql[0].sql_server_name,
+      null
+    )
+
+    sql_database_name = try(
+      module.sql[0].sql_database_name,
+      null
+    )
+
+    sql_server_fqdn = try(
+      module.sql[0].sql_server_fqdn,
+      null
+    )
   }
 }

@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/main.tf
-# VERSION: v7-enterprise-disposable-final
+# VERSION: v8-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -144,6 +144,72 @@ module "aks_workload_identity" {
 
   depends_on = [
     azurerm_resource_group.main
+  ]
+}
+
+# =====================================
+# AZURE SQL MODULE
+# =====================================
+
+module "sql" {
+
+  count = var.enable_sql_database ? 1 : 0
+
+  source = "../../modules/sql"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  # =====================================
+  # SQL SERVER
+  # =====================================
+
+  enable_sql_database = var.enable_sql_database
+
+  sql_server_name = var.sql_server_name
+
+  sql_server_version = var.sql_server_version
+
+  # =====================================
+  # SQL DATABASE
+  # =====================================
+
+  sql_database_name = var.sql_database_name
+
+  sql_database_sku_name = var.sql_database_sku_name
+
+  sql_max_size_gb = var.sql_max_size_gb
+
+  # =====================================
+  # SQL ADMINISTRATION
+  # =====================================
+
+  sql_admin_username = var.sql_admin_username
+
+  sql_admin_password = var.sql_admin_password
+
+  # =====================================
+  # SQL NETWORKING
+  # =====================================
+
+  enable_sql_public_network_access = var.enable_sql_public_network_access
+
+  enable_sql_firewall_rules = var.enable_sql_firewall_rules
+
+  sql_firewall_rules = var.sql_firewall_rules
+
+  # =====================================
+  # TAGS
+  # =====================================
+
+  additional_tags = local.common_tags
+
+  depends_on = [
+    azurerm_resource_group.main,
+    module.network
   ]
 }
 
@@ -301,7 +367,8 @@ module "aks" {
     module.network,
     module.monitoring,
     module.acr,
-    module.aks_workload_identity
+    module.aks_workload_identity,
+    module.sql
   ]
 }
 
@@ -402,6 +469,21 @@ module "keyvault" {
 
   db_password = var.db_password
 
+  sql_server_name = try(
+    module.sql[0].sql_server_name,
+    null
+  )
+
+  sql_database_name = try(
+    module.sql[0].sql_database_name,
+    null
+  )
+
+  sql_server_fqdn = try(
+    module.sql[0].sql_server_fqdn,
+    null
+  )
+
   # =====================================
   # OPTIONAL FEATURES
   # =====================================
@@ -418,6 +500,7 @@ module "keyvault" {
   depends_on = [
     module.aks,
     module.aks_workload_identity,
+    module.sql,
     time_sleep.wait_for_aks
   ]
 }

@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/infra/dev/variables.tf
-# VERSION: v8-enterprise-disposable-final
+# VERSION: v9-enterprise-sql-phase1-final
 # =====================================
 
 # =====================================
@@ -711,6 +711,134 @@ variable "db_password" {
   type = string
 
   sensitive = true
+}
+
+# =====================================
+# AZURE SQL DATABASE
+# =====================================
+
+variable "enable_sql_database" {
+
+  description = "Enable Azure SQL Database module"
+
+  type = bool
+
+  default = false
+}
+
+# =====================================
+# SQL SERVER
+# =====================================
+
+variable "sql_server_name" {
+
+  description = "Azure SQL Server name"
+
+  type = string
+
+  default = null
+}
+
+variable "sql_server_version" {
+
+  description = "Azure SQL Server version"
+
+  type = string
+
+  default = "12.0"
+}
+
+# =====================================
+# SQL DATABASE
+# =====================================
+
+variable "sql_database_name" {
+
+  description = "Azure SQL Database name"
+
+  type = string
+
+  default = null
+}
+
+variable "sql_database_sku_name" {
+
+  description = "Azure SQL Database SKU"
+
+  type = string
+
+  default = "Basic"
+}
+
+variable "sql_max_size_gb" {
+
+  description = "Azure SQL Database maximum size in GB"
+
+  type = number
+
+  default = 2
+}
+
+# =====================================
+# SQL ADMINISTRATION
+# =====================================
+
+variable "sql_admin_username" {
+
+  description = "Azure SQL administrator username"
+
+  type = string
+
+  sensitive = true
+
+  default = null
+}
+
+variable "sql_admin_password" {
+
+  description = "Azure SQL administrator password"
+
+  type = string
+
+  sensitive = true
+
+  default = null
+}
+
+# =====================================
+# SQL NETWORKING
+# =====================================
+
+variable "enable_sql_public_network_access" {
+
+  description = "Enable Azure SQL public network access"
+
+  type = bool
+
+  default = true
+}
+
+variable "enable_sql_firewall_rules" {
+
+  description = "Enable Azure SQL firewall rules"
+
+  type = bool
+
+  default = true
+}
+
+variable "sql_firewall_rules" {
+
+  description = "Azure SQL firewall rules"
+
+  type = list(object({
+
+    name             = string
+    start_ip_address = string
+    end_ip_address   = string
+  }))
+
+  default = []
 }
 
 # =====================================
