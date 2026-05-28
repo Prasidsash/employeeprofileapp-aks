@@ -2,7 +2,7 @@
 # FILE:
 # terraform/modules/uami/main.tf
 # VERSION:
-# v5-enterprise-workloadidentity-federated-runtime-final
+# v6-enterprise-workloadidentity-federated-runtime-final
 # =====================================
 
 # =====================================

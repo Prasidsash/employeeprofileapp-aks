@@ -2,7 +2,7 @@
 # FILE:
 # terraform/infra/dev/main.tf
 # VERSION:
-# v10-enterprise-platform-infra-workloadidentity-runtime-final
+# v16-enterprise-platform-infra-workloadidentity-cyclefix-final
 # =====================================
 
 # =====================================
@@ -124,42 +124,6 @@ module "acr" {
 }
 
 # =====================================
-# ENTERPRISE UAMI MODULE
-# =====================================
-
-module "aks_workload_identity" {
-
-  count = var.enable_user_assigned_identity ? 1 : 0
-
-  source = "../../modules/uami"
-
-  resource_group_name = azurerm_resource_group.main.name
-
-  location = azurerm_resource_group.main.location
-
-  environment = var.environment
-
-  identity_name = "${var.cluster_name}-wi"
-
-  enable_federated_identity = true
-
-  namespace_name = var.namespace_name
-
-  service_account_name = var.service_account_name
-
-  oidc_issuer_url = module.aks.oidc_issuer_url
-
-  key_vault_id = module.keyvault.key_vault_id
-
-  additional_tags = local.common_tags
-
-  depends_on = [
-    azurerm_resource_group.main,
-    module.aks
-  ]
-}
-
-# =====================================
 # AZURE SQL MODULE
 # =====================================
 
@@ -262,14 +226,14 @@ module "aks" {
   enable_workload_identity = var.enable_workload_identity
 
   # =====================================
-  # USER ASSIGNED MANAGED IDENTITY
+  # IMPORTANT:
+  # AVOID CYCLIC DEPENDENCY
+  # DO NOT ATTACH UAMI TO AKS
   # =====================================
 
-  enable_user_assigned_identity = var.enable_user_assigned_identity
+  enable_user_assigned_identity = false
 
-  user_assigned_identity_ids = var.enable_user_assigned_identity ? [
-    module.aks_workload_identity[0].workload_identity_id
-  ] : var.user_assigned_identity_ids
+  user_assigned_identity_ids = []
 
   # =====================================
   # SPOT NODE POOL
@@ -391,15 +355,15 @@ module "keyvault" {
   aks_kubelet_object_id = module.aks.aks_kubelet_object_id
 
   # =====================================
-  # WORKLOAD IDENTITY KEYVAULT ACCESS
+  # IMPORTANT:
+  # AVOID CYCLIC DEPENDENCY
+  # WORKLOAD IDENTITY RBAC
+  # HANDLED INSIDE UAMI MODULE
   # =====================================
 
-  enable_workload_identity_keyvault_access = true
+  enable_workload_identity_keyvault_access = false
 
-  workload_identity_principal_id = try(
-    module.aks_workload_identity[0].workload_identity_principal_id,
-    null
-  )
+  workload_identity_principal_id = null
 
   # =====================================
   # DEFAULT SECRETS
@@ -439,8 +403,43 @@ module "keyvault" {
 
   depends_on = [
     module.aks,
-    module.aks_workload_identity,
     module.sql
+  ]
+}
+
+# =====================================
+# ENTERPRISE UAMI MODULE
+# =====================================
+
+module "aks_workload_identity" {
+
+  count = var.enable_user_assigned_identity ? 1 : 0
+
+  source = "../../modules/uami"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  identity_name = "${var.cluster_name}-wi"
+
+  enable_federated_identity = true
+
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
+
+  additional_tags = local.common_tags
+
+  depends_on = [
+    module.aks,
+    module.keyvault
   ]
 }
 
@@ -486,7 +485,7 @@ module "rbac" {
   service_account_annotations = {
 
     "azure.workload.identity/client-id" = try(
-      module.aks_workload_identity[0].workload_identity_client_id,
+      module.aks_workload_identity[0].client_id,
       ""
     )
 

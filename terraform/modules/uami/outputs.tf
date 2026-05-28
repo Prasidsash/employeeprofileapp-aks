@@ -1,6 +1,8 @@
 # =====================================
-# FILE: terraform/modules/uami/outputs.tf
-# VERSION: v2-enterprise-disposable-final
+# FILE:
+# terraform/modules/uami/outputs.tf
+# VERSION:
+# v3-enterprise-workloadidentity-runtime-final
 # =====================================
 
 output "identity_id" {
