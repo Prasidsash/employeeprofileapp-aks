@@ -391,15 +391,15 @@ module "keyvault" {
   aks_kubelet_object_id = module.aks.aks_kubelet_object_id
 
   # =====================================
-  # PRESERVE EXISTING WORKLOAD RBAC
+  # IMPORTANT:
+  # DISABLE DUPLICATE WORKLOAD RBAC
+  # RBAC ALREADY MANAGED INSIDE
+  # terraform/modules/uami/main.tf
   # =====================================
 
-  enable_workload_identity_keyvault_access = true
+  enable_workload_identity_keyvault_access = false
 
-  workload_identity_principal_id = try(
-    module.aks_workload_identity[0].principal_id,
-    null
-  )
+  workload_identity_principal_id = null
 
   # =====================================
   # DEFAULT SECRETS
@@ -439,8 +439,7 @@ module "keyvault" {
 
   depends_on = [
     module.aks,
-    module.sql,
-    module.aks_workload_identity
+    module.sql
   ]
 }
 
