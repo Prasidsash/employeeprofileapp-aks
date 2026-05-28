@@ -1,4 +1,11 @@
 # =====================================
+# FILE:
+# terraform/modules/workload-identity/variables.tf
+# VERSION:
+# v7-enterprise-federated-workloadidentity-runtime-final
+# =====================================
+
+# =====================================
 # FEATURE TOGGLE
 # =====================================
 

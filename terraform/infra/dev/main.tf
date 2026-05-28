@@ -1,6 +1,8 @@
 # =====================================
-# FILE: terraform/infra/dev/main.tf
-# VERSION: v9-enterprise-platform-infra-final
+# FILE:
+# terraform/infra/dev/main.tf
+# VERSION:
+# v10-enterprise-platform-infra-workloadidentity-runtime-final
 # =====================================
 
 # =====================================
@@ -129,7 +131,9 @@ module "aks_workload_identity" {
 
   count = var.enable_user_assigned_identity ? 1 : 0
 
-  source = "../../modules/uami"
+  source = "../../modules/workload-identity"
+
+  enable_workload_identity_resources = true
 
   resource_group_name = azurerm_resource_group.main.name
 
@@ -137,12 +141,19 @@ module "aks_workload_identity" {
 
   environment = var.environment
 
-  identity_name = "${var.cluster_name}-wi"
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
 
   additional_tags = local.common_tags
 
   depends_on = [
-    azurerm_resource_group.main
+    azurerm_resource_group.main,
+    module.aks
   ]
 }
 
@@ -255,7 +266,7 @@ module "aks" {
   enable_user_assigned_identity = var.enable_user_assigned_identity
 
   user_assigned_identity_ids = var.enable_user_assigned_identity ? [
-    module.aks_workload_identity[0].identity_id
+    module.aks_workload_identity[0].workload_identity_id
   ] : var.user_assigned_identity_ids
 
   # =====================================
@@ -342,7 +353,6 @@ module "aks" {
     module.network,
     module.monitoring,
     module.acr,
-    module.aks_workload_identity,
     module.sql
   ]
 }
@@ -385,7 +395,7 @@ module "keyvault" {
   enable_workload_identity_keyvault_access = true
 
   workload_identity_principal_id = try(
-    module.aks_workload_identity[0].principal_id,
+    module.aks_workload_identity[0].workload_identity_principal_id,
     null
   )
 
@@ -474,9 +484,11 @@ module "rbac" {
   service_account_annotations = {
 
     "azure.workload.identity/client-id" = try(
-      module.aks_workload_identity[0].client_id,
+      module.aks_workload_identity[0].workload_identity_client_id,
       ""
     )
+
+    "azure.workload.identity/tenant-id" = data.azurerm_client_config.current.tenant_id
   }
 
   role_annotations = var.role_annotations
@@ -488,7 +500,8 @@ module "rbac" {
   additional_annotations = var.rbac_additional_annotations
 
   depends_on = [
-    module.namespace
+    module.namespace,
+    module.aks_workload_identity
   ]
 }
 
