@@ -195,7 +195,11 @@ resource "azurerm_role_assignment" "aks_kv_secrets_user" {
 
 resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
-  count = var.enable_workload_identity_keyvault_access ? 1 : 0
+  count = (
+    var.enable_workload_identity_keyvault_access &&
+    var.workload_identity_principal_id != null &&
+    var.workload_identity_principal_id != ""
+  ) ? 1 : 0
 
   scope = azurerm_key_vault.kv.id
 
@@ -203,7 +207,13 @@ resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
   principal_id = var.workload_identity_principal_id
 
+  principal_type = "ServicePrincipal"
+
+  skip_service_principal_aad_check = true
+
   lifecycle {
+
+    prevent_destroy = true
 
     ignore_changes = [
       principal_id
