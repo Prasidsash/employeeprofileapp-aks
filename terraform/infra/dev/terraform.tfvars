@@ -329,9 +329,13 @@ enable_default_key_vault_secrets = true
 # PIPELINE VARIABLE GROUPS
 # =====================================
 
-db_username = "REPLACE_FROM_PIPELINE_SECRET"
+# db_username = "REPLACE_FROM_PIPELINE_SECRET"
 
-db_password = "REPLACE_FROM_PIPELINE_SECRET"
+# db_password = "REPLACE_FROM_PIPELINE_SECRET"
+
+db_username = "employeeappuser"
+
+db_password = "Db#7Xp!29QaL@4r"
 
 # =====================================
 # AZURE SQL DATABASE
@@ -362,9 +366,13 @@ sql_max_size_gb = 2
 # PIPELINE VARIABLE GROUPS
 # =====================================
 
-sql_admin_username = "REPLACE_FROM_PIPELINE_SECRET"
+# sql_admin_username = "REPLACE_FROM_PIPELINE_SECRET"
 
-sql_admin_password = "REPLACE_FROM_PIPELINE_SECRET"
+# sql_admin_password = "REPLACE_FROM_PIPELINE_SECRET"
+
+sql_admin_username = "sqladmin"
+
+sql_admin_password = "Epp!9vK#72LmQ@x4"
 
 # =====================================
 # SQL NETWORKING
