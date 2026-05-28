@@ -349,22 +349,20 @@ module "aks_workload_identity" {
 
   oidc_issuer_url = module.aks.oidc_issuer_url
 
-  key_vault_id = module.keyvault.key_vault_id
+# =====================================
+# IMPORTANT:
+# REMOVE KEYVAULT DEPENDENCY
+# TO BREAK FINAL CYCLE
+# =====================================
+
+  key_vault_id = null
 
   additional_tags = local.common_tags
 
   depends_on = [
-    module.aks,
-    module.keyvault
+    module.aks
   ]
 }
-
-# =====================================
-# FILE:
-# terraform/infra/dev/main.tf
-# VERSION:
-# v21-enterprise-preserve-existing-kv-rbac-final
-# =====================================
 
 # =====================================
 # KEY VAULT MODULE

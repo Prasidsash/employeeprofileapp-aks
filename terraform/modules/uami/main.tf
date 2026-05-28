@@ -88,8 +88,7 @@ resource "time_sleep" "wait_for_workload_identity" {
   count = var.enable_federated_identity ? 1 : 0
 
   depends_on = [
-    azurerm_federated_identity_credential.uami,
-    azurerm_role_assignment.keyvault_secrets_user
+    azurerm_federated_identity_credential.uami
   ]
 
   create_duration = "180s"
