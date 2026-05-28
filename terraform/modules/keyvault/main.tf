@@ -213,8 +213,6 @@ resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
   lifecycle {
 
-    prevent_destroy = true
-
     ignore_changes = [
       principal_id
     ]
