@@ -2,7 +2,7 @@
 # FILE:
 # helm/employeeprofileapp/values-dev.yaml
 # VERSION:
-# v13-enterprise-secretproviderclass-fixed-final
+# v14-enterprise-keyvault-runtime-final
 # =====================================
 
 # =====================================
@@ -383,9 +383,9 @@ keyVault:
 
   enabled: true
 
-  keyVaultName: ""
+  keyVaultName: employeeprofileapp-devkv
 
-  tenantId: ""
+  tenantId: 242264b2-609f-4466-8afa-9c028b4003d2
 
   cloudName: AzurePublicCloud
 
@@ -407,6 +407,18 @@ secretProviderClass:
       objectType: secret
 
     - objectName: db-password
+      objectType: secret
+
+    - objectName: sql-server-name
+      objectType: secret
+
+    - objectName: sql-server-fqdn
+      objectType: secret
+
+    - objectName: sql-database-name
+      objectType: secret
+
+    - objectName: sql-connection-string
       objectType: secret
 
 # =====================================

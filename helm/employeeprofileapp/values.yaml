@@ -1,3 +1,10 @@
+# =====================================
+# FILE:
+# helm/employeeprofileapp/values.yaml
+# VERSION:
+# v14-enterprise-keyvault-runtime-final
+# =====================================
+
 replicaCount: 1
 
 # =====================================
@@ -37,6 +44,18 @@ serviceAccount:
   annotations:
 
     azure.workload.identity/client-id: ""
+
+# =====================================
+# WORKLOAD IDENTITY
+# =====================================
+
+workloadIdentity:
+
+  enabled: true
+
+  clientId: ""
+
+  tenantId: ""
 
 # =====================================
 # SERVICE
@@ -120,6 +139,7 @@ hpa:
 
 env:
   ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://+:8080
 
 # =====================================
 # AZURE KEY VAULT
@@ -131,11 +151,15 @@ keyVault:
 
   secretProviderClass: employeeprofileapp-spc
 
+  k8sSecretName: employeeprofileapp-kv-secret
+
   mountPath: /mnt/secrets-store
 
   tenantId: ""
 
   keyVaultName: ""
+
+  cloudName: AzurePublicCloud
 
   objects:
 
@@ -146,6 +170,60 @@ keyVault:
     - objectName: db-password
 
       objectType: secret
+
+    - objectName: sql-server-name
+
+      objectType: secret
+
+    - objectName: sql-server-fqdn
+
+      objectType: secret
+
+    - objectName: sql-database-name
+
+      objectType: secret
+
+    - objectName: sql-connection-string
+
+      objectType: secret
+
+# =====================================
+# SECRET PROVIDER CLASS
+# =====================================
+
+secretProviderClass:
+
+  enabled: true
+
+  objects:
+
+    - objectName: db-username
+      objectType: secret
+
+    - objectName: db-password
+      objectType: secret
+
+    - objectName: sql-server-name
+      objectType: secret
+
+    - objectName: sql-server-fqdn
+      objectType: secret
+
+    - objectName: sql-database-name
+      objectType: secret
+
+    - objectName: sql-connection-string
+      objectType: secret
+
+# =====================================
+# ENV FROM SECRET
+# =====================================
+
+envFromSecrets:
+
+  enabled: true
+
+  secretName: employeeprofileapp-kv-secret
 
 # =====================================
 # IMAGE PULL SECRETS
@@ -161,7 +239,9 @@ imagePullSecrets:
 # POD ANNOTATIONS
 # =====================================
 
-podAnnotations: {}
+podAnnotations:
+
+  azure.workload.identity/use: "true"
 
 # =====================================
 # NODE SELECTOR
@@ -188,6 +268,12 @@ affinity: {}
 securityContext: {}
 
 # =====================================
+# POD SECURITY CONTEXT
+# =====================================
+
+podSecurityContext: {}
+
+# =====================================
 # PROBES
 # =====================================
 
@@ -199,6 +285,8 @@ readinessProbe:
 
   initialDelaySeconds: 10
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
 
 livenessProbe:
   enabled: false
@@ -208,6 +296,19 @@ livenessProbe:
 
   initialDelaySeconds: 15
   periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: false
+
+  path: /
+  port: 8080
+
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
 
 # =====================================
 # CONFIGMAP AUTO RELOAD
@@ -226,7 +327,72 @@ networkPolicy:
 
   ingressControllerNamespace: ingress-nginx
 
+# =====================================
+# SECRET MOUNTS
+# =====================================
+
 secretMounts:
-  enabled: false
+
+  enabled: true
+
   mountPath: "/mnt/secrets-store"
+
   readOnly: true
+
+# =====================================
+# EXTRA VOLUMES
+# =====================================
+
+extraVolumes: []
+
+# =====================================
+# EXTRA VOLUME MOUNTS
+# =====================================
+
+extraVolumeMounts: []
+
+# =====================================
+# SIDECARS
+# =====================================
+
+sidecars: []
+
+# =====================================
+# HOST ALIASES
+# =====================================
+
+hostAliases: []
+
+# =====================================
+# DNS CONFIG
+# =====================================
+
+dnsConfig: {}
+
+dnsPolicy: ClusterFirst
+
+# =====================================
+# RUNTIME CLASS
+# =====================================
+
+runtimeClassName: ""
+
+# =====================================
+# TERMINATION
+# =====================================
+
+terminationGracePeriodSeconds: 30
+
+# =====================================
+# STRATEGY
+# =====================================
+
+strategy:
+
+  type: RollingUpdate
+
+  rollingUpdate:
+
+    maxSurge: 1
+
+    maxUnavailable: 0
