@@ -1,6 +1,6 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v20-enterprise-sql-runtime-final
+# VERSION: v21-enterprise-secure-sql-final
 # =====================================
 
 trigger:
@@ -90,6 +90,7 @@ stages:
 
           - task: TerraformInstaller@1
             displayName: Install Terraform
+
             inputs:
               terraformVersion: $(terraformVersion)
 
@@ -99,11 +100,13 @@ stages:
 
           - task: AzureCLI@2
             displayName: Azure Login Validation
+
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               addSpnToEnvironment: true
+
               inlineScript: |
 
                 set -euo pipefail
@@ -119,12 +122,14 @@ stages:
 
           - task: AzureCLI@2
             displayName: Terraform Init
+
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               addSpnToEnvironment: true
               workingDirectory: $(terraformWorkingDirectory)
+
               inlineScript: |
 
                 set -euo pipefail
@@ -164,12 +169,14 @@ stages:
 
           - task: AzureCLI@2
             displayName: Terraform Validate
+
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               addSpnToEnvironment: true
               workingDirectory: $(terraformWorkingDirectory)
+
               inlineScript: |
 
                 set -euo pipefail
@@ -179,6 +186,10 @@ stages:
                 export ARM_CLIENT_ID=$servicePrincipalId
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                # =====================================
+                # TF VAR EXPORTS
+                # =====================================
 
                 export TF_VAR_sql_admin_username="$(sql_admin_username)"
                 export TF_VAR_sql_admin_password="$(sql_admin_password)"
@@ -193,12 +204,14 @@ stages:
 
           - task: AzureCLI@2
             displayName: Terraform Plan
+
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               addSpnToEnvironment: true
               workingDirectory: $(terraformWorkingDirectory)
+
               inlineScript: |
 
                 set -euo pipefail
@@ -209,13 +222,18 @@ stages:
                 export ARM_TENANT_ID=$tenantId
                 export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
+                # =====================================
+                # TF VAR EXPORTS
+                # =====================================
+
                 export TF_VAR_sql_admin_username="$(sql_admin_username)"
                 export TF_VAR_sql_admin_password="$(sql_admin_password)"
                 export TF_VAR_db_username="$(db_username)"
                 export TF_VAR_db_password="$(db_password)"
 
                 terraform plan \
-                  -input=false
+                  -input=false \
+                  -out=tfplan
 
   # =====================================
   # DEPLOYMENT STAGE
@@ -256,6 +274,7 @@ stages:
 
                 - task: TerraformInstaller@1
                   displayName: Install Terraform
+
                   inputs:
                     terraformVersion: $(terraformVersion)
 
@@ -265,12 +284,14 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: Terraform Init
+
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
                     workingDirectory: $(terraformWorkingDirectory)
+
                     inlineScript: |
 
                       set -euo pipefail
@@ -296,12 +317,14 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: Terraform Apply
+
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
                     workingDirectory: $(terraformWorkingDirectory)
+
                     inlineScript: |
 
                       set -euo pipefail
@@ -311,6 +334,10 @@ stages:
                       export ARM_CLIENT_ID=$servicePrincipalId
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      # =====================================
+                      # TF VAR EXPORTS
+                      # =====================================
 
                       export TF_VAR_sql_admin_username="$(sql_admin_username)"
                       export TF_VAR_sql_admin_password="$(sql_admin_password)"
@@ -327,12 +354,14 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: Export Terraform Outputs
+
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
                     workingDirectory: $(terraformWorkingDirectory)
+
                     inlineScript: |
 
                       set -euo pipefail
@@ -357,11 +386,13 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: AKS Login
+
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
+
                     inlineScript: |
 
                       set -euo pipefail
@@ -379,11 +410,13 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: AKS CSI Validation
+
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     addSpnToEnvironment: true
+
                     inlineScript: |
 
                       set -euo pipefail
