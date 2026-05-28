@@ -360,6 +360,13 @@ module "aks_workload_identity" {
 }
 
 # =====================================
+# FILE:
+# terraform/infra/dev/main.tf
+# VERSION:
+# v21-enterprise-preserve-existing-kv-rbac-final
+# =====================================
+
+# =====================================
 # KEY VAULT MODULE
 # =====================================
 
@@ -392,14 +399,16 @@ module "keyvault" {
 
   # =====================================
   # IMPORTANT:
-  # DISABLE DUPLICATE WORKLOAD RBAC
-  # RBAC ALREADY MANAGED INSIDE
-  # terraform/modules/uami/main.tf
+  # KEEP EXISTING WORKLOAD RBAC
+  # TO AVOID DESTROY OPERATION
   # =====================================
 
-  enable_workload_identity_keyvault_access = false
+  enable_workload_identity_keyvault_access = true
 
-  workload_identity_principal_id = null
+  workload_identity_principal_id = try(
+    module.aks_workload_identity[0].principal_id,
+    null
+  )
 
   # =====================================
   # DEFAULT SECRETS
@@ -439,7 +448,8 @@ module "keyvault" {
 
   depends_on = [
     module.aks,
-    module.sql
+    module.sql,
+    module.aks_workload_identity
   ]
 }
 
