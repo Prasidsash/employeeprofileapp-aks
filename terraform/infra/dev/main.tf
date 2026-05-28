@@ -131,7 +131,7 @@ module "aks_workload_identity" {
 
   count = var.enable_user_assigned_identity ? 1 : 0
 
-  source = "../../modules/workload-identity"
+  source = "../../modules/uami"
 
   enable_workload_identity_resources = true
 
