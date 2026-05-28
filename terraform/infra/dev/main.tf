@@ -2,7 +2,7 @@
 # FILE:
 # terraform/infra/dev/main.tf
 # VERSION:
-# v16-enterprise-platform-infra-workloadidentity-cyclefix-final
+# v18-enterprise-platform-infra-workloadidentity-rbac-final
 # =====================================
 
 # =====================================
@@ -227,8 +227,8 @@ module "aks" {
 
   # =====================================
   # IMPORTANT:
-  # AVOID CYCLIC DEPENDENCY
-  # DO NOT ATTACH UAMI TO AKS
+  # KEEP SYSTEM ASSIGNED IDENTITY
+  # TO AVOID CYCLIC DEPENDENCY
   # =====================================
 
   enable_user_assigned_identity = false
@@ -324,6 +324,42 @@ module "aks" {
 }
 
 # =====================================
+# ENTERPRISE UAMI MODULE
+# =====================================
+
+module "aks_workload_identity" {
+
+  count = var.enable_user_assigned_identity ? 1 : 0
+
+  source = "../../modules/uami"
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  location = azurerm_resource_group.main.location
+
+  environment = var.environment
+
+  identity_name = "${var.cluster_name}-wi"
+
+  enable_federated_identity = true
+
+  namespace_name = var.namespace_name
+
+  service_account_name = var.service_account_name
+
+  oidc_issuer_url = module.aks.oidc_issuer_url
+
+  key_vault_id = module.keyvault.key_vault_id
+
+  additional_tags = local.common_tags
+
+  depends_on = [
+    module.aks,
+    module.keyvault
+  ]
+}
+
+# =====================================
 # KEY VAULT MODULE
 # =====================================
 
@@ -355,15 +391,15 @@ module "keyvault" {
   aks_kubelet_object_id = module.aks.aks_kubelet_object_id
 
   # =====================================
-  # IMPORTANT:
-  # AVOID CYCLIC DEPENDENCY
-  # WORKLOAD IDENTITY RBAC
-  # HANDLED INSIDE UAMI MODULE
+  # PRESERVE EXISTING WORKLOAD RBAC
   # =====================================
 
-  enable_workload_identity_keyvault_access = false
+  enable_workload_identity_keyvault_access = true
 
-  workload_identity_principal_id = null
+  workload_identity_principal_id = try(
+    module.aks_workload_identity[0].principal_id,
+    null
+  )
 
   # =====================================
   # DEFAULT SECRETS
@@ -403,43 +439,8 @@ module "keyvault" {
 
   depends_on = [
     module.aks,
-    module.sql
-  ]
-}
-
-# =====================================
-# ENTERPRISE UAMI MODULE
-# =====================================
-
-module "aks_workload_identity" {
-
-  count = var.enable_user_assigned_identity ? 1 : 0
-
-  source = "../../modules/uami"
-
-  resource_group_name = azurerm_resource_group.main.name
-
-  location = azurerm_resource_group.main.location
-
-  environment = var.environment
-
-  identity_name = "${var.cluster_name}-wi"
-
-  enable_federated_identity = true
-
-  namespace_name = var.namespace_name
-
-  service_account_name = var.service_account_name
-
-  oidc_issuer_url = module.aks.oidc_issuer_url
-
-  key_vault_id = module.keyvault.key_vault_id
-
-  additional_tags = local.common_tags
-
-  depends_on = [
-    module.aks,
-    module.keyvault
+    module.sql,
+    module.aks_workload_identity
   ]
 }
 
@@ -490,6 +491,8 @@ module "rbac" {
     )
 
     "azure.workload.identity/tenant-id" = data.azurerm_client_config.current.tenant_id
+
+    "azure.workload.identity/use" = "true"
   }
 
   role_annotations = var.role_annotations
