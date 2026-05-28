@@ -486,7 +486,7 @@ stages:
 
                       kubectl get svc \
                         -n $(namespace)
-
+                
                 # =====================================
                 # ROLLOUT VALIDATION
                 # =====================================
@@ -509,7 +509,95 @@ stages:
 
                       set -euo pipefail
 
+                      echo "=================================="
+                      echo "AKS LOGIN"
+                      echo "=================================="
+
+                      az aks get-credentials \
+                        --resource-group $(aksResourceGroup) \
+                        --name $(aksClusterName) \
+                        --overwrite-existing
+
+                      echo "=================================="
+                      echo "DEPLOYMENTS"
+                      echo "=================================="
+
+                      kubectl get deployment \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "REPLICASETS"
+                      echo "=================================="
+
+                      kubectl get rs \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "PODS"
+                      echo "=================================="
+
+                      kubectl get pods \
+                        -n $(namespace) \
+                        -o wide
+
+                      echo "=================================="
+                      echo "POD DETAILS"
+                      echo "=================================="
+
+                      POD_NAME=$(kubectl get pods \
+                        -n $(namespace) \
+                        -o jsonpath='{.items[0].metadata.name}')
+
+                      echo "POD_NAME=${POD_NAME}"
+
+                      kubectl describe pod \
+                        ${POD_NAME} \
+                        -n $(namespace)
+
+                      echo "=================================="
+                      echo "POD LOGS"
+                      echo "=================================="
+
+                      kubectl logs \
+                        ${POD_NAME} \
+                        -n $(namespace) \
+                        --all-containers=true \
+                        --tail=200 || true
+
+                      echo "=================================="
+                      echo "SECRET PROVIDER CLASS"
+                      echo "=================================="
+
+                      kubectl get secretproviderclass \
+                        -n $(namespace)
+
+                      kubectl describe secretproviderclass \
+                        employeeprofileapp-spc \
+                        -n $(namespace) || true
+
+                      echo "=================================="
+                      echo "SERVICE ACCOUNT"
+                      echo "=================================="
+
+                      kubectl get sa \
+                        employee-sa \
+                        -n $(namespace) \
+                        -o yaml
+
+                      echo "=================================="
+                      echo "WORKLOAD IDENTITY LABELS"
+                      echo "=================================="
+
+                      kubectl get pod \
+                        ${POD_NAME} \
+                        -n $(namespace) \
+                        --show-labels
+
+                      echo "=================================="
+                      echo "ROLLOUT STATUS"
+                      echo "=================================="
+
                       kubectl rollout status \
                         deployment/$(deploymentName) \
                         -n $(namespace) \
-                        --timeout=600s
+                        --timeout=900s
