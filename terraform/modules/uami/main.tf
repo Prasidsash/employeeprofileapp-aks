@@ -18,7 +18,6 @@ resource "azurerm_user_assigned_identity" "uami" {
   location = var.location
 
   tags = merge(
-
     {
       environment = var.environment
 

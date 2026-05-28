@@ -355,7 +355,7 @@ module "aks_workload_identity" {
 # TO BREAK FINAL CYCLE
 # =====================================
 
-  key_vault_id = null
+   key_vault_id = null
 
   additional_tags = local.common_tags
 
