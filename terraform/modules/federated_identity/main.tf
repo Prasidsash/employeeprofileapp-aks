@@ -5,6 +5,12 @@
 
 resource "azurerm_federated_identity_credential" "workload_identity" {
 
+  lifecycle {
+    replace_triggered_by = [
+      var.oidc_issuer_url
+    ]
+  }
+
   name = "${var.identity_name}-fic"
   
   user_assigned_identity_id = var.user_assigned_identity_id

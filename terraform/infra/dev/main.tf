@@ -373,51 +373,6 @@ module "aks" {
 }
 
 # =====================================
-# AKS READINESS WAIT
-# =====================================
-
-resource "time_sleep" "wait_for_aks" {
-
-  depends_on = [
-    module.aks
-  ]
-
-  create_duration = "240s"
-}
-
-# =====================================
-# FEDERATED CREDENTIAL MODULE
-# PHASE-2 IDENTITY LIFECYCLE
-# =====================================
-
-module "federated_identity" {
-
-  count = var.enable_user_assigned_identity ? 1 : 0
-
-  source = "../../modules/federated_identity"
-
-  resource_group_name = azurerm_resource_group.main.name
-
-  namespace = var.namespace_name
-
-  service_account_name = var.service_account_name
-
-  identity_name = module.aks_workload_identity[0].identity_name
-
-  identity_resource_group_name = azurerm_resource_group.main.name
-
-  user_assigned_identity_id = module.aks_workload_identity[0].identity_id
-
-  oidc_issuer_url = module.aks.aks_oidc_issuer_url
-
-  depends_on = [
-    module.aks,
-    module.aks_workload_identity,
-    time_sleep.wait_for_aks
-  ]
-}
-
-# =====================================
 # KEY VAULT MODULE
 # =====================================
 
