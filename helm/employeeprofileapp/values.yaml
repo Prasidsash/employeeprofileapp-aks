@@ -2,10 +2,12 @@
 # FILE:
 # helm/employeeprofileapp/values.yaml
 # VERSION:
-# v16-enterprise-workloadidentity-runtime-corrected-final
+# v21-enterprise-workloadidentity-runtime-consolidated-final
 # =====================================
 
 replicaCount: 1
+
+revisionHistoryLimit: 3
 
 # =====================================
 # APPLICATION
@@ -34,6 +36,12 @@ image:
 acr:
 
   enabled: false
+
+# =====================================
+# IMAGE PULL SECRETS
+# =====================================
+
+imagePullSecrets: []
 
 # =====================================
 # SERVICE ACCOUNT
@@ -65,7 +73,7 @@ workloadIdentity:
 
 service:
 
-  type: LoadBalancer
+  type: ClusterIP
 
   port: 80
 
@@ -113,7 +121,7 @@ ingress:
 
   enabled: false
 
-  className: ""
+  className: nginx
 
   host: ""
 
@@ -139,11 +147,11 @@ hpa:
 
   minReplicas: 1
 
-  maxReplicas: 1
+  maxReplicas: 2
 
   averageUtilization: 70
 
-  memoryAverageUtilization: null
+  memoryAverageUtilization: 80
 
   stabilizationWindowSeconds: 300
 
@@ -156,6 +164,16 @@ env:
   ASPNETCORE_ENVIRONMENT: Development
 
   ASPNETCORE_URLS: http://+:8080
+
+# =====================================
+# ENV FROM SECRET
+# =====================================
+
+envFromSecrets:
+
+  enabled: true
+
+  secretName: employeeprofileapp-kv-secret
 
 # =====================================
 # AZURE KEY VAULT
@@ -238,24 +256,10 @@ secretProviderClass:
       objectType: secret
 
 # =====================================
-# ENV FROM SECRET
+# POD LABELS
 # =====================================
 
-envFromSecrets:
-
-  enabled: true
-
-  secretName: employeeprofileapp-kv-secret
-
-# =====================================
-# IMAGE PULL SECRETS
-# =====================================
-
-imagePullSecrets:
-
-  enabled: false
-
-  name: ""
+podLabels: {}
 
 # =====================================
 # POD ANNOTATIONS
@@ -287,13 +291,35 @@ affinity: {}
 # SECURITY CONTEXT
 # =====================================
 
-securityContext: {}
+securityContext:
+
+  allowPrivilegeEscalation: false
+
+  readOnlyRootFilesystem: false
+
+  runAsNonRoot: true
+
+  runAsUser: 1000
+
+  capabilities:
+
+    drop:
+
+      - ALL
 
 # =====================================
 # POD SECURITY CONTEXT
 # =====================================
 
-podSecurityContext: {}
+podSecurityContext:
+
+  runAsNonRoot: true
+
+  fsGroup: 2000
+
+  seccompProfile:
+
+    type: RuntimeDefault
 
 # =====================================
 # PROBES
