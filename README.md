@@ -1,29 +1,106 @@
-# employeeprofileapp-aks
+# EmployeeProfileApp-AKS
 
-Enterprise AKS Platform Engineering Repository
+Enterprise AKS Platform Engineering Repository using Azure Kubernetes Service (AKS), Terraform Infrastructure as Code, Azure DevOps CI/CD, Helm-based Kubernetes Deployments, Azure SQL Database, Workload Identity, Monitoring Stack, and Enterprise Kubernetes Operational Practices.
 
 ---
 
 # Overview
 
-`employeeprofileapp-aks` is an enterprise-grade Azure Kubernetes Service (AKS) platform engineering implementation designed using:
+`employeeprofileapp-aks` is a real-world enterprise-grade AKS platform engineering implementation designed to simulate production-style cloud-native infrastructure deployment and Kubernetes operational workflows in Microsoft Azure.
 
-* Azure Kubernetes Service (AKS)
-* Terraform Infrastructure as Code
-* Helm-based Kubernetes Deployments
-* Azure DevOps CI/CD Pipelines
-* Azure Container Registry (ACR)
-* Azure Monitor
-* Log Analytics Workspace
-* Managed Prometheus
-* Managed Grafana
-* Azure Workload Identity
-* OIDC Federation
-* Azure Key Vault Integration
-* Namespace Isolation
-* Enterprise Monitoring & Operational Validation
+The repository combines:
 
-The repository follows a reusable environment-first deployment model aligned with enterprise AKS platform engineering practices.
+* AKS platform engineering
+* Terraform modular infrastructure automation
+* Azure DevOps CI/CD pipelines
+* Docker container lifecycle management
+* Helm-based Kubernetes deployments
+* Azure-native monitoring integrations
+* Workload Identity & OIDC federation
+* Namespace isolation
+* Enterprise RBAC implementation
+* Azure SQL Database integration
+* Operational troubleshooting workflows
+* Environment-first infrastructure architecture
+
+The implementation closely resembles enterprise cloud-native deployment standards used in modern organizations.
+
+---
+
+# Enterprise Platform Architecture
+
+```text
+Developer
+   │
+   ▼
+Azure DevOps Repositories
+   │
+   ├── Backend Pipeline
+   ├── Infrastructure Pipeline
+   ├── Application CI Pipeline
+   └── Application CD Pipeline
+   │
+   ▼
+Azure Container Registry (ACR)
+   │
+   ▼
+Azure Kubernetes Service (AKS)
+   │
+   ├── NGINX Ingress Controller
+   ├── Kubernetes Namespaces
+   ├── RBAC
+   ├── Workload Identity
+   ├── Azure Key Vault Integration
+   ├── Monitoring Stack
+   ├── Helm Releases
+   ├── Application Pods
+   └── Operational Validation
+   │
+   ▼
+Azure SQL Database
+```
+
+---
+
+# Core Design Principles
+
+The repository follows enterprise AKS platform engineering principles:
+
+* Environment-first infrastructure design
+* Modular Terraform architecture
+* Reusable infrastructure modules
+* Independent infrastructure and application pipelines
+* Immutable container deployment strategy
+* Secure remote Terraform backend
+* Namespace isolation
+* Azure-native authentication model
+* Monitoring-first operational approach
+* Runtime validation workflows
+* Disposable infrastructure lifecycle
+
+---
+
+# Technology Stack
+
+| Layer                  | Technology                     |
+| ---------------------- | ------------------------------ |
+| Cloud Platform         | Microsoft Azure                |
+| Kubernetes Platform    | Azure Kubernetes Service (AKS) |
+| Infrastructure as Code | Terraform                      |
+| CI/CD                  | Azure DevOps                   |
+| Containerization       | Docker                         |
+| Container Registry     | Azure Container Registry (ACR) |
+| Kubernetes Packaging   | Helm                           |
+| Application Runtime    | .NET 8                         |
+| Monitoring             | Azure Monitor                  |
+| Logging                | Log Analytics Workspace        |
+| Metrics                | Managed Prometheus             |
+| Dashboarding           | Managed Grafana                |
+| Identity               | Azure Workload Identity        |
+| Authentication         | OIDC Federation                |
+| Networking             | Azure CNI                      |
+| Security               | RBAC + Namespace Isolation     |
+| Database               | Azure SQL Database             |
 
 ---
 
@@ -51,7 +128,7 @@ employeeprofileapp-aks/
 ├── platform-operations/
 │
 ├── src/
-│   └── Employeeprofileapp/
+│   └── EmployeeProfileApp/
 │
 ├── terraform/
 │   ├── bootstrap/
@@ -75,6 +152,7 @@ employeeprofileapp-aks/
 │       ├── keyvault/
 │       ├── monitoring/
 │       ├── network/
+│       ├── sql/
 │       ├── uami/
 │       └── workload_identity/
 │
@@ -86,282 +164,850 @@ employeeprofileapp-aks/
 
 ---
 
-# Enterprise Platform Architecture
-
-## Core Design Principles
-
-* Environment-first infrastructure model
-* Modular Terraform architecture
-* Reusable AKS platform modules
-* Independent Infrastructure and Application pipelines
-* Secure remote Terraform backend
-* Helm-driven Kubernetes deployment model
-* Immutable image deployment strategy
-* Namespace isolation
-* Azure Workload Identity integration
-* Enterprise observability implementation
-* Runtime deployment validation
-* Disposable infrastructure lifecycle
+# Folder-by-Folder Explanation
 
 ---
 
-# Technology Stack
+# azure-pipelines/
 
-| Layer                  | Technology                     |
-| ---------------------- | ------------------------------ |
-| Cloud Platform         | Microsoft Azure                |
-| Kubernetes Platform    | Azure Kubernetes Service (AKS) |
-| Infrastructure as Code | Terraform                      |
-| CI/CD                  | Azure DevOps                   |
-| Containerization       | Docker                         |
-| Container Registry     | Azure Container Registry (ACR) |
-| Kubernetes Packaging   | Helm                           |
-| Application Runtime    | .NET 8                         |
-| Monitoring             | Azure Monitor                  |
-| Logging                | Log Analytics Workspace        |
-| Metrics                | Managed Prometheus             |
-| Dashboarding           | Managed Grafana                |
-| Identity               | Azure Workload Identity        |
-| Authentication         | OIDC Federation                |
-| Networking             | Azure CNI                      |
-| Security               | RBAC + Namespace Isolation     |
+Contains Azure DevOps YAML pipelines used for infrastructure provisioning, CI/CD automation, and Kubernetes deployments.
 
 ---
 
-# Terraform Module Architecture
+## backend-pipeline.yml
 
-The repository follows an enterprise reusable modular Terraform architecture.
+Purpose:
 
-## Implemented Modules
+* Deploy Terraform backend infrastructure.
 
-| Module              | Purpose                                  |
-| ------------------- | ---------------------------------------- |
-| acr                 | Azure Container Registry deployment      |
-| aks                 | AKS cluster deployment and configuration |
-| aks_backup          | AKS backup and recovery configuration    |
-| cert_manager        | Certificate management integration       |
-| employee_governance | Governance controls and resource tagging |
-| employee_ingress    | Application ingress integration          |
-| employee_namespace  | Kubernetes namespace management          |
-| employee_rbac       | Kubernetes RBAC implementation           |
-| employee_secret     | Secret management integration            |
-| federated_identity  | OIDC federation configuration            |
-| ingress_nginx       | NGINX ingress controller deployment      |
-| keyvault            | Azure Key Vault integration              |
-| monitoring          | Azure Monitor, Prometheus, Grafana       |
-| network             | Virtual network and subnet provisioning  |
-| uami                | User Assigned Managed Identity           |
-| workload_identity   | Azure Workload Identity integration      |
+Responsibilities:
+
+* Create remote backend resources
+* Configure Terraform state storage
+* Validate backend readiness
+
+Why Needed:
+
+* Enterprise Terraform deployments require centralized remote state management.
 
 ---
 
-# Infrastructure Components Provisioned
+## infra-pipeline.yml
 
-The platform provisions:
+Purpose:
 
-* Resource Groups
-* Virtual Networks
-* AKS Cluster
-* AKS Node Pools
-* Azure Container Registry
+* Deploy Azure infrastructure resources.
+
+Responsibilities:
+
+* Terraform initialization
+* Infrastructure validation
+* AKS deployment
+* Monitoring deployment
+* Networking deployment
+* SQL infrastructure deployment
+
+Why Needed:
+
+* Automates complete infrastructure provisioning.
+
+---
+
+## app-ci.yml
+
+Purpose:
+
+* Build and package the application.
+
+Responsibilities:
+
+* Restore .NET dependencies
+* Build application
+* Execute tests
+* Build Docker image
+* Push image to ACR
+
+Why Needed:
+
+* Implements enterprise Continuous Integration workflow.
+
+---
+
+## app-cd.yml
+
+Purpose:
+
+* Deploy application into AKS.
+
+Responsibilities:
+
+* Authenticate with AKS
+* Pull Helm chart
+* Deploy using Helm
+* Validate rollout status
+
+Why Needed:
+
+* Automates Kubernetes application deployment lifecycle.
+
+---
+
+# helm/
+
+Contains Helm chart used for Kubernetes deployments.
+
+Helm acts as a Kubernetes package manager enabling reusable and standardized deployments.
+
+---
+
+## Chart.yaml
+
+Purpose:
+
+* Helm chart metadata definition.
+
+Contains:
+
+* Chart name
+* Chart version
+* Application version
+
+---
+
+## values.yaml
+
+Purpose:
+
+* Default Helm deployment configuration.
+
+Contains:
+
+* Replica count
+* Image repository
+* Resource limits
+* Service configuration
+
+---
+
+## values-dev.yaml / values-qa.yaml / values-uat.yaml / values-prod.yaml
+
+Purpose:
+
+* Environment-specific configuration values.
+
+Used For:
+
+* Different replica counts
+* Different ingress hosts
+* Environment-specific image tags
+* Resource customization
+
+Why Needed:
+
+* Supports reusable multi-environment deployments.
+
+---
+
+## templates/
+
+Contains reusable Kubernetes YAML templates.
+
+---
+
+### deployment.yaml
+
+Creates:
+
+* Kubernetes Deployments
+
+Responsibilities:
+
+* Pod creation
+* Replica management
+* Container runtime configuration
+
+---
+
+### service.yaml
+
+Creates:
+
+* Kubernetes Services
+
+Responsibilities:
+
+* Internal networking
+* Pod exposure inside cluster
+
+---
+
+### ingress.yaml
+
+Creates:
+
+* Kubernetes Ingress resources
+
+Responsibilities:
+
+* External traffic routing
+* HTTP/HTTPS exposure
+
+Integrated With:
+
+* NGINX Ingress Controller
+
+---
+
+### configmap.yaml
+
+Purpose:
+
+* Store non-sensitive configuration.
+
+Examples:
+
+* Environment variables
+* Runtime application settings
+
+---
+
+### secret.yaml
+
+Purpose:
+
+* Store sensitive configuration securely.
+
+Examples:
+
+* Database credentials
+* Connection strings
+
+---
+
+### serviceaccount.yaml
+
+Purpose:
+
+* Create Kubernetes Service Account.
+
+Used For:
+
+* Workload Identity integration
+* Azure resource authentication
+
+---
+
+### hpa.yaml
+
+Purpose:
+
+* Configure Horizontal Pod Autoscaler.
+
+Benefits:
+
+* Automatic scaling
+* Resource optimization
+
+---
+
+### _helpers.tpl
+
+Purpose:
+
+* Reusable Helm helper functions.
+
+Used For:
+
+* Naming standards
+* Labels
+* Template reuse
+
+---
+
+# platform-operations/
+
+Contains operational support scripts and runtime validation activities.
+
+Responsibilities:
+
+* AKS operational verification
+* Rollout validation
+* Monitoring verification
+* Troubleshooting support
+* Day-2 operational workflows
+
+Why Needed:
+
+* Enterprise AKS environments require operational support tooling.
+
+---
+
+# src/
+
+Contains actual ASP.NET Core application source code.
+
+---
+
+## Controllers/
+
+Purpose:
+
+* Handle incoming HTTP/API requests.
+
+Responsibilities:
+
+* API endpoint handling
+* Request processing
+
+---
+
+## Models/
+
+Purpose:
+
+* Define application data models.
+
+Examples:
+
+* Employee entity
+* Database models
+
+---
+
+## Views/
+
+Purpose:
+
+* UI rendering layer.
+
+Used In:
+
+* MVC application pages
+
+---
+
+## Services/
+
+Purpose:
+
+* Business logic implementation.
+
+Responsibilities:
+
+* Data processing
+* Service operations
+
+---
+
+## Data/
+
+Purpose:
+
+* Database connectivity layer.
+
+Responsibilities:
+
+* SQL interaction
+* Data access logic
+* Entity Framework operations
+
+---
+
+## appsettings.json
+
+Purpose:
+
+* Application runtime configuration.
+
+Contains:
+
+* Logging settings
+* Connection strings
+* Environment configuration
+
+---
+
+## Program.cs
+
+Purpose:
+
+* Main application startup file.
+
+Responsibilities:
+
+* Configure services
+* Configure middleware
+* Start application runtime
+
+---
+
+# terraform/
+
+Contains complete Infrastructure as Code implementation.
+
+Terraform provisions all Azure infrastructure resources.
+
+---
+
+# bootstrap/
+
+Used for Terraform backend initialization.
+
+Purpose:
+
+* Create remote Terraform backend resources.
+
+Resources:
+
+* Storage Account
+* Blob Container
+* Resource Group
+
+Benefits:
+
+* Centralized Terraform state
+* Team collaboration
+* State locking support
+
+---
+
+# infra/
+
+Contains actual infrastructure deployment configuration.
+
+Environment-first structure is followed.
+
+Example:
+
+```text
+infra/dev
+infra/qa
+infra/uat
+infra/prod
+```
+
+Benefits:
+
+* Environment isolation
+* Independent deployments
+* Enterprise scalability
+
+---
+
+# modules/
+
+Contains reusable enterprise Terraform modules.
+
+Each module provisions one infrastructure capability.
+
+---
+
+## acr/
+
+Purpose:
+
+* Deploy Azure Container Registry.
+
+Responsibilities:
+
+* Store Docker images
+* Integrate with AKS image pulls
+
+---
+
+## aks/
+
+Purpose:
+
+* Deploy AKS cluster.
+
+Features:
+
+* Node pools
+* OIDC issuer
+* Workload Identity
+* RBAC
+* Azure CNI networking
+
+---
+
+## aks_backup/
+
+Purpose:
+
+* Configure AKS backup and recovery capabilities.
+
+Why Needed:
+
+* Enterprise disaster recovery support.
+
+---
+
+## cert_manager/
+
+Purpose:
+
+* Certificate management integration.
+
+Responsibilities:
+
+* TLS certificate automation
+* HTTPS support
+
+---
+
+## employee_governance/
+
+Purpose:
+
+* Apply enterprise governance standards.
+
+Responsibilities:
+
+* Resource tagging
+* Naming conventions
+* Compliance-ready structure
+
+---
+
+## employee_ingress/
+
+Purpose:
+
+* Application ingress configuration.
+
+Responsibilities:
+
+* Application routing
+* External traffic integration
+
+---
+
+## employee_namespace/
+
+Purpose:
+
+* Create Kubernetes namespaces.
+
+Examples:
+
+* ingress-nginx
+* monitoring
+* employeeprofileapp
+
+Benefits:
+
+* Isolation
+* Governance
+* Multi-team separation
+
+---
+
+## employee_rbac/
+
+Purpose:
+
+* Implement Kubernetes RBAC.
+
+Responsibilities:
+
+* Roles
+* RoleBindings
+* Namespace permissions
+
+Benefits:
+
+* Least privilege access
+* Enterprise security model
+
+---
+
+## employee_secret/
+
+Purpose:
+
+* Secret management integration.
+
+Responsibilities:
+
+* Kubernetes secrets
+* Secret synchronization
+
+---
+
+## federated_identity/
+
+Purpose:
+
+* Configure OIDC federation.
+
+Benefits:
+
+* Secure Azure authentication
+* Passwordless authentication model
+
+---
+
+## ingress_nginx/
+
+Purpose:
+
+* Deploy NGINX Ingress Controller.
+
+Responsibilities:
+
+* HTTP/HTTPS routing
+* External ingress management
+
+Traffic Flow:
+
+```text
+Internet
+   ↓
+NGINX Ingress Controller
+   ↓
+Kubernetes Service
+   ↓
+Application Pods
+```
+
+---
+
+## keyvault/
+
+Purpose:
+
+* Integrate Azure Key Vault.
+
+Used For:
+
+* Secure secret storage
+* Centralized secret management
+
+Examples:
+
+* Database credentials
+* Connection strings
+
+---
+
+## monitoring/
+
+Purpose:
+
+* Deploy enterprise monitoring stack.
+
+Resources:
+
 * Azure Monitor
 * Log Analytics Workspace
 * Managed Prometheus
 * Managed Grafana
-* Azure Key Vault
-* User Assigned Managed Identity
-* Kubernetes Namespaces
-* Kubernetes RBAC
-* NGINX Ingress Controller
-* Certificate Management
-* Monitoring Stack
-* OIDC Federation Configuration
-* Workload Identity Integration
+
+Capabilities:
+
+* Metrics collection
+* Pod monitoring
+* Dashboarding
+* AKS diagnostics
 
 ---
 
-# Azure DevOps SPN and Service Connections
+## network/
 
-## Azure DevOps Service Principal
+Purpose:
 
-```text
-azure-devops-sp
+* Create AKS networking layer.
+
+Resources:
+
+* Virtual Network
+* Subnets
+* NSGs
+
+Responsibilities:
+
+* AKS network isolation
+* Internal communication
+
+---
+
+## sql/
+
+Purpose:
+
+* Deploy Azure SQL infrastructure.
+
+Resources:
+
+* SQL Server
+* SQL Database
+* Firewall Rules
+
+Problem Solved:
+
+* Persistent backend application storage
+
+Variables:
+
+```hcl
+db_username
+db_password
 ```
 
-This SPN is used for:
+---
 
-* Terraform backend authentication
-* Azure DevOps pipeline authentication
+## uami/
+
+Purpose:
+
+* Deploy User Assigned Managed Identity.
+
+Benefits:
+
+* Azure resource authentication
+* Managed identity integration
+
+---
+
+## workload_identity/
+
+Purpose:
+
+* Configure AKS Workload Identity.
+
+Benefits:
+
+* Passwordless Azure access
+* Secure pod identity
+* No hardcoded secrets
+
+Authentication Flow:
+
+```text
+AKS Pod
+   ↓
+Kubernetes Service Account
+   ↓
+Workload Identity
+   ↓
+Managed Identity
+   ↓
+Azure Resource
+```
+
+---
+
+# Dockerfile
+
+Purpose:
+
+* Containerize the .NET application.
+
+Responsibilities:
+
+* Multi-stage build
+* Runtime optimization
+* Docker image packaging
+
+Benefits:
+
+* Portable deployment
+* Kubernetes compatibility
+
+---
+
+# employeeprofileapp-aks.sln
+
+Purpose:
+
+* Visual Studio solution file.
+
+Used For:
+
+* Manage .NET project structure
+* Centralized solution management
+
+---
+
+# Terminal-Opener.bat
+
+Purpose:
+
+* Quick terminal access utility.
+
+Used For:
+
+* Faster local development workflows
+
+---
+
+# Terraform Backend Architecture
+
+Terraform remote state uses Azure Storage Account backend.
+
+Backend Components:
+
+| Component       | Purpose                 |
+| --------------- | ----------------------- |
+| Resource Group  | Store backend resources |
+| Storage Account | Store Terraform state   |
+| Blob Container  | Store `.tfstate` files  |
+
+Benefits:
+
+* Centralized state management
+* Terraform state locking
+* Team collaboration
+
+---
+
+# Azure DevOps Service Principal
+
+## azure-devops-sp
+
+Used For:
+
+* Terraform authentication
 * AKS authentication
 * ACR authentication
 * Key Vault access
-* Terraform infrastructure deployment
+* Infrastructure deployment
 
 ---
 
-## Azure DevOps Service Connections
+# Service Connections
 
-Validated Service Connections:
+Validated Connections:
 
 * ACR-SC
 * AKS SCN
 * AzureAKS-SCN
 * Docker-SC
 
-All Service Connections were reauthenticated and validated before infrastructure deployment and pipeline execution.
+Purpose:
+
+* Secure Azure DevOps integration with Azure resources.
 
 ---
 
 # IAM Role Assignments
 
-## Storage Account IAM
+Implemented Roles:
 
-Assigned Role:
-
-```text
-Storage Blob Data Contributor
-```
-
-Assigned To:
-
-```text
-azure-devops-sp
-```
-
-Purpose:
-
-* Terraform remote backend state read/write
-* Terraform state locking
-
----
-
-## Resource Group IAM
-
-Assigned Role:
-
-```text
-Contributor
-```
-
-Assigned To:
-
-```text
-azure-devops-sp
-```
-
-Purpose:
-
-* Terraform infrastructure provisioning
-* Azure resource management
-
----
-
-## Key Vault IAM
-
-Assigned Role:
-
-```text
-Key Vault Administrator
-```
-
-Assigned To:
-
-```text
-azure-devops-sp
-```
-
-Purpose:
-
-* Key Vault secret creation
-* Secret retrieval
-* Secret update
-* Secret management
-
----
-
-## Azure Container Registry IAM
-
-Assigned Roles:
-
-```text
-AcrPush
-AcrPull
-```
-
-Assigned To:
-
-```text
-azure-devops-sp
-```
-
-Purpose:
-
-* Docker image push from Azure DevOps
-* AKS image pull authentication
-
----
-
-# Terraform Backend Architecture
-
-Terraform remote state is configured using Azure Storage Account backend.
-
-## Backend Components
-
-| Component                  | Purpose                  |
-| -------------------------- | ------------------------ |
-| Resource Group             | Stores backend resources |
-| Storage Account            | Stores Terraform state   |
-| Blob Container (`tfstate`) | Stores `.tfstate` files  |
-
----
-
-# Terraform Cleanup and Reinitialization
-
-## Backend Folder Cleanup
-
-Delete below files/folders from:
-
-```text
-terraform\bootstrap\backend
-```
-
-Files/Folders:
-
-* `.terraform`
-* `.terraform.lock.hcl`
-* `terraform.tfstate`
-* `terraform.tfstate.backup`
-
----
-
-## Infrastructure Folder Cleanup
-
-Delete below files/folders from:
-
-```text
-terraform\infra\dev
-```
-
-Files/Folders:
-
-* `.terraform`
-* `.terraform.lock.hcl`
-* `terraform.tfstate`
-* `terraform.tfstate.backup`
-
----
-
-## Backend Reinitialization
-
-```powershell
-terraform init -reconfigure
-```
+| Role                          | Purpose                   |
+| ----------------------------- | ------------------------- |
+| Contributor                   | Infrastructure deployment |
+| Storage Blob Data Contributor | Terraform backend access  |
+| Key Vault Administrator       | Secret management         |
+| AcrPush                       | Docker image push         |
+| AcrPull                       | AKS image pull            |
 
 ---
 
 # Enterprise Deployment Workflow
 
-## Deployment Order
+Deployment Order:
 
 ```text
 1. Backend Pipeline
@@ -374,57 +1020,63 @@ terraform init -reconfigure
 
 # Infrastructure Deployment Flow
 
-## Step 1 - Reauthenticate Service Connections
+## Step 1 — Reauthenticate Service Connections
 
-Revalidate and reauthenticate all Azure DevOps Service Connections before pipeline execution.
+Ensures:
 
----
-
-## Step 2 - Configure IAM Permissions
-
-Validate all required IAM role assignments for:
-
-* Storage Account
-* Resource Group
-* Key Vault
-* ACR
+* Valid Azure authentication
+* Pipeline authorization
 
 ---
 
-## Step 3 - Initialize Terraform Backend
+## Step 2 — Configure IAM Permissions
+
+Validates:
+
+* Storage permissions
+* Resource Group permissions
+* Key Vault permissions
+* ACR permissions
+
+---
+
+## Step 3 — Initialize Terraform Backend
 
 ```powershell
 terraform init -reconfigure
 ```
 
----
+Purpose:
 
-## Step 4 - Deploy Backend Resources
-
-Run backend Terraform deployment manually.
+* Initialize remote backend state.
 
 ---
 
-## Step 5 - Deploy Infrastructure
+## Step 4 — Deploy Backend Resources
 
-Run infrastructure Terraform deployment manually.
+Deploy:
 
-This provisions:
+* Storage Account
+* Blob Container
+* Backend Resource Group
+
+---
+
+## Step 5 — Deploy Infrastructure
+
+Deploys:
 
 * AKS
-* ACR
-* Key Vault
 * Networking
 * Monitoring
 * RBAC
 * Ingress
-* Governance
-* Namespaces
-* Diagnostics
+* Key Vault
+* SQL Database
 
 ---
 
-## Step 6 - Connect to AKS Cluster
+## Step 6 — Connect to AKS Cluster
 
 ```powershell
 az aks get-credentials --resource-group employeeprofileapp-dev-rg --name employeeprofileapp-dev-aks --overwrite-existing
@@ -432,9 +1084,9 @@ az aks get-credentials --resource-group employeeprofileapp-dev-rg --name employe
 
 ---
 
-## Step 7 - Validate AKS Connectivity
+## Step 7 — Validate AKS Connectivity
 
-```powershell
+```bash
 kubectl get nodes
 kubectl get pods -A
 kubectl get namespaces
@@ -442,109 +1094,56 @@ kubectl get namespaces
 
 ---
 
-# Key Vault Secret Conflict Troubleshooting
+# Azure SQL Database Integration
 
-Issue:
+Initially:
 
-Azure Key Vault secrets already existed in Azure but corresponding Terraform state entries were missing.
+* Application data was temporary inside pod runtime memory.
 
-## Resolution
+Problem:
 
-* Cleanup stale Terraform local state
-* Reinitialize Terraform backend
-* Import existing Azure resources into Terraform state
-* Re-run Terraform plan/apply
+* Data lost during restart/redeployment.
 
-This resolved Terraform duplicate secret creation conflicts.
+Solution:
 
----
+* Azure SQL Database integration.
 
-# Helm Deployment Architecture
+Application Flow:
 
-The repository uses Helm for Kubernetes application packaging and deployment.
+```text
+Application Pod
+      ↓
+Connection String
+      ↓
+Azure SQL Database
+```
 
-## Helm Features
+Capabilities Achieved:
 
-* Reusable templates
-* Environment-specific values files
-* Namespace-based deployment
-* Runtime image injection
-* Resource requests and limits
-* Workload identity integration
-* Azure Key Vault CSI integration
-* Kubernetes service definitions
-
----
-
-# CI/CD Pipeline Architecture
-
-## Backend Pipeline
-
-Responsible for:
-
-* Terraform backend provisioning
-* Remote state setup
-* Backend validation
-
----
-
-## Infrastructure Pipeline
-
-Responsible for:
-
-* AKS provisioning
-* Azure resource deployment
-* IAM validation
-* Monitoring deployment
-* Runtime validation
-
----
-
-## Application CI Pipeline
-
-Responsible for:
-
-* .NET application build
-* Docker image creation
-* Docker image push to ACR
-* Immutable image tagging
-
----
-
-## Application CD Pipeline
-
-Responsible for:
-
-* AKS authentication
-* Helm deployment
-* Rollout validation
-* Runtime deployment verification
+* Persistent application storage
+* Enterprise relational database support
+* Production-style backend architecture
 
 ---
 
 # Monitoring & Observability
 
-## Monitoring Stack
-
-Includes:
+Monitoring Stack Includes:
 
 * Azure Monitor
 * Log Analytics Workspace
 * Managed Prometheus
 * Managed Grafana
-* AKS diagnostics
-* Container insights
+* Container Insights
+* AKS Diagnostics
 
----
-
-## Observability Features
+Capabilities:
 
 * Pod monitoring
 * Node monitoring
-* Container log collection
 * Metrics visualization
 * Deployment diagnostics
-* AKS troubleshooting support
+* Operational troubleshooting
 
 ---
 
@@ -554,14 +1153,11 @@ Includes:
 
 Includes:
 
-* Terraform backend initialization
-* AKS cluster provisioning
-* Network deployment
+* AKS provisioning
+* Monitoring setup
 * Namespace creation
 * RBAC configuration
-* Monitoring integration
-* ACR integration
-* Helm deployment enablement
+* Helm enablement
 
 ---
 
@@ -570,27 +1166,11 @@ Includes:
 Includes:
 
 * Helm upgrades
-* Image version updates
-* Pod troubleshooting
 * Rollout validation
+* Pod troubleshooting
 * Log analysis
 * Infrastructure updates
-* Monitoring verification
-* Destroy/rebuild lifecycle management
-
----
-
-# Platform Operations
-
-The repository includes a dedicated `platform-operations` layer for operational support activities including:
-
-* AKS operational validation
-* Cluster troubleshooting
-* Deployment verification
-* Namespace validation
-* Rollout validation
-* Monitoring verification
-* Operational scripts and utilities
+* Cluster rebuild lifecycle
 
 ---
 
@@ -640,17 +1220,18 @@ Implemented Security Features:
 * Azure Workload Identity
 * OIDC Federation
 * Managed Identity Authentication
-* Azure DevOps Service Connections
 * Kubernetes RBAC
-* Namespace isolation
+* Namespace Isolation
 * Azure RBAC
-* Key Vault integration
-* Secure Terraform backend
-* Immutable image deployment
+* Key Vault Integration
+* Secure Terraform Backend
+* Immutable Image Deployment
 
 ---
 
 # Common Troubleshooting Areas
+
+Common Operational Issues:
 
 * Terraform backend initialization issues
 * AKS authentication failures
@@ -658,34 +1239,31 @@ Implemented Security Features:
 * Helm deployment failures
 * Kubernetes rollout failures
 * Namespace permission issues
-* Workload identity validation issues
+* Workload Identity issues
 * Monitoring integration issues
-* Azure DevOps permission validation
 
 ---
 
 # Enterprise Best Practices Implemented
 
-* Modular Terraform structure
+* Modular Terraform architecture
 * Environment isolation
 * Namespace isolation
 * Immutable image deployment
-* Runtime deployment validation
-* Centralized backend management
-* OIDC authentication
-* Managed identity integration
+* Runtime validation
 * Monitoring-first operational model
 * Infrastructure disposability
+* Secure secret management
+* Passwordless authentication
 
 ---
 
 # Deployment Prerequisites
 
-Required Components:
+Required Tools:
 
 * Azure Subscription
 * Azure DevOps Organization
-* Azure DevOps Service Connections
 * Terraform CLI
 * Azure CLI
 * Kubectl
@@ -700,25 +1278,17 @@ Required Components:
 This repository demonstrates:
 
 * Enterprise AKS platform engineering
-* End-to-end Azure DevOps CI/CD automation
-* Terraform modular infrastructure design
-* Secure Kubernetes deployment lifecycle
-* Enterprise observability implementation
-* Real-world AKS operational workflows
+* End-to-end Azure DevOps CI/CD
+* Terraform modular infrastructure
+* Kubernetes operational workflows
+* Secure AKS deployment lifecycle
+* Enterprise monitoring implementation
+* Real-world platform engineering practices
 
 ---
 
 # Conclusion
 
-`employeeprofileapp-aks` provides a complete enterprise AKS platform engineering implementation combining:
+`employeeprofileapp-aks` provides a complete enterprise AKS platform engineering implementation combining Terraform Infrastructure as Code, Azure DevOps CI/CD, Helm-based Kubernetes deployments, Azure-native monitoring, Workload Identity integration, Azure SQL Database implementation, and enterprise Kubernetes operational practices.
 
-* Terraform Infrastructure as Code
-* Azure DevOps CI/CD
-* AKS Kubernetes Platform Engineering
-* Helm Deployment Automation
-* Azure Monitoring Stack
-* Workload Identity Integration
-* Environment-first Deployment Design
-* Enterprise Operational Practices
-
-The repository demonstrates scalable, reusable, cloud-native AKS deployment standards aligned with enterprise platform engineering practices.
+The repository demonstrates scalable, reusable, secure, and production-style AKS deployment architecture aligned with modern enterprise cloud-native engineering standards.
