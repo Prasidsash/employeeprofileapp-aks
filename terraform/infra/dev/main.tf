@@ -150,7 +150,7 @@ module "sql" {
   sql_database_sku_name = var.sql_database_sku_name
 
   sql_max_size_gb = var.sql_max_size_gb
-  
+
   enable_sql_public_network_access = var.enable_sql_public_network_access
 
   enable_sql_firewall_rules = var.enable_sql_firewall_rules
@@ -220,12 +220,6 @@ module "aks" {
   enable_oidc_issuer = var.enable_oidc_issuer
 
   enable_workload_identity = var.enable_workload_identity
-
-  # =====================================
-  # IMPORTANT:
-  # KEEP SYSTEM ASSIGNED IDENTITY
-  # TO AVOID CYCLIC DEPENDENCY
-  # =====================================
 
   enable_user_assigned_identity = false
 

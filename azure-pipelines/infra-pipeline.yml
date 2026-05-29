@@ -1,35 +1,27 @@
 # =====================================
 # FILE: azure-pipelines/infra-pipeline.yml
-# VERSION: v22-enterprise-keyvault-generated-sql-credentials-final
+# VERSION: v23-enterprise-keyvault-generated-sql-credentials-final
 # =====================================
 
 trigger:
-
   branches:
-
     include:
-
       - main
 
   paths:
-
     include:
-
       - terraform/infra/**
       - terraform/modules/**
       - azure-pipelines/infra-pipeline.yml
 
     exclude:
-
       - src/**
       - helm/**
 
 pool:
-
   vmImage: ubuntu-latest
 
 variables:
-
   - group: employeeprofileapp-dev-vars
 
   # =====================================
@@ -49,16 +41,6 @@ variables:
   - name: backendStateKey
     value: dev.terraform.tfstate
 
-  # =====================================
-  # AKS
-  # =====================================
-
-  - name: aksClusterName
-    value: employeeprofileapp-dev-aks
-
-  - name: aksResourceGroup
-    value: employeeprofileapp-dev-rg
-
 stages:
 
   # =====================================
@@ -66,29 +48,23 @@ stages:
   # =====================================
 
   - stage: Validation
-
     displayName: Terraform Validation
 
     jobs:
-
       - job: TerraformValidation
-
         displayName: Terraform Validation
 
         steps:
-
           - checkout: self
             clean: true
 
           - task: TerraformInstaller@1
             displayName: Install Terraform
-
             inputs:
               terraformVersion: $(terraformVersion)
 
           - task: AzureCLI@2
             displayName: Azure Login Validation
-
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
@@ -96,7 +72,6 @@ stages:
               addSpnToEnvironment: true
 
               inlineScript: |
-
                 set -euo pipefail
 
                 export ARM_USE_OIDC=true
@@ -104,9 +79,31 @@ stages:
 
                 az account show
 
+          - script: |
+              set -euo pipefail
+
+              echo "Checking Helm installation..."
+              helm version
+
+              echo "Initializing Helm repositories..."
+
+              helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx --force-update
+              helm repo add jetstack https://charts.jetstack.io --force-update
+              helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update
+
+              helm repo update
+
+              echo "Validating repositories..."
+
+              helm search repo ingress-nginx/ingress-nginx
+              helm search repo jetstack/cert-manager
+              helm search repo prometheus-community
+
+              echo "Helm repositories initialized successfully."
+            displayName: Initialize Helm Repositories
+
           - task: AzureCLI@2
             displayName: Terraform Init
-
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
@@ -115,7 +112,6 @@ stages:
               workingDirectory: $(terraformWorkingDirectory)
 
               inlineScript: |
-
                 set -euo pipefail
 
                 export ARM_USE_OIDC=true
@@ -134,18 +130,14 @@ stages:
                   -backend-config="use_azuread_auth=true"
 
           - script: |
-
               set -euo pipefail
 
               terraform fmt -recursive -check
-
             displayName: Terraform Format Check
-
             workingDirectory: $(terraformWorkingDirectory)
 
           - task: AzureCLI@2
             displayName: Terraform Validate
-
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
@@ -154,7 +146,6 @@ stages:
               workingDirectory: $(terraformWorkingDirectory)
 
               inlineScript: |
-
                 set -euo pipefail
 
                 export ARM_USE_OIDC=true
@@ -170,31 +161,24 @@ stages:
   # =====================================
 
   - stage: Plan
-
     displayName: Terraform Plan
-
     dependsOn: Validation
 
     jobs:
-
       - job: TerraformPlan
-
         displayName: Terraform Plan
 
         steps:
-
           - checkout: self
             clean: true
 
           - task: TerraformInstaller@1
             displayName: Install Terraform
-
             inputs:
               terraformVersion: $(terraformVersion)
 
           - task: AzureCLI@2
             displayName: Terraform Init
-
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
@@ -203,7 +187,6 @@ stages:
               workingDirectory: $(terraformWorkingDirectory)
 
               inlineScript: |
-
                 set -euo pipefail
 
                 export ARM_USE_OIDC=true
@@ -222,7 +205,6 @@ stages:
 
           - task: AzureCLI@2
             displayName: Terraform Plan
-
             inputs:
               azureSubscription: $(azureInfraServiceConnection)
               scriptType: bash
@@ -231,7 +213,6 @@ stages:
               workingDirectory: $(terraformWorkingDirectory)
 
               inlineScript: |
-
                 set -euo pipefail
 
                 export ARM_USE_OIDC=true
@@ -251,29 +232,19 @@ stages:
   # =====================================
 
   - stage: Apply
-
     displayName: Terraform Apply
-
     dependsOn: Plan
-
     condition: succeeded()
 
     jobs:
-
       - deployment: TerraformApply
-
         displayName: Terraform Apply
-
         environment: dev
 
         strategy:
-
           runOnce:
-
             deploy:
-
               steps:
-
                 - checkout: self
                   clean: true
 
@@ -282,13 +253,11 @@ stages:
 
                 - task: TerraformInstaller@1
                   displayName: Install Terraform
-
                   inputs:
                     terraformVersion: $(terraformVersion)
 
                 - task: AzureCLI@2
                   displayName: Terraform Init
-
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
@@ -297,7 +266,6 @@ stages:
                     workingDirectory: $(terraformWorkingDirectory)
 
                     inlineScript: |
-
                       set -euo pipefail
 
                       export ARM_USE_OIDC=true
@@ -316,7 +284,6 @@ stages:
 
                 - task: AzureCLI@2
                   displayName: Terraform Apply
-
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
@@ -325,7 +292,6 @@ stages:
                     workingDirectory: $(terraformWorkingDirectory)
 
                     inlineScript: |
-
                       set -euo pipefail
 
                       export ARM_USE_OIDC=true
@@ -334,13 +300,14 @@ stages:
                       export ARM_TENANT_ID=$tenantId
                       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
+                      cp "$(Pipeline.Workspace)/terraform-plan/tfplan" ./tfplan
+
                       terraform apply \
                         -auto-approve \
                         tfplan
 
                 - task: AzureCLI@2
                   displayName: Terraform Outputs
-
                   inputs:
                     azureSubscription: $(azureInfraServiceConnection)
                     scriptType: bash
@@ -349,7 +316,6 @@ stages:
                     workingDirectory: $(terraformWorkingDirectory)
 
                     inlineScript: |
-
                       set -euo pipefail
 
                       export ARM_USE_OIDC=true

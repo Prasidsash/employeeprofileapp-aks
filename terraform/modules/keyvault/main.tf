@@ -177,11 +177,7 @@ resource "azurerm_role_assignment" "aks_kv_secrets_user" {
 
 resource "azurerm_role_assignment" "workload_identity_kv_secrets_user" {
 
-  count = (
-    var.enable_workload_identity_keyvault_access &&
-    var.workload_identity_principal_id != null &&
-    var.workload_identity_principal_id != ""
-  ) ? 1 : 0
+  count = var.enable_workload_identity_keyvault_access ? 1 : 0
 
   scope = azurerm_key_vault.kv.id
 
@@ -334,10 +330,7 @@ resource "azurerm_key_vault_secret" "sql_server_fqdn" {
 
 resource "azurerm_key_vault_secret" "sql_connection_string" {
 
-  count = (
-    var.enable_default_key_vault_secrets &&
-    local.sql_connection_string != null
-  ) ? 1 : 0
+  count = var.enable_default_key_vault_secrets ? 1 : 0
 
   name = "sql-connection-string"
 

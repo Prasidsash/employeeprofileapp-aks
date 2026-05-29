@@ -30,9 +30,7 @@ resource "helm_release" "cert_manager" {
   atomic = false
 
   cleanup_on_fail = false
-
-  dependency_update = true
-
+  
   # =====================================
   # CERT MANAGER CRDS
   # =====================================

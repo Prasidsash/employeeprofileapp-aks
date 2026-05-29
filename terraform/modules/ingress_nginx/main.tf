@@ -1,33 +1,23 @@
 # =====================================
 # FILE: terraform/modules/ingress_nginx/main.tf
-# VERSION: v2-enterprise-disposable-final
+# VERSION: v3-enterprise-final
 # =====================================
 
 resource "helm_release" "ingress_nginx" {
 
-  name = "ingress-nginx"
+  name             = "ingress-nginx"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  version          = var.chart_version
 
-  repository = "https://kubernetes.github.io/ingress-nginx"
-
-  chart = "ingress-nginx"
-
-  version = var.chart_version
-
-  namespace = var.namespace
-
+  namespace        = var.namespace
   create_namespace = true
 
-  wait = true
+  dependency_update = true
 
-  timeout = 900
-
-  atomic = false
-
-  cleanup_on_fail = false
-
-  # =====================================
-  # CONTROLLER CONFIGURATION
-  # =====================================
+  timeout          = 900
+  wait             = true
+  atomic           = true
 
   set {
     name  = "controller.service.type"
@@ -36,17 +26,13 @@ resource "helm_release" "ingress_nginx" {
 
   set {
     name  = "controller.replicaCount"
-    value = var.replica_count
+    value = tostring(var.replica_count)
   }
 
   set {
     name  = "controller.publishService.enabled"
     value = "true"
   }
-
-  # =====================================
-  # OPTIONAL STABILITY SETTINGS
-  # =====================================
 
   set {
     name  = "controller.resources.requests.cpu"
