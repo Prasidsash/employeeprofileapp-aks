@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/sql/variables.tf
-# VERSION: v1-enterprise-sql-phase1-final
+# VERSION: v2-enterprise-keyvault-generated-sql-credentials-final
 # =====================================
 
 # =====================================
@@ -88,28 +88,6 @@ variable "sql_max_size_gb" {
   type = number
 
   default = 2
-}
-
-# =====================================
-# SQL ADMINISTRATION
-# =====================================
-
-variable "sql_admin_username" {
-
-  description = "Azure SQL administrator username"
-
-  type = string
-
-  sensitive = true
-}
-
-variable "sql_admin_password" {
-
-  description = "Azure SQL administrator password"
-
-  type = string
-
-  sensitive = true
 }
 
 # =====================================

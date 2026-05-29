@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/keyvault/main.tf
-# VERSION: v12-enterprise-null-safe-final
+# VERSION: v13-enterprise-keyvault-generated-sql-credentials-final
 # =====================================
 
 # =====================================
@@ -61,27 +61,6 @@ locals {
   ) ? "Server=tcp:${var.sql_server_fqdn},1433;Initial Catalog=${var.sql_database_name};Persist Security Info=False;User ID=${var.db_username};Password=${var.db_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" : null
 
   # =====================================
-  # NON-SENSITIVE SECRET METADATA
-  # =====================================
-
-  secret_metadata = {
-
-    "db-username" = true
-
-    "db-password" = true
-
-    "keyvault-name" = true
-
-    "sql-server-name" = true
-
-    "sql-database-name" = true
-
-    "sql-server-fqdn" = true
-
-    "sql-connection-string" = true
-  }
-
-  # =====================================
   # STABLE ADMIN OBJECT ID
   # =====================================
 
@@ -98,8 +77,11 @@ locals {
 resource "azurerm_key_vault" "kv" {
 
   name                = local.key_vault_name
+
   location            = var.location
+
   resource_group_name = var.resource_group_name
+
   tenant_id           = data.azurerm_client_config.current.tenant_id
 
   sku_name = "standard"
@@ -233,51 +215,137 @@ resource "time_sleep" "wait_for_kv_rbac" {
 }
 
 # =====================================
-# DEFAULT KEY VAULT SECRETS
+# DB USERNAME SECRET
 # =====================================
 
-resource "azurerm_key_vault_secret" "default_secrets" {
+resource "azurerm_key_vault_secret" "db_username" {
 
-  for_each = var.enable_default_key_vault_secrets ? local.secret_metadata : {}
+  count = var.enable_default_key_vault_secrets ? 1 : 0
 
-  name = each.key
+  name = "db-username"
 
-  value = (
-    each.key == "db-username" ? var.db_username :
-
-    each.key == "db-password" ? var.db_password :
-
-    each.key == "keyvault-name" ? local.key_vault_name :
-
-    each.key == "sql-server-name" ? (
-      var.sql_server_name != null ? var.sql_server_name : ""
-    ) :
-
-    each.key == "sql-database-name" ? (
-      var.sql_database_name != null ? var.sql_database_name : ""
-    ) :
-
-    each.key == "sql-server-fqdn" ? (
-      var.sql_server_fqdn != null ? var.sql_server_fqdn : ""
-    ) :
-
-    each.key == "sql-connection-string" ? (
-      local.sql_connection_string != null ? local.sql_connection_string : ""
-    ) :
-
-    ""
-  )
+  value = var.db_username
 
   key_vault_id = azurerm_key_vault.kv.id
 
   depends_on = [
     time_sleep.wait_for_kv_rbac
   ]
+}
 
-  lifecycle {
+# =====================================
+# DB PASSWORD SECRET
+# =====================================
 
-    ignore_changes = [
-      value
-    ]
-  }
+resource "azurerm_key_vault_secret" "db_password" {
+
+  count = var.enable_default_key_vault_secrets ? 1 : 0
+
+  name = "db-password"
+
+  value = var.db_password
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+}
+
+# =====================================
+# KEY VAULT NAME SECRET
+# =====================================
+
+resource "azurerm_key_vault_secret" "keyvault_name" {
+
+  count = var.enable_default_key_vault_secrets ? 1 : 0
+
+  name = "keyvault-name"
+
+  value = local.key_vault_name
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+}
+
+# =====================================
+# SQL SERVER NAME SECRET
+# =====================================
+
+resource "azurerm_key_vault_secret" "sql_server_name" {
+
+  count = var.enable_default_key_vault_secrets ? 1 : 0
+
+  name = "sql-server-name"
+
+  value = coalesce(var.sql_server_name, "")
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+}
+
+# =====================================
+# SQL DATABASE NAME SECRET
+# =====================================
+
+resource "azurerm_key_vault_secret" "sql_database_name" {
+
+  count = var.enable_default_key_vault_secrets ? 1 : 0
+
+  name = "sql-database-name"
+
+  value = coalesce(var.sql_database_name, "")
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+}
+
+# =====================================
+# SQL SERVER FQDN SECRET
+# =====================================
+
+resource "azurerm_key_vault_secret" "sql_server_fqdn" {
+
+  count = var.enable_default_key_vault_secrets ? 1 : 0
+
+  name = "sql-server-fqdn"
+
+  value = coalesce(var.sql_server_fqdn, "")
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
+}
+
+# =====================================
+# SQL CONNECTION STRING SECRET
+# =====================================
+
+resource "azurerm_key_vault_secret" "sql_connection_string" {
+
+  count = (
+    var.enable_default_key_vault_secrets &&
+    local.sql_connection_string != null
+  ) ? 1 : 0
+
+  name = "sql-connection-string"
+
+  value = local.sql_connection_string
+
+  key_vault_id = azurerm_key_vault.kv.id
+
+  depends_on = [
+    time_sleep.wait_for_kv_rbac
+  ]
 }

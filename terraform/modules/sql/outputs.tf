@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/sql/outputs.tf
-# VERSION: v1-enterprise-sql-phase1-final
+# VERSION: v2-enterprise-keyvault-generated-sql-credentials-final
 # =====================================
 
 # =====================================
@@ -62,6 +62,26 @@ output "sql_database_name" {
 }
 
 # =====================================
+# GENERATED SQL CREDENTIALS
+# =====================================
+
+output "sql_admin_username" {
+
+  description = "Generated SQL administrator username"
+
+  value = local.sql_admin_username
+}
+
+output "sql_admin_password" {
+
+  description = "Generated SQL administrator password"
+
+  value = random_password.sql_admin_password.result
+
+  sensitive = true
+}
+
+# =====================================
 # SQL CONNECTION METADATA
 # =====================================
 
@@ -85,6 +105,8 @@ output "sql_connection_metadata" {
       azurerm_mssql_database.sql_database[0].name,
       null
     )
+
+    sql_admin_username = local.sql_admin_username
   }
 
   sensitive = true

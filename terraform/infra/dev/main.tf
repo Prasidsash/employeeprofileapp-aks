@@ -150,11 +150,7 @@ module "sql" {
   sql_database_sku_name = var.sql_database_sku_name
 
   sql_max_size_gb = var.sql_max_size_gb
-
-  sql_admin_username = var.sql_admin_username
-
-  sql_admin_password = var.sql_admin_password
-
+  
   enable_sql_public_network_access = var.enable_sql_public_network_access
 
   enable_sql_firewall_rules = var.enable_sql_firewall_rules
@@ -414,9 +410,9 @@ module "keyvault" {
 
   enable_default_key_vault_secrets = var.enable_default_key_vault_secrets
 
-  db_username = var.db_username
+  db_username = module.sql[0].sql_admin_username
 
-  db_password = var.db_password
+  db_password = module.sql[0].sql_admin_password
 
   sql_server_name = try(
     module.sql[0].sql_server_name,

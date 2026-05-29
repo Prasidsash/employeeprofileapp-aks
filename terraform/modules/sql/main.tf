@@ -1,6 +1,6 @@
 # =====================================
 # FILE: terraform/modules/sql/main.tf
-# VERSION: v1-enterprise-sql-phase1-final
+# VERSION: v2-enterprise-keyvault-generated-sql-credentials-final
 # =====================================
 
 # =====================================
@@ -23,6 +23,19 @@ locals {
 
     var.additional_tags
   )
+
+  sql_admin_username = "sqladmin"
+}
+
+# =====================================
+# GENERATED SQL ADMIN PASSWORD
+# =====================================
+
+resource "random_password" "sql_admin_password" {
+
+  length = 32
+
+  special = true
 }
 
 # =====================================
@@ -41,9 +54,9 @@ resource "azurerm_mssql_server" "sql_server" {
 
   version = var.sql_server_version
 
-  administrator_login = var.sql_admin_username
+  administrator_login = local.sql_admin_username
 
-  administrator_login_password = var.sql_admin_password
+  administrator_login_password = random_password.sql_admin_password.result
 
   public_network_access_enabled = var.enable_sql_public_network_access
 

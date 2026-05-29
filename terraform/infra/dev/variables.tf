@@ -692,28 +692,6 @@ variable "enable_default_key_vault_secrets" {
 }
 
 # =====================================
-# DATABASE SECRETS
-# =====================================
-
-variable "db_username" {
-
-  description = "Database username"
-
-  type = string
-
-  sensitive = true
-}
-
-variable "db_password" {
-
-  description = "Database password"
-
-  type = string
-
-  sensitive = true
-}
-
-# =====================================
 # AZURE SQL DATABASE
 # =====================================
 
@@ -777,32 +755,6 @@ variable "sql_max_size_gb" {
   type = number
 
   default = 2
-}
-
-# =====================================
-# SQL ADMINISTRATION
-# =====================================
-
-variable "sql_admin_username" {
-
-  description = "Azure SQL administrator username"
-
-  type = string
-
-  sensitive = true
-
-  default = null
-}
-
-variable "sql_admin_password" {
-
-  description = "Azure SQL administrator password"
-
-  type = string
-
-  sensitive = true
-
-  default = null
 }
 
 # =====================================
