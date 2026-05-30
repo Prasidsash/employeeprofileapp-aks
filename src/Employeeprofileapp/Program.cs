@@ -42,7 +42,7 @@ string Page(string title, string emoji, string message)
                 padding-top: 120px;
             }}
             .header {{
-                background: rgba(255,255,255,0.85);
+                background: rgba(255,255,255,0.7); /* 70% opaque → background 30% visible */
                 width: 100%;
                 padding: 20px 0;
                 text-align: center;
@@ -98,7 +98,7 @@ string Page(string title, string emoji, string message)
 
 app.MapGet("/", async context =>
 {
-    await context.Response.WriteAsync(Page("Home", "🏠", "Welcome to 29/05/2026 @ 10:00 PM"));
+    await context.Response.WriteAsync(Page("Home", "🏠", "Welcome to 30/05/2026 @ 10:40 AM"));
 });
 
 app.MapGet("/employee", async context =>

@@ -1,0 +1,30 @@
+To fetch the kubeconfig file for an AKS cluster
+===============================================
+
+az aks get-credentials --resource-group employeeprofileapp-dev-rg --name employeeprofileapp-dev-aks --overwrite-existing
+
+SPN
+====
+azure-devops-sp 
+
+ACR-SC 
+
+Terraform commands
+===================
+
+terraform fmt 
+terraform fmt -recursive
+terraform init
+terraform validate
+terraform plan
+terraform apply -auto-approve
+terraform destroy -auto-approve
+
+Git commands
+============
+
+git add .
+git commit -m "New comm"
+git push origin main
+
+
